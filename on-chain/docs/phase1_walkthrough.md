@@ -67,10 +67,15 @@ npx hardhat ignition deploy ignition/modules/CrowdfundingPlatform.ts
 ```
 
 ### Sepolia Testnet
-Set environment variables first:
+### Sepolia Testnet
+Set environment variables in `.env` file:
 ```bash
-npx hardhat vars set SEPOLIA_RPC_URL
-npx hardhat vars set SEPOLIA_PRIVATE_KEY
+cp .env.example .env
+# Edit .env and set your SEPOLIA_RPC_URL and SEPOLIA_PRIVATE_KEY
+```
+
+Deploy:
+```bash
 npx hardhat ignition deploy ignition/modules/CrowdfundingPlatform.ts --network sepolia
 ```
 

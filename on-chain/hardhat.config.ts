@@ -1,5 +1,15 @@
 import hardhatToolboxViemPlugin from "@nomicfoundation/hardhat-toolbox-viem";
-import { configVariable, defineConfig } from "hardhat/config";
+import { defineConfig } from "hardhat/config";
+import * as dotenv from "dotenv";
+
+dotenv.config();
+
+// Helper to ensure private key has 0x prefix
+const getPrivateKey = () => {
+  const key = process.env.PRIVATE_KEY || process.env.SEPOLIA_PRIVATE_KEY;
+  if (!key) return [];
+  return [key.startsWith("0x") ? key : `0x${key}`];
+};
 
 export default defineConfig({
   plugins: [hardhatToolboxViemPlugin],
@@ -31,8 +41,8 @@ export default defineConfig({
     sepolia: {
       type: "http",
       chainType: "l1",
-      url: configVariable("SEPOLIA_RPC_URL"),
-      accounts: [configVariable("SEPOLIA_PRIVATE_KEY")],
+      url: process.env.SEPOLIA_RPC_URL || "",
+      accounts: getPrivateKey(),
     },
   },
 });
