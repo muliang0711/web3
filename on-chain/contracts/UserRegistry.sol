@@ -4,7 +4,6 @@ pragma solidity ^0.8.28;
 contract UserRegistry {
     // 1. struct :
     struct User {
-        address wallet;
         string name;
         bool isRegistered;
     }
@@ -22,7 +21,7 @@ contract UserRegistry {
         require(!users[msg.sender].isRegistered, "User already registered");
 
         // logic :
-        users[msg.sender] = User(msg.sender, _name, true);
+        users[msg.sender] = User(_name, true);
         emit UserRegistered(msg.sender, _name);
     }
 
