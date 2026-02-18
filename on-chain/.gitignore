@@ -20,3 +20,6 @@
 /coverage
 
 .env
+
+/indexer-server/node_modules
+/indexer-server/dist
