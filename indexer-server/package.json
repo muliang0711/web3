@@ -1,0 +1,27 @@
+{
+  "name": "indexer-poc",
+  "version": "1.0.0",
+  "description": "Proof-of-Concept Event Indexer for CrowdfundingPlatform on Sepolia",
+  "type": "module",
+  "main": "dist/listener.js",
+  "scripts": {
+    "dev": "tsx watch src/listener.ts",
+    "build": "tsc",
+    "start": "node dist/listener.js",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.7",
+    "ethers": "^6.13.4",
+    "winston": "^3.17.0",
+    "winston-daily-rotate-file": "^5.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.17.12",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.3"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
