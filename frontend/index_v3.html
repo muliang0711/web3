@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Decentralized User Registry v3</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f0f0f0;
+        }
+
+        .container {
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        input {
+            padding: 10px;
+            margin: 10px 0;
+            width: 200px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        button {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        #status {
+            margin-top: 15px;
+            color: #333;
+        }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.11.1/ethers.umd.min.js"></script>
+</head>
+
+<body>
+
+    <div class="container">
+        <!-- View 1: Connect Wallet -->
+        <div id="connect-view">
+            <h2>Welcome to DApp</h2>
+            <button onclick="connectWallet()">Connect Wallet</button>
+        </div>
+
+        <!-- View 2: Registration -->
+        <div id="register-view" style="display:none;">
+            <h2>Create Account</h2>
+            <p>You are new here. Please register.</p>
+            <input type="text" id="username" placeholder="Choose a Username">
+            <br>
+            <button onclick="registerUser()">Register</button>
+        </div>
+
+        <!-- View 3: Dashboard (Logged In) -->
+        <div id="dashboard-view" style="display:none;">
+            <h2>🎉 Welcome Back!</h2>
+            <h3 id="display-username" style="color: #007bff;"></h3>
+            <p>Wallet: <span id="display-wallet" style="font-size: 0.8em; color: gray;"></span></p>
+            <p><i>You are securely logged in.</i></p>
+        </div>
+
+        <p id="status"></p>
+        <p style="font-size: 12px; color: #666; margin-top: 20px;">Contract: <span
+                id="contract-addr-display">Loading...</span> (v4 - PRO FLOW)</p>
+    </div>
+
+    <script>
+        const contractAddress = "0x5FbDB2315678afecb367f032d93F642f64180aa3";
+        document.getElementById('contract-addr-display').innerText = contractAddress;
+
+        const contractABI = [
+            "function register(string memory name) public",
+            "function users(address) public view returns (string memory name, bool isRegistered)",
+            "event UserRegistered(address indexed userAddress, string _name)"
+        ];
+
+        let provider, signer, contract;
+
+        // 1. Check if already connected on load
+        window.onload = async () => {
+            if (window.ethereum) {
+                // Listen for account changes (switching wallets in MetaMask)
+                window.ethereum.on('accountsChanged', handleAccountsChanged);
+
+                // Allow auto-connect if previously approved
+                const accounts = await window.ethereum.request({ method: 'eth_accounts' });
+                if (accounts.length > 0) {
+                    handleAccountsChanged(accounts);
+                }
+            }
+        };
+
+        async function connectWallet() {
+            if (!window.ethereum) return alert("MetaMask not found!");
+            try {
+                const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+                handleAccountsChanged(accounts);
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        async function handleAccountsChanged(accounts) {
+            if (accounts.length === 0) {
+                // Disconnected
+                showView('connect-view');
+                return;
+            }
+
+            const currentAccount = accounts[0];
+            document.getElementById('display-wallet').innerText = currentAccount;
+
+            // Setup Ethers
+            provider = new ethers.BrowserProvider(window.ethereum);
+            signer = await provider.getSigner();
+            contract = new ethers.Contract(contractAddress, contractABI, signer);
+
+            checkRegistration(currentAccount);
+        }
+
+        async function checkRegistration(userAddress) {
+            const statusEl = document.getElementById('status');
+            statusEl.innerText = "Checking registration status...";
+
+            try {
+                // Call the mapping: users(address)
+                // Returns [username, isRegistered]
+                const userData = await contract.users(userAddress);
+                const username = userData[0]; // First return value
+                const isRegistered = userData[1]; // Second return value
+
+                if (isRegistered) {
+                    // USER EXISTS -> Show Dashboard
+                    document.getElementById('display-username').innerText = username;
+                    showView('dashboard-view');
+                    statusEl.innerText = "";
+                } else {
+                    // NEW USER -> Show Register
+                    showView('register-view');
+                    statusEl.innerText = "Please create an account.";
+                }
+
+            } catch (err) {
+                console.error(err);
+                statusEl.innerText = "Error checking user: " + err.message;
+            }
+        }
+
+        async function registerUser() {
+            const username = document.getElementById('username').value;
+            if (!username) return alert("Enter a name!");
+
+            try {
+                const tx = await contract.register(username);
+                document.getElementById('status').innerText = "Registering... please wait";
+
+                await tx.wait(); // Wait for mining
+
+                // Auto-refresh logic after success
+                const address = await signer.getAddress();
+                checkRegistration(address);
+
+            } catch (error) {
+                console.error(error);
+                alert("Error: " + (error.reason || error.message));
+            }
+        }
+
+        function showView(viewId) {
+            // Hide all views
+            ['connect-view', 'register-view', 'dashboard-view'].forEach(id => {
+                document.getElementById(id).style.display = 'none';
+            });
+            // Show target view
+            document.getElementById(viewId).style.display = 'block';
+        }
+    </script>
+
+</body>
+
+</html>
