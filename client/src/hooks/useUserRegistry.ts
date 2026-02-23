@@ -53,6 +53,10 @@ export function useUserRegistry() {
     }
 
     const register = (name: string) => {
+        if (userData?.isRegistered) {
+            alert(`you already register with this wallet addres :${address}！`);
+            return;
+        }
         writeContract({
             address: CONTRACT_ADDRESS,
             abi: CONTRACT_ABI,
