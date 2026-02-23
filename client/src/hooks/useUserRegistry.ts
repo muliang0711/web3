@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { useReadContract, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
 import { useAccount } from 'wagmi';
 
@@ -48,9 +49,11 @@ export function useUserRegistry() {
     });
 
     // Trigger auto-refresh when transaction confirms
-    if (isConfirmed) {
-        refetch();
-    }
+    useEffect(() => {
+        if (isConfirmed) {
+            refetch();
+        }
+    }, [isConfirmed, refetch]);
 
     const register = (name: string) => {
         if (userData?.isRegistered) {

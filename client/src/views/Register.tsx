@@ -12,44 +12,45 @@ export function RegisterView() {
         }
     };
 
+    const isProcessing = status.isRegistering || status.isConfirming;
+
     return (
-        <div style={{ textAlign: 'center' }}>
-            <h2>Create account</h2>
-            <p>You are new here. Please register to continue.</p>
-            <form onSubmit={handleRegister}>
+        <div className="fade-in text-center">
+            <div style={{ fontSize: '2.5rem', marginBottom: '0.75rem' }}>📝</div>
+            <h2>Create Your Account</h2>
+            <p style={{ margin: '0.5rem 0 1.75rem' }}>
+                Register your identity on-chain to start using the platform.
+            </p>
+
+            <form onSubmit={handleRegister} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                 <input
+                    className="input"
                     type="text"
-                    placeholder="Enter your name"
+                    placeholder="Enter your display name"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     required
-                    style={{
-                        padding: '10px',
-                        margin: '10px 0',
-                        width: '80%',
-                        borderRadius: '4px',
-                        border: '1px solid #ccc'
-                    }}
+                    disabled={isProcessing}
                 />
-                <br />
+
                 <button
+                    className="btn-success"
                     type="submit"
-                    disabled={status.isRegistering || status.isConfirming}
-                    style={{
-                        padding: '10px 20px',
-                        backgroundColor: '#28a745',
-                        color: 'white',
-                        border: 'none',
-                        borderRadius: '4px',
-                        cursor: 'pointer'
-                    }}
+                    disabled={isProcessing || !name.trim()}
                 >
-                    {status.isRegistering || status.isConfirming ? 'Processing...' : 'Register'}
+                    {isProcessing ? '⏳ Processing...' : '✅ Register'}
                 </button>
             </form>
+
             {status.error && (
-                <p style={{ color: 'red', fontSize: '12px', marginTop: '10px' }}>
-                    Error: {status.error.message}
+                <p className="text-danger" style={{ marginTop: '1rem' }}>
+                    ⚠ {status.error.message}
+                </p>
+            )}
+
+            {status.txHash && !status.error && (
+                <p style={{ marginTop: '1rem', fontSize: '0.8rem', color: 'var(--text-muted)', wordBreak: 'break-all' }}>
+                    Tx: {status.txHash}
                 </p>
             )}
         </div>

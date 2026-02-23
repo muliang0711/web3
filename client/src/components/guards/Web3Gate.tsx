@@ -16,8 +16,9 @@ export function Web3Gate() {
     // 2. Data is loading -> Show loader
     if (status.isReading) {
         return (
-            <div style={{ textAlign: 'center', padding: '40px' }}>
-                <p>📡 Synchronizing with Blockchain...</p>
+            <div className="text-center fade-in" style={{ padding: '3rem 0' }}>
+                <div className="spinner" />
+                <p style={{ marginTop: '1rem', fontSize: '0.85rem' }}>Syncing with blockchain…</p>
             </div>
         );
     }
