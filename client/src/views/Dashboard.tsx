@@ -1,10 +1,12 @@
 import { useAccount, useDisconnect } from 'wagmi';
+import { useNavigate } from 'react-router-dom';
 import { useUserRegistry } from '../hooks/useUserRegistry';
 
 export function DashboardView() {
     const { address } = useAccount();
     const { disconnect } = useDisconnect();
     const { user } = useUserRegistry();
+    const navigate = useNavigate();
 
     return (
         <div className="fade-in">
@@ -25,17 +27,19 @@ export function DashboardView() {
                 <p style={{ marginTop: '0.25rem' }}>Your on-chain identity is verified.</p>
             </div>
 
-            {/* Placeholder — ready for crowdfunding module */}
-            <div style={{
-                padding: '1.5rem',
-                background: 'var(--bg-input)',
-                border: '1px dashed var(--border)',
-                borderRadius: '12px',
-                textAlign: 'center',
-            }}>
-                <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>
-                    🏗️ Crowdfunding features coming soon
-                </p>
+            {/* Navigation Grid */}
+            <div className="nav-grid">
+                <button className="nav-card" onClick={() => navigate('/profile')}>
+                    <span className="nav-card-icon">👤</span>
+                    <span className="nav-card-title">My Profile</span>
+                    <span className="nav-card-desc">Points & donation history</span>
+                </button>
+
+                <button className="nav-card" onClick={() => navigate('/campaigns')}>
+                    <span className="nav-card-icon">📋</span>
+                    <span className="nav-card-title">Campaigns</span>
+                    <span className="nav-card-desc">Browse & create campaigns</span>
+                </button>
             </div>
         </div>
     );
