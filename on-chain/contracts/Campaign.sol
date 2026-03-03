@@ -2,7 +2,7 @@
 pragma solidity ^0.8.28;
 
 contract Campaign {
-    // ── Structs ──────────────────────────────────────────────
+    // ── Structs ────────────────────────────────────────────── // cyao : need to able to explain when designn struct like this
     struct CampaignInfo {
         address creator;
         string title;
@@ -15,7 +15,7 @@ contract Campaign {
         bool isCancelled;
     }
 
-    // ── State Variables ──────────────────────────────────────
+    // ── State Variables ────────────────────────────────────── // cyao : need to be able explain why need these state variable
     address public creator;
     string public title;
     string public description;
@@ -29,18 +29,21 @@ contract Campaign {
     mapping(address => uint256) public contributions;
     address[] public contributors;
 
-    // ── Events ───────────────────────────────────────────────
+    // ── Events ─────────────────────────────────────────────── // Chooi Jian Jin : able to explain how it work
     event ContributionMade(address indexed contributor, uint256 amount);
     event FundsWithdrawn(address indexed creator, uint256 amount);
     event RefundIssued(address indexed contributor, uint256 amount);
 
-    // ── Modifiers ────────────────────────────────────────────
+    // ── Modifiers ──────────────────────────────────────────── // nelvyin and cyao : able to explain how it work
     modifier onlyCreator() {
-        require(msg.sender == creator, "Only the campaign creator can call this");
+        require(
+            msg.sender == creator,
+            "Only the campaign creator can call this"
+        );
         _;
     }
 
-    // ── Constructor ──────────────────────────────────────────
+    // ── Constructor ────────────────────────────────────────── // cyao : able to explain how it work
     constructor(
         address _creator,
         string memory _title,
@@ -62,7 +65,7 @@ contract Campaign {
 
     // ── Core Functions ───────────────────────────────────────
 
-    /// @notice Contribute ETH to this campaign
+    /// @notice Contribute ETH to this campaign // nelvyn
     function contribute() external payable {
         require(block.timestamp < deadline, "Campaign has ended");
         require(!isCancelled, "Campaign is cancelled");
@@ -81,7 +84,7 @@ contract Campaign {
         emit ContributionMade(msg.sender, msg.value);
     }
 
-    /// @notice Creator withdraws funds after successful campaign
+    /// @notice Creator withdraws funds after successful campaign // nelvyn
     function withdrawFunds() external onlyCreator {
         require(block.timestamp >= deadline, "Campaign has not ended yet");
         require(goalReached, "Funding target was not reached");
@@ -96,7 +99,7 @@ contract Campaign {
         emit FundsWithdrawn(creator, amount);
     }
 
-    /// @notice Contributors can get a refund if the campaign failed
+    /// @notice Contributors can get a refund if the campaign failed // nelvyn
     function refund() external {
         require(block.timestamp >= deadline, "Campaign has not ended yet");
         require(!goalReached, "Funding target was reached, no refunds");
@@ -113,27 +116,30 @@ contract Campaign {
 
     // ── View Functions ───────────────────────────────────────
 
-    /// @notice Get full campaign info
+    /// @notice Get full campaign info // nelvyn
     function getCampaignInfo() external view returns (CampaignInfo memory) {
-        return CampaignInfo({
-            creator: creator,
-            title: title,
-            description: description,
-            fundingTarget: fundingTarget,
-            deadline: deadline,
-            totalFunded: totalFunded,
-            goalReached: goalReached,
-            fundsWithdrawn: fundsWithdrawn,
-            isCancelled: isCancelled
-        });
+        return
+            CampaignInfo({
+                creator: creator,
+                title: title,
+                description: description,
+                fundingTarget: fundingTarget,
+                deadline: deadline,
+                totalFunded: totalFunded,
+                goalReached: goalReached,
+                fundsWithdrawn: fundsWithdrawn,
+                isCancelled: isCancelled
+            });
     }
 
-    /// @notice Get contribution amount for a specific address
-    function getContribution(address _contributor) external view returns (uint256) {
+    /// @notice Get contribution amount for a specific address // nelvyn
+    function getContribution(
+        address _contributor
+    ) external view returns (uint256) {
         return contributions[_contributor];
     }
 
-    /// @notice Get all contributor addresses
+    /// @notice Get all contributor addresses // nelvyn
     function getContributors() external view returns (address[] memory) {
         return contributors;
     }

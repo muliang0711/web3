@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.28;
 
+// HY : able to explain how it work
 contract UserRegistry {
     // 1. struct :
     struct User {

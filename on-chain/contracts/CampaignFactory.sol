@@ -4,11 +4,11 @@ pragma solidity ^0.8.28;
 import "./Campaign.sol";
 
 contract CampaignFactory {
-    // ── State Variables ──────────────────────────────────────
-    address[] public campaigns;
-    mapping(address => address[]) public userCampaigns;
+    // ── State Variables ────────────────────────────────────── // cyao : need to be able explain why need these state variable
+    address[] public campaigns; // cyao : need to be able explain why need this state variable
+    mapping(address => address[]) public userCampaigns; // cyao : need to be able explain why need this state variable
 
-    // ── Events ───────────────────────────────────────────────
+    // ── Events ─────────────────────────────────────────────── // cyao : need to be able explain why need these event
     event CampaignCreated(
         address indexed campaignAddress,
         address indexed creator,
@@ -17,13 +17,14 @@ contract CampaignFactory {
         uint256 durationInDays
     );
 
-    // ── Functions ────────────────────────────────────────────
+    // ── Functions ──────────────────────────────────────────── cyao : all the fucntion below need to be able explain why need and how it work
 
     /// @notice Deploy a new Campaign contract
     /// @param _title Campaign title
     /// @param _description Campaign description
     /// @param _fundingTarget Funding target in wei
     /// @param _durationInDays Duration in days until deadline
+
     function createCampaign(
         string memory _title,
         string memory _description,
