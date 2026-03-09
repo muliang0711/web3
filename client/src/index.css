@@ -251,6 +251,12 @@ button {
   gap: 1rem;
 }
 
+.nav-grid-3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.75rem;
+}
+
 .nav-card {
   display: flex;
   flex-direction: column;

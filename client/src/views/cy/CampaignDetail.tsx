@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { formatEther } from 'viem';
 import { useAccount } from 'wagmi';
-import { useCampaign } from '../hooks/useCampaign';
+import { useCampaign } from '../../hooks/useCampaign';
 
 export function CampaignDetailView() {
     const { address: campaignAddress } = useParams<{ address: string }>();

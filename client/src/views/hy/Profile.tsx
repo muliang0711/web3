@@ -1,9 +1,9 @@
 import { useAccount } from 'wagmi';
 import { useNavigate } from 'react-router-dom';
 import { formatEther } from 'viem';
-import { useUserRegistry } from '../hooks/useUserRegistry';
-import { useCampaignFactory } from '../hooks/useCampaignFactory';
-import { useCampaign } from '../hooks/useCampaign';
+import { useUserRegistry } from '../../hooks/useUserRegistry';
+import { useCampaignFactory } from '../../hooks/useCampaignFactory';
+import { useCampaign } from '../../hooks/useCampaign';
 
 // Sub-component: renders one donation history row
 function DonationRow({ campaignAddress }: { campaignAddress: `0x${string}` }) {

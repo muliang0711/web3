@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { formatEther } from 'viem';
-import { useCampaignFactory } from '../hooks/useCampaignFactory';
-import { useCampaign } from '../hooks/useCampaign';
+import { useCampaignFactory } from '../../hooks/useCampaignFactory';
+import { useCampaign } from '../../hooks/useCampaign';
 
 // Sub-component: renders one campaign card
 function CampaignCard({ campaignAddress }: { campaignAddress: `0x${string}` }) {

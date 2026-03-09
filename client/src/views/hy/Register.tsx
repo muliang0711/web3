@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useUserRegistry } from '../hooks/useUserRegistry';
+import { useUserRegistry } from '../../hooks/useUserRegistry';
 
 export function RegisterView() {
     const [name, setName] = useState('');
