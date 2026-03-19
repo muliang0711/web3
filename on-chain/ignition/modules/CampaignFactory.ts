@@ -1,7 +1,9 @@
 import { buildModule } from "@nomicfoundation/hardhat-ignition/modules";
+import UserRegistryModule from "./UserRegistry";
 
 const CampaignFactoryModule = buildModule("CampaignFactoryModule", (m) => {
-    const campaignFactory = m.contract("CampaignFactory");
+    const { userRegistry } = m.useModule(UserRegistryModule);
+    const campaignFactory = m.contract("CampaignFactory", [userRegistry]);
 
     return { campaignFactory };
 });

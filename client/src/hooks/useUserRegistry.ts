@@ -2,8 +2,24 @@ import { useEffect } from 'react';
 import { useReadContract, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
 import { useAccount } from 'wagmi';
 
-const CONTRACT_ADDRESS = "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512";
+const CONTRACT_ADDRESS = "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0";
 const CONTRACT_ABI = [
+    {
+        "type": "function",
+        "name": "getUserDonations",
+        "inputs": [{ "name": "_userAddress", "type": "address" }],
+        "outputs": [
+            {
+                "type": "tuple[]",
+                "components": [
+                    { "name": "campaign", "type": "address" },
+                    { "name": "amount", "type": "uint256" },
+                    { "name": "timestamp", "type": "uint256" }
+                ]
+            }
+        ],
+        "stateMutability": "view"
+    },
     {
         "type": "function",
         "name": "register",
@@ -33,10 +49,21 @@ export function useUserRegistry() {
     const { writeContract, data: hash, isPending: isRegistering, error: registerError } = useWriteContract();
 
     // Read User Data
-    const { data: userData, refetch, isLoading: isReading } = useReadContract({
+    const { data: userData, refetch: refetchUser, isLoading: isReading } = useReadContract({
         address: CONTRACT_ADDRESS,
         abi: CONTRACT_ABI,
         functionName: 'getUser',
+        args: address ? [address] : undefined,
+        query: {
+            enabled: !!address,
+        },
+    });
+
+    // Read User Donations
+    const { data: userDonationsData, refetch: refetchDonations, isLoading: isReadingDonations } = useReadContract({
+        address: CONTRACT_ADDRESS,
+        abi: CONTRACT_ABI,
+        functionName: 'getUserDonations',
         args: address ? [address] : undefined,
         query: {
             enabled: !!address,
@@ -51,9 +78,10 @@ export function useUserRegistry() {
     // Trigger auto-refresh when transaction confirms
     useEffect(() => {
         if (isConfirmed) {
-            refetch();
+            refetchUser();
+            refetchDonations();
         }
-    }, [isConfirmed, refetch]);
+    }, [isConfirmed, refetchUser, refetchDonations]);
 
     const register = (name: string) => {
         if (userData?.isRegistered) {
@@ -70,11 +98,13 @@ export function useUserRegistry() {
 
     return {
         user: userData ? { name: userData.name, isRegistered: userData.isRegistered } : null,
+        donations: (userDonationsData as { campaign: string, amount: bigint, timestamp: bigint }[] | undefined) ?? [],
         register,
         status: {
             isRegistering,
             isConfirming,
             isReading,
+            isReadingDonations,
             error: registerError,
             txHash: hash
         }

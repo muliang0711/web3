@@ -46,6 +46,20 @@ export function DashboardView() {
                 </div>
             </div>
 
+            {/* ===== Global Module ===== */}
+            <div style={{ marginBottom: '1rem' }}>
+                <p style={{ fontSize: '0.7rem', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '0.5rem' }}>
+                    🌍 Global
+                </p>
+                <div className="nav-grid-3">
+                    <button className="nav-card" onClick={() => navigate('/global-history')}>
+                        <span className="nav-card-icon">🌍</span>
+                        <span className="nav-card-title">Live History</span>
+                        <span className="nav-card-desc">Platform events</span>
+                    </button>
+                </div>
+            </div>
+
             {/* ===== Campaign Module (cyao) ===== */}
             <div style={{ marginBottom: '1rem' }}>
                 <p style={{ fontSize: '0.7rem', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '0.5rem' }}>

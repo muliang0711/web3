@@ -9,6 +9,7 @@ import { RegisterView } from './views/hy/Register';
 import { DashboardView } from './views/hy/Dashboard';
 import { ProfileView } from './views/hy/Profile';
 import { UserCreatedHistoryView } from './views/hy/UserCreatedHistory';
+import { GlobalHistoryView } from './views/hy/GlobalHistory';
 
 // cy - Campaign module
 import { CampaignsView } from './views/cy/Campaigns';
@@ -42,6 +43,7 @@ function App() {
               <Route path="/dashboard" element={<DashboardView />} />
               <Route path="/profile" element={<ProfileView />} />
               <Route path="/user/created-history" element={<UserCreatedHistoryView />} />
+              <Route path="/global-history" element={<GlobalHistoryView />} />
 
               {/* cy - Campaign module */}
               <Route path="/campaigns" element={<CampaignsView />} />

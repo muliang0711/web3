@@ -1,6 +1,10 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.28;
 
+interface IUserRegistry {
+    function recordDonation(address _user, uint256 _amount) external;
+}
+
 contract Campaign {
     // ── Structs ────────────────────────────────────────────── // cyao : need to able to explain when designn struct like this
     struct CampaignInfo {
@@ -29,6 +33,8 @@ contract Campaign {
     mapping(address => uint256) public contributions;
     address[] public contributors;
 
+    IUserRegistry public userRegistry;
+
     // ── Events ─────────────────────────────────────────────── // Chooi Jian Jin : able to explain how it work
     event ContributionMade(address indexed contributor, uint256 amount);
     event FundsWithdrawn(address indexed creator, uint256 amount);
@@ -49,18 +55,21 @@ contract Campaign {
         string memory _title,
         string memory _description,
         uint256 _fundingTarget,
-        uint256 _durationInDays
+        uint256 _durationInDays,
+        address _userRegistryAddress
     ) {
         require(_creator != address(0), "Invalid creator address");
         require(bytes(_title).length > 0, "Title cannot be empty");
         require(_fundingTarget > 0, "Funding target must be greater than 0");
         require(_durationInDays > 0, "Duration must be greater than 0");
+        require(_userRegistryAddress != address(0), "Invalid registry address");
 
         creator = _creator;
         title = _title;
         description = _description;
         fundingTarget = _fundingTarget;
         deadline = block.timestamp + (_durationInDays * 1 days);
+        userRegistry = IUserRegistry(_userRegistryAddress);
     }
 
     // ── Core Functions ───────────────────────────────────────
@@ -80,6 +89,8 @@ contract Campaign {
         if (totalFunded >= fundingTarget) {
             goalReached = true;
         }
+
+        userRegistry.recordDonation(msg.sender, msg.value);
 
         emit ContributionMade(msg.sender, msg.value);
     }

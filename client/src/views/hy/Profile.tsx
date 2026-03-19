@@ -5,21 +5,21 @@ import { useUserRegistry } from '../../hooks/useUserRegistry';
 import { useCampaignFactory } from '../../hooks/useCampaignFactory';
 import { useCampaign } from '../../hooks/useCampaign';
 
-// Sub-component: renders one donation history row
-function DonationRow({ campaignAddress }: { campaignAddress: `0x${string}` }) {
-    const { info, contribution } = useCampaign(campaignAddress);
-
-    if (!info || contribution === 0n) return null;
+// Sub-component: renders one donation record from history
+function DonationRecordRow({ record }: { record: { campaign: string, amount: bigint, timestamp: bigint } }) {
+    const { info } = useCampaign(record.campaign as `0x${string}`);
+    const date = new Date(Number(record.timestamp) * 1000).toLocaleString();
+    const points = Number(formatEther(record.amount)) * 100; // Example: 100 points per ETH
 
     return (
         <div className="history-item">
-            <div className="history-item-icon">💰</div>
+            <div className="history-item-icon">⭐</div>
             <div className="history-item-content">
-                <p className="history-item-text">
-                    You donated <strong>{formatEther(contribution)} ETH</strong> to campaign <strong>"{info.title}"</strong>
+                <p className="history-item-text" style={{ fontSize: '0.9rem', lineHeight: '1.4' }}>
+                    On <strong>{date}</strong>, you donated <strong>{formatEther(record.amount)} ETH</strong> to <strong>{info ? info.title : (record.campaign.slice(0, 6) + '...')}</strong>
                 </p>
-                <p className="history-item-meta">
-                    Campaign {info.goalReached ? '✅ Goal reached' : '⏳ In progress'} · Target: {formatEther(info.fundingTarget)} ETH
+                <p className="history-item-meta" style={{ marginTop: '0.25rem', color: '#ffc107', fontWeight: 'bold' }}>
+                    🏆 Earned {points.toFixed(0)} Points
                 </p>
             </div>
         </div>
@@ -28,13 +28,12 @@ function DonationRow({ campaignAddress }: { campaignAddress: `0x${string}` }) {
 
 export function ProfileView() {
     const { address } = useAccount();
-    const { user } = useUserRegistry();
-    const { campaigns, status } = useCampaignFactory();
+    const { user, donations, status: userStatus } = useUserRegistry();
+    const { campaigns } = useCampaignFactory();
     const navigate = useNavigate();
 
-    // Calculate total donated across all campaigns
-    // We'll display this in the stat cards; actual sum is computed from DonationRows
-    // For simplicity, we show the campaign count and let rows handle amounts
+    // Calculate total points
+    const totalPoints = donations.reduce((acc, current) => acc + (Number(formatEther(current.amount)) * 100), 0);
 
     return (
         <div className="fade-in">
@@ -59,30 +58,30 @@ export function ProfileView() {
                     <span className="stat-label">Campaigns Available</span>
                 </div>
                 <div className="stat-card">
-                    <span className="stat-value accent">🏅</span>
-                    <span className="stat-label">Donor Badge</span>
+                    <span className="stat-value accent">🏆 {totalPoints.toFixed(0)}</span>
+                    <span className="stat-label">Total Points</span>
                 </div>
             </div>
 
             {/* Donation History */}
             <div style={{ marginTop: '1.5rem' }}>
                 <h3 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '0.75rem', color: 'var(--text)' }}>
-                    📜 Donation History
+                    📜 Transaction History
                 </h3>
 
-                {status.isLoadingCampaigns ? (
+                {userStatus.isReadingDonations ? (
                     <div className="text-center" style={{ padding: '2rem 0' }}>
                         <div className="spinner" />
-                        <p style={{ marginTop: '0.75rem', fontSize: '0.8rem' }}>Loading campaigns...</p>
+                        <p style={{ marginTop: '0.75rem', fontSize: '0.8rem' }}>Loading history...</p>
                     </div>
-                ) : campaigns.length === 0 ? (
+                ) : donations.length === 0 ? (
                     <div style={{ padding: '1.5rem', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
-                        No campaigns found yet.
+                        No transactions found yet.
                     </div>
                 ) : (
                     <div className="history-list">
-                        {campaigns.map((addr) => (
-                            <DonationRow key={addr} campaignAddress={addr} />
+                        {[...donations].reverse().map((record, idx) => (
+                            <DonationRecordRow key={idx} record={record} />
                         ))}
                     </div>
                 )}

@@ -7,6 +7,12 @@ contract CampaignFactory {
     // ── State Variables ────────────────────────────────────── // cyao : need to be able explain why need these state variable
     address[] public campaigns; // cyao : need to be able explain why need this state variable
     mapping(address => address[]) public userCampaigns; // cyao : need to be able explain why need this state variable
+    address public userRegistryAddress;
+
+    constructor(address _userRegistryAddress) {
+        require(_userRegistryAddress != address(0), "Invalid registry address");
+        userRegistryAddress = _userRegistryAddress;
+    }
 
     // ── Events ─────────────────────────────────────────────── // cyao : need to be able explain why need these event
     event CampaignCreated(
@@ -36,7 +42,8 @@ contract CampaignFactory {
             _title,
             _description,
             _fundingTarget,
-            _durationInDays
+            _durationInDays,
+            userRegistryAddress
         );
 
         address campaignAddress = address(newCampaign);

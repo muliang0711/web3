@@ -1,0 +1,39 @@
+{
+  "_format": "hh3-sol-build-info-1",
+  "id": "solc-0_8_28-9c36019dd1f82be384d241cb58f2c7224e0a5be2",
+  "solcVersion": "0.8.28",
+  "solcLongVersion": "0.8.28+commit.7893614a",
+  "userSourceNameMap": {
+    "contracts/UserRegistry.sol": "project/contracts/UserRegistry.sol"
+  },
+  "input": {
+    "language": "Solidity",
+    "settings": {
+      "evmVersion": "cancun",
+      "optimizer": {
+        "enabled": true,
+        "runs": 200
+      },
+      "outputSelection": {
+        "*": {
+          "": [
+            "ast"
+          ],
+          "*": [
+            "abi",
+            "evm.bytecode",
+            "evm.deployedBytecode",
+            "evm.methodIdentifiers",
+            "metadata"
+          ]
+        }
+      },
+      "remappings": []
+    },
+    "sources": {
+      "project/contracts/UserRegistry.sol": {
+        "content": "// SPDX-License-Identifier: UNLICENSED\r\npragma solidity ^0.8.28;\r\n\r\n// HY : able to explain how it work\r\ncontract UserRegistry {\r\n    // 1. struct :\r\n    struct User {\r\n        string name;\r\n        bool isRegistered;\r\n    }\r\n\r\n    struct DonationRecord {\r\n        address campaign;\r\n        uint256 amount;\r\n        uint256 timestamp;\r\n    }\r\n\r\n    // 2.state variable :\r\n    mapping(address => User) public users;\r\n    mapping(address => DonationRecord[]) public userDonations;\r\n\r\n    // 3. events :\r\n    event UserRegistered(address indexed userAddress, string username, uint256 timestamp);\r\n    event DonationRecorded(address indexed user, address indexed campaign, uint256 amount, uint256 timestamp);\r\n\r\n    // 4. functions :\r\n    function register(string memory _name) public {\r\n        // modifier :\r\n        require(bytes(_name).length > 0, \"Username cannot be empty\");\r\n        require(!users[msg.sender].isRegistered, \"User already registered\");\r\n\r\n        // logic :\r\n        users[msg.sender] = User(_name, true);\r\n        emit UserRegistered(msg.sender, _name, block.timestamp);\r\n    }\r\n\r\n    function getUser(address _userAddress) public view returns (User memory) {\r\n        return users[_userAddress];\r\n    }\r\n\r\n    function recordDonation(address _user, uint256 _amount) external {\r\n        userDonations[_user].push(DonationRecord(msg.sender, _amount, block.timestamp));\r\n        emit DonationRecorded(_user, msg.sender, _amount, block.timestamp);\r\n    }\r\n\r\n    function getUserDonations(address _userAddress) public view returns (DonationRecord[] memory) {\r\n        return userDonations[_userAddress];\r\n    }\r\n}\r\n"
+      }
+    }
+  }
+}
