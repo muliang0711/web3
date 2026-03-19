@@ -1,22 +1,42 @@
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 
 export function DonationSuccessView() {
     const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
+    const campaign = searchParams.get('campaign') || '';
+    const amount = searchParams.get('amount') || '0';
+    const points = (Number(amount) * 100).toFixed(0);
 
     return (
         <div className="fade-in">
-            <button className="btn-back" onClick={() => navigate('/dashboard')}>
-                ← Back
-            </button>
+            <div className="text-center" style={{ padding: '2rem 0' }}>
+                <div style={{ fontSize: '4rem', marginBottom: '1rem' }}>🎉</div>
+                <h2>Donation Successful!</h2>
+                <p style={{ marginTop: '0.5rem', marginBottom: '2rem', color: 'var(--text-secondary)' }}>
+                    Your contribution has been confirmed on-chain.
+                </p>
 
-            <div className="text-center" style={{ marginBottom: '1.5rem' }}>
-                <div style={{ fontSize: '2.5rem', marginBottom: '0.5rem' }}>✅</div>
-                <h2>Donation Success</h2>
-                <p style={{ marginTop: '0.25rem' }}>Your donation has been confirmed</p>
-            </div>
+                <div style={{ maxWidth: '400px', margin: '0 auto', background: 'var(--bg-secondary)', borderRadius: '12px', padding: '1.5rem', textAlign: 'left' }}>
+                    <div style={{ marginBottom: '0.75rem' }}>
+                        <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Amount Donated</span>
+                        <p style={{ fontSize: '1.25rem', fontWeight: 'bold' }}>{amount} ETH</p>
+                    </div>
+                    <div style={{ marginBottom: '0.75rem' }}>
+                        <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Points Earned</span>
+                        <p style={{ fontSize: '1.25rem', fontWeight: 'bold', color: '#ffc107' }}>🏆 {points} Points</p>
+                    </div>
+                    {campaign && (
+                        <div>
+                            <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Campaign</span>
+                            <p style={{ fontSize: '0.75rem', fontFamily: 'monospace' }}>{campaign.slice(0, 10)}...{campaign.slice(-8)}</p>
+                        </div>
+                    )}
+                </div>
 
-            <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.85rem', background: 'var(--bg-input)', borderRadius: '12px', border: '1px dashed var(--border)' }}>
-                🚧 This page is under development by <strong>ny</strong>
+                <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'center', marginTop: '2rem' }}>
+                    <button className="btn-primary" onClick={() => navigate('/profile')}>👤 View Profile</button>
+                    <button className="btn-ghost" onClick={() => navigate('/dashboard')}>← Dashboard</button>
+                </div>
             </div>
         </div>
     );

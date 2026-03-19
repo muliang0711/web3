@@ -98,7 +98,7 @@ export function useUserRegistry() {
 
     return {
         user: userData ? { name: userData.name, isRegistered: userData.isRegistered } : null,
-        donations: (userDonationsData as { campaign: string, amount: bigint, timestamp: bigint }[] | undefined) ?? [],
+        donations: Array.isArray(userDonationsData) ? userDonationsData : [],
         register,
         status: {
             isRegistering,

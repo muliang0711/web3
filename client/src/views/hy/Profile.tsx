@@ -6,17 +6,21 @@ import { useCampaignFactory } from '../../hooks/useCampaignFactory';
 import { useCampaign } from '../../hooks/useCampaign';
 
 // Sub-component: renders one donation record from history
-function DonationRecordRow({ record }: { record: { campaign: string, amount: bigint, timestamp: bigint } }) {
-    const { info } = useCampaign(record.campaign as `0x${string}`);
-    const date = new Date(Number(record.timestamp) * 1000).toLocaleString();
-    const points = Number(formatEther(record.amount)) * 100; // Example: 100 points per ETH
+function DonationRecordRow({ record }: { record: any }) {
+    const campaignAddr = record.campaign || record[0];
+    const amountVal = record.amount || record[1];
+    const timestampVal = record.timestamp || record[2];
+
+    const { info } = useCampaign(campaignAddr as `0x${string}`);
+    const date = new Date(Number(timestampVal) * 1000).toLocaleString();
+    const points = Number(formatEther(amountVal || 0n)) * 100; // Example: 100 points per ETH
 
     return (
         <div className="history-item">
             <div className="history-item-icon">⭐</div>
             <div className="history-item-content">
                 <p className="history-item-text" style={{ fontSize: '0.9rem', lineHeight: '1.4' }}>
-                    On <strong>{date}</strong>, you donated <strong>{formatEther(record.amount)} ETH</strong> to <strong>{info ? info.title : (record.campaign.slice(0, 6) + '...')}</strong>
+                    On <strong>{date}</strong>, you donated <strong>{formatEther(amountVal || 0n)} ETH</strong> to <strong>{info ? info.title : (campaignAddr?.slice(0, 6) + '...')}</strong>
                 </p>
                 <p className="history-item-meta" style={{ marginTop: '0.25rem', color: '#ffc107', fontWeight: 'bold' }}>
                     🏆 Earned {points.toFixed(0)} Points
@@ -33,7 +37,10 @@ export function ProfileView() {
     const navigate = useNavigate();
 
     // Calculate total points
-    const totalPoints = donations.reduce((acc, current) => acc + (Number(formatEther(current.amount)) * 100), 0);
+    const totalPoints = [...donations].reduce((acc, current: any) => {
+        const amountVal = current.amount || current[1] || 0n;
+        return acc + (Number(formatEther(amountVal)) * 100);
+    }, 0);
 
     return (
         <div className="fade-in">

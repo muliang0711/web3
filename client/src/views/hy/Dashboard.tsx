@@ -43,19 +43,10 @@ export function DashboardView() {
                         <span className="nav-card-title">My Campaigns</span>
                         <span className="nav-card-desc">Created history</span>
                     </button>
-                </div>
-            </div>
-
-            {/* ===== Global Module ===== */}
-            <div style={{ marginBottom: '1rem' }}>
-                <p style={{ fontSize: '0.7rem', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '0.5rem' }}>
-                    🌍 Global
-                </p>
-                <div className="nav-grid-3">
                     <button className="nav-card" onClick={() => navigate('/global-history')}>
                         <span className="nav-card-icon">🌍</span>
-                        <span className="nav-card-title">Live History</span>
-                        <span className="nav-card-desc">Platform events</span>
+                        <span className="nav-card-title">Registrations</span>
+                        <span className="nav-card-desc">User sign-ups</span>
                     </button>
                 </div>
             </div>
@@ -116,18 +107,8 @@ export function DashboardView() {
                 <div className="nav-grid-3">
                     <button className="nav-card" onClick={() => navigate('/transactions/user')}>
                         <span className="nav-card-icon">📊</span>
-                        <span className="nav-card-title">My Txns</span>
-                        <span className="nav-card-desc">User transactions</span>
-                    </button>
-                    <button className="nav-card" onClick={() => navigate('/transactions/campaign')}>
-                        <span className="nav-card-icon">📈</span>
-                        <span className="nav-card-title">Campaign Txns</span>
-                        <span className="nav-card-desc">By campaign</span>
-                    </button>
-                    <button className="nav-card" onClick={() => navigate('/transactions/filter')}>
-                        <span className="nav-card-icon">🔍</span>
-                        <span className="nav-card-title">Filter</span>
-                        <span className="nav-card-desc">Search & filter</span>
+                        <span className="nav-card-title">Explorer</span>
+                        <span className="nav-card-desc">All donations</span>
                     </button>
                 </div>
             </div>

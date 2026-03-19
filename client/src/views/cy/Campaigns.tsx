@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { formatEther } from 'viem';
 import { useCampaignFactory } from '../../hooks/useCampaignFactory';
@@ -51,27 +50,8 @@ function CampaignCard({ campaignAddress }: { campaignAddress: `0x${string}` }) {
 }
 
 export function CampaignsView() {
-    const { campaigns, createCampaign, status } = useCampaignFactory();
+    const { campaigns, status } = useCampaignFactory();
     const navigate = useNavigate();
-    const [showForm, setShowForm] = useState(false);
-    const [title, setTitle] = useState('');
-    const [description, setDescription] = useState('');
-    const [target, setTarget] = useState('');
-    const [duration, setDuration] = useState('');
-
-    const handleCreate = (e: React.FormEvent) => {
-        e.preventDefault();
-        if (title.trim() && description.trim() && target && duration) {
-            createCampaign(title.trim(), description.trim(), target, Number(duration));
-            setTitle('');
-            setDescription('');
-            setTarget('');
-            setDuration('');
-            setShowForm(false);
-        }
-    };
-
-    const isProcessing = status.isCreating || status.isConfirming;
 
     return (
         <div className="fade-in">
@@ -87,48 +67,15 @@ export function CampaignsView() {
                 <p style={{ marginTop: '0.25rem' }}>Browse or create crowdfunding campaigns</p>
             </div>
 
-            {/* Create Campaign Button / Form */}
-            {!showForm ? (
+            {/* Create Campaign Button Container */}
+            <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
                 <button
                     className="btn-primary"
-                    onClick={() => setShowForm(true)}
-                    style={{ marginBottom: '1.5rem' }}
+                    onClick={() => navigate('/campaigns/create')}
                 >
                     ➕ Create New Campaign
                 </button>
-            ) : (
-                <form onSubmit={handleCreate} className="create-form" style={{ marginBottom: '1.5rem' }}>
-                    <div className="form-group">
-                        <label>Title</label>
-                        <input className="input" placeholder="Campaign title" value={title} onChange={e => setTitle(e.target.value)} required disabled={isProcessing} />
-                    </div>
-                    <div className="form-group">
-                        <label>Description</label>
-                        <input className="input" placeholder="What's this campaign about?" value={description} onChange={e => setDescription(e.target.value)} required disabled={isProcessing} />
-                    </div>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
-                        <div className="form-group">
-                            <label>Target (ETH)</label>
-                            <input className="input" type="number" step="0.01" min="0.01" placeholder="10" value={target} onChange={e => setTarget(e.target.value)} required disabled={isProcessing} />
-                        </div>
-                        <div className="form-group">
-                            <label>Duration (days)</label>
-                            <input className="input" type="number" min="1" placeholder="30" value={duration} onChange={e => setDuration(e.target.value)} required disabled={isProcessing} />
-                        </div>
-                    </div>
-                    <div style={{ display: 'flex', gap: '0.75rem' }}>
-                        <button className="btn-success" type="submit" disabled={isProcessing} style={{ flex: 1 }}>
-                            {isProcessing ? '⏳ Creating...' : '🚀 Create'}
-                        </button>
-                        <button type="button" className="btn-ghost" onClick={() => setShowForm(false)} disabled={isProcessing}>
-                            Cancel
-                        </button>
-                    </div>
-                    {status.error && (
-                        <p className="text-danger" style={{ marginTop: '0.5rem' }}>⚠ {status.error.message}</p>
-                    )}
-                </form>
-            )}
+            </div>
 
             {/* Campaign List */}
             {status.isLoadingCampaigns ? (
