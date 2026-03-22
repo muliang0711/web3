@@ -47,13 +47,13 @@
 body {
   min-height: 100vh;
   display: flex;
-  align-items: center;
+  /*align-items: center;*/ /* Removed align-items: center so your long tables can scroll naturally */
   justify-content: center;
 }
 
 #root {
   width: 100%;
-  max-width: 480px;
+  max-width: 1440px; /* Changed from 480px to a massive desktop width! */
   margin: 0 auto;
   padding: 2rem 1.5rem;
 }
