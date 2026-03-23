@@ -44,7 +44,7 @@ export function UserCreatedHistoryView() {
                 ) : userCampaigns.length === 0 ? (
                     <p style={{ textAlign: 'center', color: 'var(--text-muted)' }}>You haven't created any campaigns yet.</p>
                 ) : (
-                    userCampaigns.map((addr) => <CreatedCampaignRow key={addr} address={addr} />)
+                    userCampaigns.map((camp) => <CreatedCampaignRow key={camp.address || camp} address={camp.address || camp} />)
                 )}
             </div>
         </div>

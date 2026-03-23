@@ -1,7 +1,8 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useReadContract, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
 import { useAccount } from 'wagmi';
 import { parseEther } from 'viem';
+import { supabase } from '../lib/supabase';
 
 const CAMPAIGN_ABI = [
     {
@@ -31,13 +32,6 @@ const CAMPAIGN_ABI = [
         "name": "getContribution",
         "inputs": [{ "name": "_contributor", "type": "address" }],
         "outputs": [{ "type": "uint256" }],
-        "stateMutability": "view"
-    },
-    {
-        "type": "function",
-        "name": "getContributors",
-        "inputs": [],
-        "outputs": [{ "type": "address[]" }],
         "stateMutability": "view"
     },
     {
@@ -73,6 +67,10 @@ export function useCampaign(campaignAddress?: `0x${string}`) {
     const { writeContract, data: hash, isPending: isContributing, error: contributeError } = useWriteContract();
 
     const enabled = !!campaignAddress;
+    const [pendingAmount, setPendingAmount] = useState<string>("");
+
+    // Supabase State for Contributors
+    const [contributors, setContributors] = useState<string[]>([]);
 
     // Read campaign info
     const { data: rawInfo, refetch: refetchInfo, isLoading: isLoadingInfo } = useReadContract({
@@ -91,27 +89,53 @@ export function useCampaign(campaignAddress?: `0x${string}`) {
         query: { enabled: enabled && !!address },
     });
 
-    // Read contributors list
-    const { data: contributors, refetch: refetchContributors } = useReadContract({
-        address: campaignAddress,
-        abi: CAMPAIGN_ABI,
-        functionName: 'getContributors',
-        query: { enabled },
-    });
-
-    // Watch tx confirmation
-    const { isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransactionReceipt({ hash });
+    // Fetch contributors from Supabase
+    const fetchContributors = async () => {
+        if (!campaignAddress) return;
+        const { data } = await supabase
+            .from('donations')
+            .select('donor_address')
+            .eq('campaign_address', campaignAddress);
+        
+        if (data) {
+            // Get unique contributors
+            const unique = Array.from(new Set(data.map(d => d.donor_address)));
+            setContributors(unique);
+        }
+    };
 
     useEffect(() => {
-        if (isConfirmed) {
-            refetchInfo();
-            refetchContribution();
-            refetchContributors();
-        }
-    }, [isConfirmed, refetchInfo, refetchContribution, refetchContributors]);
+        fetchContributors();
+    }, [campaignAddress]);
+
+    // Watch tx confirmation
+    const { data: receipt, isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransactionReceipt({ hash });
+
+    useEffect(() => {
+        const syncToSupabase = async () => {
+            if (isConfirmed && pendingAmount && campaignAddress && address) {
+                try {
+                    await supabase.from('donations').insert({
+                        donor_address: address,
+                        campaign_address: campaignAddress,
+                        amount_eth: pendingAmount
+                    });
+                    setPendingAmount("");
+                    
+                    refetchInfo();
+                    refetchContribution();
+                    fetchContributors();
+                } catch (e) {
+                    console.error("Failed to sync donation to Supabase", e);
+                }
+            }
+        };
+        syncToSupabase();
+    }, [isConfirmed, receipt]);
 
     const contribute = (amountEth: string) => {
         if (!campaignAddress) return;
+        setPendingAmount(amountEth);
         writeContract({
             address: campaignAddress,
             abi: CAMPAIGN_ABI,
@@ -137,7 +161,7 @@ export function useCampaign(campaignAddress?: `0x${string}`) {
     return {
         info,
         contribution: contribution ?? 0n,
-        contributors: (contributors as readonly `0x${string}`[] | undefined) ?? [],
+        contributors,
         contribute,
         refetchInfo,
         status: {

@@ -69,9 +69,12 @@ export function DonateToCampaignView() {
                     <p style={{ color: 'var(--text-muted)', textAlign: 'center' }}>No active campaigns available.</p>
                 ) : (
                     <div style={{ maxHeight: '300px', overflowY: 'auto', marginBottom: '1.5rem' }}>
-                        {campaigns.map(addr => (
-                            <CampaignOption key={addr} addr={addr} selected={selectedCampaign === addr} onSelect={() => setSelectedCampaign(addr)} />
-                        ))}
+                        {campaigns.map(camp => {
+                            const address = camp.address || camp;
+                            return (
+                                <CampaignOption key={address} addr={address} selected={selectedCampaign === address} onSelect={() => setSelectedCampaign(address)} />
+                            );
+                        })}
                     </div>
                 )}
 

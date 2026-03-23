@@ -89,8 +89,8 @@ export function CampaignsView() {
                 </div>
             ) : (
                 <div className="campaign-list">
-                    {[...campaigns].reverse().map((addr) => (
-                        <CampaignCard key={addr} campaignAddress={addr} />
+                    {[...campaigns].reverse().map((camp) => (
+                        <CampaignCard key={camp.address || camp} campaignAddress={camp.address || camp} />
                     ))}
                 </div>
             )}

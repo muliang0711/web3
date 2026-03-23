@@ -1,25 +1,10 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useReadContract, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
 import { useAccount } from 'wagmi';
+import { supabase } from '../lib/supabase';
 
-const CONTRACT_ADDRESS = "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0";
+const CONTRACT_ADDRESS = "0x5FbDB2315678afecb367f032d93F642f64180aa3";
 const CONTRACT_ABI = [
-    {
-        "type": "function",
-        "name": "getUserDonations",
-        "inputs": [{ "name": "_userAddress", "type": "address" }],
-        "outputs": [
-            {
-                "type": "tuple[]",
-                "components": [
-                    { "name": "campaign", "type": "address" },
-                    { "name": "amount", "type": "uint256" },
-                    { "name": "timestamp", "type": "uint256" }
-                ]
-            }
-        ],
-        "stateMutability": "view"
-    },
     {
         "type": "function",
         "name": "register",
@@ -48,7 +33,13 @@ export function useUserRegistry() {
     const { address } = useAccount();
     const { writeContract, data: hash, isPending: isRegistering, error: registerError } = useWriteContract();
 
-    // Read User Data
+    const [pendingName, setPendingName] = useState<string>("");
+
+    // Supabase State
+    const [donations, setDonations] = useState<any[]>([]);
+    const [isReadingDonations, setIsReadingDonations] = useState(false);
+
+    // Read User Data (still from blockchain to ensure extreme sync for login gate)
     const { data: userData, refetch: refetchUser, isLoading: isReading } = useReadContract({
         address: CONTRACT_ADDRESS,
         abi: CONTRACT_ABI,
@@ -59,35 +50,54 @@ export function useUserRegistry() {
         },
     });
 
-    // Read User Donations
-    const { data: userDonationsData, refetch: refetchDonations, isLoading: isReadingDonations } = useReadContract({
-        address: CONTRACT_ADDRESS,
-        abi: CONTRACT_ABI,
-        functionName: 'getUserDonations',
-        args: address ? [address] : undefined,
-        query: {
-            enabled: !!address,
-        },
-    });
+    // Fetch Donations from Supabase
+    const fetchDonations = async () => {
+        if (!address) return;
+        setIsReadingDonations(true);
+        const { data } = await supabase
+            .from('donations')
+            .select('*')
+            .eq('donor_address', address)
+            .order('created_at', { ascending: false });
+        if (data) setDonations(data);
+        setIsReadingDonations(false);
+    };
 
-    // Watch for Transaction Success to auto-refresh
-    const { isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransactionReceipt({
+    useEffect(() => {
+        fetchDonations();
+    }, [address]);
+
+    // Watch for Transaction Success to auto-refresh and insert to Supabase
+    const { data: receipt, isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransactionReceipt({
         hash,
     });
 
-    // Trigger auto-refresh when transaction confirms
     useEffect(() => {
-        if (isConfirmed) {
-            refetchUser();
-            refetchDonations();
-        }
-    }, [isConfirmed, refetchUser, refetchDonations]);
+        const syncToSupabase = async () => {
+            if (isConfirmed && pendingName) {
+                try {
+                    await supabase.from('users').insert({
+                        wallet_address: address,
+                        name: pendingName
+                    });
+                    setPendingName("");
+                    refetchUser();
+                } catch (e) {
+                    console.error("Failed to sync new user to Supabase", e);
+                }
+            }
+        };
+        syncToSupabase();
+    }, [isConfirmed, receipt]);
 
     const register = (name: string) => {
         if (userData?.isRegistered) {
-            alert(`you already register with this wallet addres :${address}！`);
+            alert(`You are already registered with this wallet address: ${address}!`);
             return;
         }
+
+        setPendingName(name);
+
         writeContract({
             address: CONTRACT_ADDRESS,
             abi: CONTRACT_ABI,
@@ -98,7 +108,7 @@ export function useUserRegistry() {
 
     return {
         user: userData ? { name: userData.name, isRegistered: userData.isRegistered } : null,
-        donations: Array.isArray(userDonationsData) ? userDonationsData : [],
+        donations,
         register,
         status: {
             isRegistering,

@@ -47,9 +47,10 @@ export function RefundHistoryView() {
         const fetchRefunds = async () => {
             try {
                 const allLogs: any[] = [];
-                for (const addr of campaigns) {
+                for (const camp of campaigns) {
+                    const address = camp.address || camp;
                     const logs = await publicClient.getLogs({
-                        address: addr,
+                        address: address,
                         event: parseAbiItem('event RefundIssued(address indexed contributor, uint256 amount)'),
                         fromBlock: 0n,
                         toBlock: 'latest',
