@@ -19,9 +19,31 @@ contract UserRegistry {
     mapping(address => User) public users;
     mapping(address => DonationRecord[]) public userDonations;
 
+    // mapping to track points (JJ)
+    mapping(address => uint256) public claimableRewards;
+
+    // Security & Architecture variables (JJ)
+    address public rewardManager;
+    address public owner;
+
     // 3. events :
     event UserRegistered(address indexed userAddress, string username, uint256 timestamp);
     event DonationRecorded(address indexed user, address indexed campaign, uint256 amount, uint256 timestamp);
+
+    // constructor(JJ)
+    constructor() {
+        owner = msg.sender;
+    }
+
+    // MODIFIERS 
+    modifier onlyRewardManager() {
+        require(msg.sender == rewardManager, "Only RewardManager can call this");
+        _;
+    }
+    modifier onlyOwner() {
+        require(msg.sender == owner, "Not authorized");
+        _;
+    }
 
     // 4. functions :
     function register(string memory _name) public {
@@ -45,5 +67,22 @@ contract UserRegistry {
 
     function getUserDonations(address _userAddress) public view returns (DonationRecord[] memory) {
         return userDonations[_userAddress];
+    }
+
+    // REWARD MANAGER INTEGRATION
+    
+    // JJ: getter function
+    function getClaimableRewards(address _user) external view returns (uint256) {
+        return claimableRewards[_user];
+    }
+
+    // Secure reset (Removed the duplicate, kept the safe one)
+    function resetRewards(address _user) external onlyRewardManager {
+        claimableRewards[_user] = 0;
+    }
+
+    // onlyOwner so hackers can't change the manager
+    function setRewardManager(address _rewardManager) external onlyOwner {
+        rewardManager = _rewardManager;
     }
 }
