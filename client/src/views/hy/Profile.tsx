@@ -5,6 +5,14 @@ import { useUserRegistry } from '../../hooks/useUserRegistry';
 import { useCampaignFactory } from '../../hooks/useCampaignFactory';
 import { useCampaign } from '../../hooks/useCampaign';
 
+// Smart Contract Info for Claiming 
+const USER_REGISTRY_ADDR = "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0" as const;
+const USER_REGISTRY_ABI = [
+    { type: "function", name: "claimableRewards", inputs: [{ name: "user", type: "address" }], outputs: [{ name: "", type: "uint256" }], stateMutability: "view" },
+    { type: "function", name: "claimRewards", inputs: [], outputs: [], stateMutability: "nonpayable" }
+] as const;
+// ----------------------------------------------
+
 // Sub-component: renders one donation record from history
 function DonationRecordRow({ record }: { record: any }) {
     // Check if it's Supabase dict or Wagmi tuple
@@ -49,6 +57,34 @@ export function ProfileView() {
     const { campaigns } = useCampaignFactory();
     const navigate = useNavigate();
 
+     // Web3 Claim Rewards Logic
+    const { data: claimableAmount, refetch: refetchRewards } = useReadContract({
+        address: USER_REGISTRY_ADDR,
+        abi: USER_REGISTRY_ABI,
+        functionName: 'claimableRewards',
+        args: [address as `0x${string}`],
+        query: { enabled: !!address }
+    });
+
+    const { data: hash, writeContract, isPending } = useWriteContract();
+    const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash });
+
+    useEffect(() => {
+        if (isSuccess) refetchRewards(); // Refresh balance after claiming
+    }, [isSuccess, refetchRewards]);
+
+    const displayRewards = claimableAmount ? formatEther(claimableAmount as bigint) : "0.0";
+    const hasRewards = claimableAmount && (claimableAmount as bigint) > 0n;
+
+    const handleClaim = () => {
+        writeContract({
+            address: USER_REGISTRY_ADDR,
+            abi: USER_REGISTRY_ABI,
+            functionName: 'claimRewards',
+        });
+    };
+    // --------------------------------------
+    
     // Calculate total points
     const totalPoints = [...donations].reduce((acc, current: any) => {
         let amountEth = 0;
@@ -86,6 +122,40 @@ export function ProfileView() {
                 <div className="stat-card">
                     <span className="stat-value accent">🏆 {totalPoints.toFixed(0)}</span>
                     <span className="stat-label">Total Points</span>
+                </div>
+                
+                {/* CLAIM CARD */}
+                <div className="stat-card" style={{ 
+                    gridColumn: '1 / -1', /* <--- THIS IS THE MAGIC LINE */
+                    background: hasRewards ? 'rgba(108, 92, 231, 0.1)' : 'var(--bg-card)', 
+                    border: hasRewards ? '1px solid var(--primary)' : '1px solid var(--border)',
+                    display: 'flex', flexDirection: 'column', justifyContent: 'center',
+                    alignItems: 'center', /* Centers the content nicely when stretched */
+                    padding: '2rem' /* Gives it a bit more breathing room as a hero banner */
+                }}>
+                    <span className="stat-value" style={{ color: hasRewards ? 'var(--primary)' : 'var(--text)' }}>
+                        🎁 {displayRewards} CFR
+                    </span>
+                    <span className="stat-label">Claimable Rewards</span>
+                    
+                    <button
+                        onClick={handleClaim}
+                        disabled={!hasRewards || isPending || isConfirming}
+                        style={{
+                            marginTop: '1rem', 
+                            maxWidth: '400px',
+                            width: '100%', 
+                            padding: '0.75rem', 
+                            borderRadius: '8px', 
+                            border: 'none',
+                            background: (!hasRewards || isPending || isConfirming) ? 'rgba(255,255,255,0.05)' : 'var(--primary)',
+                            color: (!hasRewards || isPending || isConfirming) ? 'var(--text-muted)' : 'white',
+                            cursor: (!hasRewards || isPending || isConfirming) ? 'not-allowed' : 'pointer',
+                            fontWeight: 'bold', transition: 'all 0.2s'
+                        }}
+                    >
+                        {isPending ? 'Confirming...' : isConfirming ? 'Claiming...' : isSuccess ? 'Claimed!' : 'Claim Tokens'}
+                    </button>
                 </div>
             </div>
 
