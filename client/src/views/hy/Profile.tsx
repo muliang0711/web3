@@ -1,9 +1,10 @@
-import { useAccount } from 'wagmi';
+import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
 import { useNavigate } from 'react-router-dom';
 import { formatEther } from 'viem';
 import { useUserRegistry } from '../../hooks/useUserRegistry';
 import { useCampaignFactory } from '../../hooks/useCampaignFactory';
 import { useCampaign } from '../../hooks/useCampaign';
+import { useEffect } from 'react';
 
 // Smart Contract Info for Claiming 
 const USER_REGISTRY_ADDR = "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0" as const;

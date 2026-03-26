@@ -5,15 +5,19 @@ import { useCampaign } from '../../hooks/useCampaign';
 
 // Sub-component: renders one campaign card
 function CampaignCard({ campaignAddress }: { campaignAddress: `0x${string}` }) {
-    const { info } = useCampaign(campaignAddress);
+    const { info, status } = useCampaign(campaignAddress);
     const navigate = useNavigate();
 
     if (!info) {
-        return (
-            <div className="campaign-card" style={{ opacity: 0.5 }}>
-                <div className="spinner" style={{ width: 20, height: 20, borderWidth: 2 }} />
-            </div>
-        );
+        if (status.isLoadingInfo) {
+            return (
+                <div className="campaign-card skeleton-card">
+                    <div className="spinner" style={{ width: 24, height: 24, borderWidth: 2 }} />
+                </div>
+            );
+        }
+        // If not loading but still no info — the address is stale/invalid, hide it
+        return null;
     }
 
     const progress = info.fundingTarget > 0n
@@ -23,27 +27,33 @@ function CampaignCard({ campaignAddress }: { campaignAddress: `0x${string}` }) {
     const deadlineDate = new Date(Number(info.deadline) * 1000);
     const isExpired = deadlineDate < new Date();
 
+    // Dynamic gradient thumbnail from address
+    const hue1 = parseInt(campaignAddress.slice(2, 4), 16) || 60;
+    const hue2 = parseInt(campaignAddress.slice(4, 6), 16) || 180;
+    const gradient = `linear-gradient(135deg, hsl(${hue1}, 70%, 45%), hsl(${hue2}, 80%, 30%))`;
+
     return (
         <button
             className="campaign-card"
             onClick={() => navigate(`/campaigns/${campaignAddress}`)}
         >
-            <div className="campaign-card-header">
-                <h4 className="campaign-card-title">{info.title}</h4>
+            <div className="campaign-card-thumb" style={{ background: gradient }}>
                 <span className={`campaign-card-badge ${info.goalReached ? 'badge-success' : isExpired ? 'badge-danger' : 'badge-active'}`}>
                     {info.goalReached ? '✅ Funded' : isExpired ? '❌ Ended' : '🟢 Active'}
                 </span>
             </div>
-
-            <p className="campaign-card-desc">{info.description}</p>
-
-            <div className="progress-bar">
-                <div className="progress-fill" style={{ width: `${Math.min(progress, 100)}%` }} />
-            </div>
-
-            <div className="campaign-card-stats">
-                <span>{formatEther(info.totalFunded)} / {formatEther(info.fundingTarget)} ETH</span>
-                <span>{progress}%</span>
+            <div className="campaign-card-content">
+                <h4 className="campaign-card-title">{info.title}</h4>
+                <p className="campaign-card-desc">{info.description}</p>
+                <div className="progress-bar-container">
+                    <div className="progress-bar" style={{ height: '8px' }}>
+                        <div className="progress-fill" style={{ width: `${Math.min(progress, 100)}%` }} />
+                    </div>
+                    <div className="campaign-card-stats" style={{ marginTop: '0.5rem' }}>
+                        <span><strong>{formatEther(info.totalFunded)}</strong> / {formatEther(info.fundingTarget)} ETH</span>
+                        <span style={{ color: progress >= 100 ? 'var(--success)' : 'var(--text-secondary)' }}>{progress}%</span>
+                    </div>
+                </div>
             </div>
         </button>
     );

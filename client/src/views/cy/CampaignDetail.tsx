@@ -58,106 +58,110 @@ export function CampaignDetailView() {
     const isCreator = userAddress?.toLowerCase() === info.creator.toLowerCase();
 
     return (
-        <div className="fade-in">
+        <div className="fade-in campaign-detail-wrapper">
             {/* Back button */}
             <button className="btn-back" onClick={() => navigate('/campaigns')}>
-                ← Back
+                ← Back to Campaigns
             </button>
 
-            {/* Campaign Header */}
-            <div style={{ marginBottom: '1.5rem' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
-                    <h2 style={{ flex: 1, margin: 0 }}>{info.title}</h2>
-                    <span className={`campaign-card-badge ${info.goalReached ? 'badge-success' : isExpired ? 'badge-danger' : 'badge-active'}`}>
-                        {info.goalReached ? '✅ Funded' : isExpired ? '❌ Ended' : '🟢 Active'}
-                    </span>
+            <div className="campaign-detail-grid">
+                {/* Left Column: Campaign Info */}
+                <div className="campaign-info-section">
+                    <div className="campaign-detail-header">
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem' }}>
+                            <h2 style={{ fontSize: '2rem', margin: 0, lineHeight: 1.2 }}>{info.title}</h2>
+                            <span className={`campaign-card-badge ${info.goalReached ? 'badge-success' : isExpired ? 'badge-danger' : 'badge-active'}`} style={{ position: 'static' }}>
+                                {info.goalReached ? '✅ Funded' : isExpired ? '❌ Ended' : '🟢 Active'}
+                            </span>
+                        </div>
+                        <p className="campaign-detail-desc">
+                            {info.description}
+                        </p>
+                        <p className="campaign-creator">
+                            <span style={{ color: 'var(--text-muted)' }}>Created by:</span>{' '}
+                            <span style={{ fontFamily: 'monospace', color: 'var(--primary-light)' }}>
+                                {info.creator.slice(0, 6)}...{info.creator.slice(-4)}
+                            </span>
+                            {isCreator && <span style={{ color: 'var(--accent)', marginLeft: '0.5rem' }}>(You)</span>}
+                        </p>
+                    </div>
+
+                    <div className="campaign-stats-row border-top" style={{ marginTop: '1.5rem', paddingTop: '1.5rem', display: 'flex', gap: '2rem' }}>
+                        <div className="stat-card transparent">
+                            <span className="stat-value">{contributors.length}</span>
+                            <span className="stat-label">Backers</span>
+                        </div>
+                        <div className="stat-card transparent">
+                            <span className="stat-value">{deadlineDate.toLocaleDateString()}</span>
+                            <span className="stat-label">Deadline</span>
+                        </div>
+                    </div>
+
+                    {/* Your Contribution */}
+                    {contribution > 0n && (
+                        <div className="contribution-banner">
+                            <span style={{ fontSize: '1.25rem' }}>💜</span> You've contributed <strong>{formatEther(contribution)} ETH</strong> to this campaign!
+                        </div>
+                    )}
                 </div>
-                <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '0.75rem' }}>
-                    {info.description}
-                </p>
-                <p style={{ fontSize: '0.7rem', fontFamily: 'monospace', color: 'var(--text-muted)' }}>
-                    Creator: {info.creator.slice(0, 6)}...{info.creator.slice(-4)}
-                    {isCreator && <span style={{ color: 'var(--accent)', marginLeft: '0.5rem' }}>(You)</span>}
-                </p>
+
+                {/* Right Column: Donation Card */}
+                <div className="campaign-donate-card">
+                    <div className="funding-progress-header">
+                        <span className="amount-raised"><strong>{formatEther(info.totalFunded)} ETH</strong></span>
+                        <span className="amount-target">raised of {formatEther(info.fundingTarget)} ETH goal</span>
+                    </div>
+
+                    <div className="progress-bar" style={{ height: '10px', borderRadius: '5px', marginBottom: '1rem' }}>
+                        <div className="progress-fill" style={{ width: `${Math.min(progress, 100)}%`, borderRadius: '5px' }} />
+                    </div>
+
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', marginBottom: '2rem' }}>
+                        <span style={{ color: 'var(--text-muted)' }}>{contributors.length} donations</span>
+                        <span style={{ color: progress >= 100 ? 'var(--success)' : 'var(--text-secondary)', fontWeight: 600 }}>
+                            {progress}% Funded
+                        </span>
+                    </div>
+
+                    {canDonate ? (
+                        <form onSubmit={handleDonate} className="donate-form-integrated">
+                            <div className="input-with-symbol">
+                                <span className="currency-symbol">ETH</span>
+                                <input
+                                    className="input large-input"
+                                    type="number"
+                                    step="0.01"
+                                    min="0.01"
+                                    placeholder="0.00"
+                                    value={donateAmount}
+                                    onChange={e => setDonateAmount(e.target.value)}
+                                    required
+                                    disabled={isProcessing}
+                                />
+                            </div>
+                            <button className="btn-success large-btn" type="submit" disabled={isProcessing}>
+                                {isProcessing ? (
+                                    <><div className="spinner-small" /> Processing...</>
+                                ) : 'Donate to this Campaign'}
+                            </button>
+                        </form>
+                    ) : (
+                        <div className="campaign-closed-message">
+                            {info.goalReached ? '🎉 This campaign has successfully reached its funding goal!' : 'This campaign is no longer accepting donations.'}
+                        </div>
+                    )}
+
+                    {status.error && (
+                        <p className="text-danger" style={{ marginTop: '1rem', textAlign: 'center' }}>⚠ {status.error.message}</p>
+                    )}
+
+                    {status.isConfirmed && (
+                        <p style={{ color: 'var(--success)', fontSize: '0.9rem', textAlign: 'center', marginTop: '1rem', fontWeight: 600 }}>
+                            ✅ Donation confirmed successfully!
+                        </p>
+                    )}
+                </div>
             </div>
-
-            {/* Progress */}
-            <div style={{ marginBottom: '1.5rem' }}>
-                <div className="progress-bar" style={{ height: '12px', borderRadius: '6px' }}>
-                    <div className="progress-fill" style={{ width: `${Math.min(progress, 100)}%`, borderRadius: '6px' }} />
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '0.5rem', fontSize: '0.85rem' }}>
-                    <span style={{ color: 'var(--text-secondary)' }}>
-                        <strong style={{ color: 'var(--text)' }}>{formatEther(info.totalFunded)}</strong> / {formatEther(info.fundingTarget)} ETH
-                    </span>
-                    <span style={{ color: progress >= 100 ? 'var(--success)' : 'var(--text-muted)' }}>
-                        {progress}%
-                    </span>
-                </div>
-            </div>
-
-            {/* Stats Row */}
-            <div className="stat-grid" style={{ marginBottom: '1.5rem' }}>
-                <div className="stat-card">
-                    <span className="stat-value">{contributors.length}</span>
-                    <span className="stat-label">Contributors</span>
-                </div>
-                <div className="stat-card">
-                    <span className="stat-value">{deadlineDate.toLocaleDateString()}</span>
-                    <span className="stat-label">Deadline</span>
-                </div>
-            </div>
-
-            {/* Your Contribution */}
-            {contribution > 0n && (
-                <div style={{
-                    padding: '1rem',
-                    background: 'rgba(108, 92, 231, 0.1)',
-                    border: '1px solid rgba(108, 92, 231, 0.3)',
-                    borderRadius: '12px',
-                    marginBottom: '1.5rem',
-                    fontSize: '0.85rem',
-                }}>
-                    💜 You've contributed <strong>{formatEther(contribution)} ETH</strong> to this campaign
-                </div>
-            )}
-
-            {/* Donate Form */}
-            {canDonate && (
-                <form onSubmit={handleDonate} style={{ display: 'flex', gap: '0.75rem', marginBottom: '1rem' }}>
-                    <input
-                        className="input"
-                        type="number"
-                        step="0.01"
-                        min="0.01"
-                        placeholder="Amount in ETH"
-                        value={donateAmount}
-                        onChange={e => setDonateAmount(e.target.value)}
-                        required
-                        disabled={isProcessing}
-                        style={{ flex: 1 }}
-                    />
-                    <button className="btn-success" type="submit" disabled={isProcessing} style={{ width: 'auto', padding: '0.85rem 1.5rem' }}>
-                        {isProcessing ? '⏳' : '💰 Donate'}
-                    </button>
-                </form>
-            )}
-
-            {!canDonate && !info.goalReached && (
-                <div style={{ padding: '1rem', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.85rem', background: 'var(--bg-input)', borderRadius: '12px' }}>
-                    This campaign is no longer accepting donations.
-                </div>
-            )}
-
-            {status.error && (
-                <p className="text-danger" style={{ marginTop: '0.5rem' }}>⚠ {status.error.message}</p>
-            )}
-
-            {status.isConfirmed && (
-                <p style={{ color: 'var(--success)', fontSize: '0.85rem', textAlign: 'center', marginTop: '0.5rem' }}>
-                    ✅ Donation confirmed!
-                </p>
-            )}
         </div>
     );
 }

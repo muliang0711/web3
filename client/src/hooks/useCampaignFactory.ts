@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
-import { useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
+import { useWriteContract, useWaitForTransactionReceipt, usePublicClient } from 'wagmi';
 import { useAccount } from 'wagmi';
-import { parseEther, decodeEventLog } from 'viem';
+import { parseEther, decodeEventLog, parseAbiItem } from 'viem';
 import { supabase } from '../lib/supabase';
 
 const FACTORY_ADDRESS = "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512";
@@ -34,9 +34,10 @@ const FACTORY_ABI = [
 
 export function useCampaignFactory() {
     const { address } = useAccount();
+    const publicClient = usePublicClient();
     const { writeContract, data: hash, isPending: isCreating, error: createError } = useWriteContract();
 
-    // Supabase State
+    // On-chain campaign addresses (source of truth)
     const [campaigns, setCampaigns] = useState<any[]>([]);
     const [userCampaigns, setUserCampaigns] = useState<any[]>([]);
     const [isLoadingCampaigns, setIsLoadingCampaigns] = useState(false);
@@ -47,29 +48,49 @@ export function useCampaignFactory() {
     // Watch for tx confirmation
     const { data: receipt, isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransactionReceipt({ hash });
 
-    // Fetch from Supabase
+    // Fetch campaign addresses from on-chain events (source of truth — not affected by testnet restarts)
     const fetchCampaigns = async () => {
+        if (!publicClient) return;
         setIsLoadingCampaigns(true);
-        const { data } = await supabase.from('campaigns').select('*').order('created_at', { ascending: false });
-        if (data) setCampaigns(data);
+        try {
+            const logs = await publicClient.getLogs({
+                address: FACTORY_ADDRESS as `0x${string}`,
+                event: parseAbiItem('event CampaignCreated(address indexed campaignAddress, address indexed creator, string title, uint256 fundingTarget, uint256 durationInDays)'),
+                fromBlock: 0n,
+                toBlock: 'latest',
+            });
 
-        if (address) {
-            const { data: userData } = await supabase.from('campaigns').select('*').eq('creator_address', address).order('created_at', { ascending: false });
-            if (userData) setUserCampaigns(userData);
+            // All campaigns (newest first)
+            const all = [...logs].reverse().map(log => ({
+                address: log.args.campaignAddress as `0x${string}`,
+                creator: log.args.creator,
+                title: log.args.title,
+            }));
+            setCampaigns(all);
+
+            // User's own campaigns
+            if (address) {
+                const mine = all.filter(c => c.creator?.toLowerCase() === address.toLowerCase());
+                setUserCampaigns(mine);
+            } else {
+                setUserCampaigns([]);
+            }
+        } catch (err) {
+            console.error("Failed to fetch campaigns from chain", err);
+        } finally {
+            setIsLoadingCampaigns(false);
         }
-        setIsLoadingCampaigns(false);
     };
 
     useEffect(() => {
         fetchCampaigns();
-    }, [address]);
+    }, [address, publicClient]);
 
-    // Handle Transaction Success to Insert into Supabase
+    // Handle Transaction Success — also sync to Supabase for donation history queries
     useEffect(() => {
         const syncToSupabase = async () => {
             if (isConfirmed && receipt && pendingCampaign) {
                 try {
-                    // Try to extract the new campaign address from the event logs
                     let newCampaignAddress = "UNKNOWN";
                     for (const log of receipt.logs) {
                         try {
@@ -81,25 +102,26 @@ export function useCampaignFactory() {
                             if (decoded.eventName === 'CampaignCreated') {
                                 newCampaignAddress = (decoded.args as any).campaignAddress;
                             }
-                        } catch (e) {
-                            // ignore non-matching logs
-                        }
+                        } catch (e) { /* ignore non-matching logs */ }
                     }
 
-                    // Insert to Supabase Database
-                    await supabase.from('campaigns').insert({
+                    // Also write to Supabase for cross-referencing donations with campaign names
+                    await supabase.from('campaigns').upsert({
                         address: newCampaignAddress,
                         creator_address: address,
                         title: pendingCampaign.title,
                         description: pendingCampaign.description,
                         target_eth: pendingCampaign.targetEth,
                         duration_days: pendingCampaign.durationDays,
-                    });
+                    }, { onConflict: 'address' });
 
                     setPendingCampaign(null);
-                    fetchCampaigns(); // Refresh the list
+                    fetchCampaigns(); // Refresh the list from chain
                 } catch (err) {
                     console.error("Failed to sync campaign to Supabase", err);
+                    // Still refresh from chain even if Supabase fails
+                    fetchCampaigns();
+                    setPendingCampaign(null);
                 }
             }
         };
@@ -107,9 +129,7 @@ export function useCampaignFactory() {
     }, [isConfirmed, receipt]);
 
     const createCampaign = (title: string, description: string, targetEth: string, durationDays: number) => {
-        // Save form data temporarily so we can push to Supabase after the blockchain confirms it
         setPendingCampaign({ title, description, targetEth, durationDays });
-
         writeContract({
             address: FACTORY_ADDRESS,
             abi: FACTORY_ABI,

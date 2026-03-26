@@ -46,16 +46,17 @@
 
 body {
   min-height: 100vh;
-  display: flex;
-  /*align-items: center;*/ /* Removed align-items: center so your long tables can scroll naturally */
-  justify-content: center;
+  background-color: var(--bg);
+  color: var(--text);
+  margin: 0;
+  padding: 0;
 }
 
 #root {
   width: 100%;
-  max-width: 1440px; /* Changed from 480px to a massive desktop width! */
-  margin: 0 auto;
-  padding: 2rem 1.5rem;
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
 }
 
 /* ===== Typography ===== */
@@ -521,4 +522,195 @@ button {
   color: var(--text-secondary);
   text-transform: uppercase;
   letter-spacing: 0.5px;
+}
+
+/* ===== Campaign Detail View ===== */
+.campaign-detail-wrapper {
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.campaign-detail-grid {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr;
+  gap: 2rem;
+  align-items: flex-start;
+  margin-top: 1rem;
+}
+
+@media (max-width: 900px) {
+  .campaign-detail-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.campaign-info-section {
+  display: flex;
+  flex-direction: column;
+}
+
+.campaign-detail-header {
+  margin-bottom: 1rem;
+}
+
+.campaign-detail-desc {
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  white-space: pre-wrap;
+  margin-bottom: 0.75rem;
+}
+
+.campaign-creator {
+  font-size: 0.85rem;
+  padding: 0.75rem 1rem;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 8px;
+  display: inline-block;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.transparent {
+  background: transparent !important;
+  border: none !important;
+  padding: 0 !important;
+}
+
+.border-top {
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.contribution-banner {
+  padding: 1rem;
+  background: linear-gradient(135deg, rgba(108, 92, 231, 0.15), rgba(108, 92, 231, 0.05));
+  border: 1px solid rgba(108, 92, 231, 0.3);
+  border-radius: 12px;
+  margin-top: 1.25rem;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+/* Donation Card */
+.campaign-donate-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 2rem;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.2);
+  position: sticky;
+  top: 2rem;
+}
+
+.funding-progress-header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin-bottom: 1.5rem;
+}
+
+.amount-raised {
+  font-size: 2.25rem;
+  color: var(--text);
+  line-height: 1;
+}
+
+.amount-target {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+.donate-form-integrated {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.input-with-symbol {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.currency-symbol {
+  position: absolute;
+  left: 1rem;
+  color: var(--text-muted);
+  font-weight: 600;
+  pointer-events: none;
+}
+
+.large-input {
+  width: 100%;
+  padding-left: 3.5rem !important;
+  font-size: 1.25rem;
+  height: 3.5rem;
+}
+
+.large-btn {
+  width: 100%;
+  height: 3.5rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.campaign-closed-message {
+  padding: 1.5rem;
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: 1rem;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 12px;
+  border: 1px dashed var(--border);
+}
+
+/* ===== Sidebar Footer / Logout ===== */
+.sidebar-footer {
+  padding: 1rem 1rem 1.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  margin-top: auto;
+}
+
+.sidebar-logout-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.65rem 1rem;
+  background: rgba(255, 107, 107, 0.08);
+  color: var(--text-muted);
+  border: 1px solid rgba(255, 107, 107, 0.2);
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-family: inherit;
+  transition: all 0.2s ease;
+}
+
+.sidebar-logout-btn:hover {
+  background: rgba(255, 107, 107, 0.18);
+  color: #ff6b6b;
+  border-color: rgba(255, 107, 107, 0.4);
+}
+
+/* Inline text link button */
+.btn-link {
+  background: none;
+  border: none;
+  color: var(--primary-light);
+  cursor: pointer;
+  font-size: inherit;
+  font-family: inherit;
+  padding: 0;
+  text-decoration: underline;
+  transition: color 0.15s ease;
+}
+
+.btn-link:hover {
+  color: var(--accent);
 }

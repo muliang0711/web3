@@ -15,12 +15,7 @@ import { GlobalHistoryView } from './views/hy/GlobalHistory';
 import { CampaignsView } from './views/cy/Campaigns';
 import { CampaignDetailView } from './views/cy/CampaignDetail';
 import { CreateCampaignView } from './views/cy/CreateCampaign';
-import { CampaignHistoryView } from './views/cy/CampaignHistory';
 
-// nv - Donation module
-import { DonateToCampaignView } from './views/nv/DonateToCampaign';
-import { DonationSuccessView } from './views/nv/DonationSuccess';
-import { RefundHistoryView } from './views/nv/RefundHistory';
 
 // ccy - Transaction module
 import { UserTransactionsView } from './views/ccy/UserTransactions';
@@ -48,13 +43,9 @@ function App() {
               {/* cy - Campaign module */}
               <Route path="/campaigns" element={<CampaignsView />} />
               <Route path="/campaigns/create" element={<CreateCampaignView />} />
-              <Route path="/campaigns/history" element={<CampaignHistoryView />} />
               <Route path="/campaigns/:address" element={<CampaignDetailView />} />
 
-              {/* nv - Donation module */}
-              <Route path="/donate" element={<DonateToCampaignView />} />
-              <Route path="/donation-success" element={<DonationSuccessView />} />
-              <Route path="/refund-history" element={<RefundHistoryView />} />
+
 
               {/* ccy - Transaction module */}
               <Route path="/transactions/user" element={<UserTransactionsView />} />
