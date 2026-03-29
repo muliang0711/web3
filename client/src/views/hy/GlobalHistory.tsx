@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react';
 import { usePublicClient } from 'wagmi';
 import { parseAbiItem } from 'viem';
-
-const USER_REGISTRY_ADDR = "0x5FbDB2315678afecb367f032d93F642f64180aa3";
+import { USER_REGISTRY_ADDRESS } from '../../lib/contracts';
 
 export function GlobalHistoryView() {
     const publicClient = usePublicClient();
@@ -15,7 +14,7 @@ export function GlobalHistoryView() {
         const fetchData = async () => {
             try {
                 const registrationLogs = await publicClient.getLogs({
-                    address: USER_REGISTRY_ADDR as `0x${string}`,
+                    address: USER_REGISTRY_ADDRESS,
                     event: parseAbiItem('event UserRegistered(address indexed userAddress, string username, uint256 timestamp)'),
                     fromBlock: 0n,
                     toBlock: 'latest'

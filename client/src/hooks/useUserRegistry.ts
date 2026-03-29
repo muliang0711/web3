@@ -2,8 +2,7 @@ import { useEffect, useState } from 'react';
 import { useReadContract, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
 import { useAccount } from 'wagmi';
 import { supabase } from '../lib/supabase';
-
-const CONTRACT_ADDRESS = "0x5FbDB2315678afecb367f032d93F642f64180aa3";
+import { USER_REGISTRY_ADDRESS } from '../lib/contracts';
 const CONTRACT_ABI = [
     {
         "type": "function",
@@ -41,7 +40,7 @@ export function useUserRegistry() {
 
     // Read User Data (still from blockchain to ensure extreme sync for login gate)
     const { data: userData, refetch: refetchUser, isLoading: isReading } = useReadContract({
-        address: CONTRACT_ADDRESS,
+        address: USER_REGISTRY_ADDRESS,
         abi: CONTRACT_ABI,
         functionName: 'getUser',
         args: address ? [address] : undefined,
@@ -99,7 +98,7 @@ export function useUserRegistry() {
         setPendingName(name);
 
         writeContract({
-            address: CONTRACT_ADDRESS,
+            address: USER_REGISTRY_ADDRESS,
             abi: CONTRACT_ABI,
             functionName: 'register',
             args: [name],

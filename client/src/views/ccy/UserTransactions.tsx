@@ -3,8 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { usePublicClient, useReadContract } from 'wagmi';
 import { formatEther, parseAbiItem } from 'viem';
 import { useCampaign } from '../../hooks/useCampaign';
+import { USER_REGISTRY_ADDRESS } from '../../lib/contracts';
 
-const USER_REGISTRY_ADDR = "0x5FbDB2315678afecb367f032d93F642f64180aa3" as const;
 const USER_REGISTRY_ABI = [
     { type: "function", name: "getUser", inputs: [{ name: "_userAddress", type: "address" }], outputs: [{ type: "tuple", components: [{ name: "name", type: "string" }, { name: "isRegistered", type: "bool" }] }], stateMutability: "view" }
 ] as const;
@@ -12,7 +12,7 @@ const USER_REGISTRY_ABI = [
 function DonationTxRow({ log }: { log: any }) {
     const { info } = useCampaign(log.args.campaign as `0x${string}`);
     const { data: userData } = useReadContract({
-        address: USER_REGISTRY_ADDR, abi: USER_REGISTRY_ABI, functionName: 'getUser',
+        address: USER_REGISTRY_ADDRESS, abi: USER_REGISTRY_ABI, functionName: 'getUser',
         args: [log.args.user as `0x${string}`], query: { enabled: !!log.args.user }
     });
 
@@ -64,7 +64,7 @@ export function UserTransactionsView() {
         const fetchDonations = async () => {
             try {
                 const logs = await publicClient.getLogs({
-                    address: USER_REGISTRY_ADDR,
+                    address: USER_REGISTRY_ADDRESS,
                     event: parseAbiItem('event DonationRecorded(address indexed user, address indexed campaign, uint256 amount, uint256 timestamp)'),
                     fromBlock: 0n, toBlock: 'latest'
                 });

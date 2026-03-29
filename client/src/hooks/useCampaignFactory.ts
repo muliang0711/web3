@@ -3,8 +3,7 @@ import { useWriteContract, useWaitForTransactionReceipt, usePublicClient } from 
 import { useAccount } from 'wagmi';
 import { parseEther, decodeEventLog, parseAbiItem } from 'viem';
 import { supabase } from '../lib/supabase';
-
-const FACTORY_ADDRESS = "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512";
+import { CAMPAIGN_FACTORY_ADDRESS } from '../lib/contracts';
 
 const FACTORY_ABI = [
     {
@@ -54,7 +53,7 @@ export function useCampaignFactory() {
         setIsLoadingCampaigns(true);
         try {
             const logs = await publicClient.getLogs({
-                address: FACTORY_ADDRESS as `0x${string}`,
+                address: CAMPAIGN_FACTORY_ADDRESS,
                 event: parseAbiItem('event CampaignCreated(address indexed campaignAddress, address indexed creator, string title, uint256 fundingTarget, uint256 durationInDays)'),
                 fromBlock: 0n,
                 toBlock: 'latest',
@@ -131,7 +130,7 @@ export function useCampaignFactory() {
     const createCampaign = (title: string, description: string, targetEth: string, durationDays: number) => {
         setPendingCampaign({ title, description, targetEth, durationDays });
         writeContract({
-            address: FACTORY_ADDRESS,
+            address: CAMPAIGN_FACTORY_ADDRESS,
             abi: FACTORY_ABI,
             functionName: 'createCampaign',
             args: [title, description, parseEther(targetEth), BigInt(durationDays)],

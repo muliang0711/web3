@@ -2,8 +2,8 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { usePublicClient, useReadContract } from 'wagmi';
 import { formatEther, parseAbiItem } from 'viem';
+import { CAMPAIGN_FACTORY_ADDRESS, USER_REGISTRY_ADDRESS } from '../../lib/contracts';
 
-const USER_REGISTRY_ADDR = "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0";
 const USER_REGISTRY_ABI = [
     {
         "type": "function",
@@ -16,7 +16,7 @@ const USER_REGISTRY_ABI = [
 
 function CampaignHistoryRow({ log }: { log: any }) {
     const { data: userData } = useReadContract({
-        address: USER_REGISTRY_ADDR,
+        address: USER_REGISTRY_ADDRESS,
         abi: USER_REGISTRY_ABI,
         functionName: 'getUser',
         args: [log.args.creator as `0x${string}`],
@@ -68,7 +68,7 @@ export function CampaignHistoryView() {
         if (!publicClient) return;
         const fetchLogs = () => {
              publicClient.getLogs({
-                address: "0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9",
+                address: CAMPAIGN_FACTORY_ADDRESS,
                 event: parseAbiItem('event CampaignCreated(address indexed campaignAddress, address indexed creator, string title, uint256 fundingTarget, uint256 durationInDays)'),
                 fromBlock: 0n,
                 toBlock: 'latest'
