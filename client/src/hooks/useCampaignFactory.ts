@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
-import { useWriteContract, useWaitForTransactionReceipt, usePublicClient } from 'wagmi';
+import { useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
 import { useAccount } from 'wagmi';
-import { parseEther, decodeEventLog, parseAbiItem } from 'viem';
+import { parseEther, decodeEventLog } from 'viem';
 import { supabase } from '../lib/supabase';
 import { CAMPAIGN_FACTORY_ADDRESS } from '../lib/contracts';
 
@@ -31,43 +31,49 @@ const FACTORY_ABI = [
     }
 ] as const;
 
+type CampaignRecord = {
+    address: `0x${string}`;
+    creator: string | null;
+    title: string | null;
+    description?: string | null;
+    target_eth?: string | number | null;
+    duration_days?: number | null;
+    created_at?: string | null;
+};
+
 export function useCampaignFactory() {
     const { address } = useAccount();
-    const publicClient = usePublicClient();
     const { writeContract, data: hash, isPending: isCreating, error: createError } = useWriteContract();
 
-    // On-chain campaign addresses (source of truth)
-    const [campaigns, setCampaigns] = useState<any[]>([]);
-    const [userCampaigns, setUserCampaigns] = useState<any[]>([]);
+    const [campaigns, setCampaigns] = useState<CampaignRecord[]>([]);
+    const [userCampaigns, setUserCampaigns] = useState<CampaignRecord[]>([]);
     const [isLoadingCampaigns, setIsLoadingCampaigns] = useState(false);
-
-    // Pending Form Data Temporary Storage
     const [pendingCampaign, setPendingCampaign] = useState<any>(null);
 
-    // Watch for tx confirmation
     const { data: receipt, isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransactionReceipt({ hash });
 
-    // Fetch campaign addresses from on-chain events (source of truth — not affected by testnet restarts)
     const fetchCampaigns = async () => {
-        if (!publicClient) return;
         setIsLoadingCampaigns(true);
         try {
-            const logs = await publicClient.getLogs({
-                address: CAMPAIGN_FACTORY_ADDRESS,
-                event: parseAbiItem('event CampaignCreated(address indexed campaignAddress, address indexed creator, string title, uint256 fundingTarget, uint256 durationInDays)'),
-                fromBlock: 0n,
-                toBlock: 'latest',
-            });
+            const { data, error } = await supabase
+                .from('campaigns')
+                .select('*')
+                .order('created_at', { ascending: false });
 
-            // All campaigns (newest first)
-            const all = [...logs].reverse().map(log => ({
-                address: log.args.campaignAddress as `0x${string}`,
-                creator: log.args.creator,
-                title: log.args.title,
+            if (error) throw error;
+
+            const all = (data ?? []).map((row: any) => ({
+                address: row.address as `0x${string}`,
+                creator: row.creator_address,
+                title: row.title,
+                description: row.description,
+                target_eth: row.target_eth,
+                duration_days: row.duration_days,
+                created_at: row.created_at,
             }));
+
             setCampaigns(all);
 
-            // User's own campaigns
             if (address) {
                 const mine = all.filter(c => c.creator?.toLowerCase() === address.toLowerCase());
                 setUserCampaigns(mine);
@@ -75,7 +81,9 @@ export function useCampaignFactory() {
                 setUserCampaigns([]);
             }
         } catch (err) {
-            console.error("Failed to fetch campaigns from chain", err);
+            console.error('Failed to fetch campaigns from Supabase', err);
+            setCampaigns([]);
+            setUserCampaigns([]);
         } finally {
             setIsLoadingCampaigns(false);
         }
@@ -83,49 +91,49 @@ export function useCampaignFactory() {
 
     useEffect(() => {
         fetchCampaigns();
-    }, [address, publicClient]);
+    }, [address]);
 
-    // Handle Transaction Success — also sync to Supabase for donation history queries
     useEffect(() => {
         const syncToSupabase = async () => {
-            if (isConfirmed && receipt && pendingCampaign) {
-                try {
-                    let newCampaignAddress = "UNKNOWN";
-                    for (const log of receipt.logs) {
-                        try {
-                            const decoded = decodeEventLog({
-                                abi: FACTORY_ABI,
-                                data: log.data,
-                                topics: log.topics,
-                            });
-                            if (decoded.eventName === 'CampaignCreated') {
-                                newCampaignAddress = (decoded.args as any).campaignAddress;
-                            }
-                        } catch (e) { /* ignore non-matching logs */ }
+            if (!isConfirmed || !receipt || !pendingCampaign) return;
+
+            try {
+                let newCampaignAddress = 'UNKNOWN';
+
+                for (const log of receipt.logs) {
+                    try {
+                        const decoded = decodeEventLog({
+                            abi: FACTORY_ABI,
+                            data: log.data,
+                            topics: log.topics,
+                        });
+
+                        if (decoded.eventName === 'CampaignCreated') {
+                            newCampaignAddress = decoded.args.campaignAddress as string;
+                        }
+                    } catch {
+                        // Ignore non-matching logs.
                     }
-
-                    // Also write to Supabase for cross-referencing donations with campaign names
-                    await supabase.from('campaigns').upsert({
-                        address: newCampaignAddress,
-                        creator_address: address,
-                        title: pendingCampaign.title,
-                        description: pendingCampaign.description,
-                        target_eth: pendingCampaign.targetEth,
-                        duration_days: pendingCampaign.durationDays,
-                    }, { onConflict: 'address' });
-
-                    setPendingCampaign(null);
-                    fetchCampaigns(); // Refresh the list from chain
-                } catch (err) {
-                    console.error("Failed to sync campaign to Supabase", err);
-                    // Still refresh from chain even if Supabase fails
-                    fetchCampaigns();
-                    setPendingCampaign(null);
                 }
+
+                await supabase.from('campaigns').upsert({
+                    address: newCampaignAddress,
+                    creator_address: address,
+                    title: pendingCampaign.title,
+                    description: pendingCampaign.description,
+                    target_eth: pendingCampaign.targetEth,
+                    duration_days: pendingCampaign.durationDays,
+                }, { onConflict: 'address' });
+            } catch (err) {
+                console.error('Failed to sync campaign to Supabase', err);
+            } finally {
+                setPendingCampaign(null);
+                fetchCampaigns();
             }
         };
+
         syncToSupabase();
-    }, [isConfirmed, receipt]);
+    }, [address, isConfirmed, pendingCampaign, receipt]);
 
     const createCampaign = (title: string, description: string, targetEth: string, durationDays: number) => {
         setPendingCampaign({ title, description, targetEth, durationDays });

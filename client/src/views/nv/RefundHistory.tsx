@@ -1,74 +1,64 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { usePublicClient } from 'wagmi';
-import { formatEther, parseAbiItem } from 'viem';
-import { useCampaignFactory } from '../../hooks/useCampaignFactory';
-import { useCampaign } from '../../hooks/useCampaign';
-
-function RefundRow({ log }: { log: any }) {
-    const campaignAddr = log.address as `0x${string}`;
-    const { info } = useCampaign(campaignAddr);
-    const [blockTime, setBlockTime] = useState('');
-    const publicClient = usePublicClient();
-
-    useEffect(() => {
-        if (!publicClient || !log.blockNumber) return;
-        publicClient.getBlock({ blockNumber: log.blockNumber }).then(b => {
-            setBlockTime(new Date(Number(b.timestamp) * 1000).toLocaleString());
-        }).catch(() => setBlockTime('Unknown'));
-    }, [publicClient, log.blockNumber]);
-
-    return (
-        <div className="history-item" style={{ padding: '0.75rem', borderBottom: '1px solid var(--border)' }}>
-            <div className="history-item-icon">🔄</div>
-            <div className="history-item-content">
-                <p style={{ fontSize: '0.9rem', lineHeight: '1.4' }}>
-                    Refunded <strong>{formatEther(log.args.amount || 0n)} ETH</strong> from <strong>{info ? info.title : (campaignAddr.slice(0, 6) + '...')}</strong>
-                </p>
-                <p className="history-item-meta" style={{ marginTop: '0.25rem' }}>{blockTime || 'Loading...'}</p>
-            </div>
-        </div>
-    );
-}
+import { supabase } from '../../lib/supabase';
 
 export function RefundHistoryView() {
     const navigate = useNavigate();
-    const publicClient = usePublicClient();
-    const { campaigns } = useCampaignFactory();
-    const [refundLogs, setRefundLogs] = useState<any[]>([]);
+    const [refunds, setRefunds] = useState<any[]>([]);
+    const [campaignTitles, setCampaignTitles] = useState<Record<string, string>>({});
     const [isLoading, setIsLoading] = useState(true);
+    const [dbMessage, setDbMessage] = useState<string | null>(null);
 
     useEffect(() => {
-        if (!publicClient || campaigns.length === 0) {
-            setIsLoading(false);
-            return;
-        }
-
         const fetchRefunds = async () => {
             try {
-                const allLogs: any[] = [];
-                for (const camp of campaigns) {
-                    const address = camp.address || camp;
-                    const logs = await publicClient.getLogs({
-                        address: address,
-                        event: parseAbiItem('event RefundIssued(address indexed contributor, uint256 amount)'),
-                        fromBlock: 0n,
-                        toBlock: 'latest',
-                    });
-                    allLogs.push(...logs);
-                }
-                setRefundLogs(allLogs.reverse());
-            } catch (e) {
+                const { data, error } = await supabase
+                    .from('refunds')
+                    .select('*')
+                    .order('created_at', { ascending: false });
+
+                if (error) throw error;
+                setRefunds(data ?? []);
+            } catch (e: any) {
                 console.error(e);
+                setRefunds([]);
+                setDbMessage('No refund records table is available in the database yet.');
             } finally {
                 setIsLoading(false);
             }
         };
 
         fetchRefunds();
-        const inv = setInterval(fetchRefunds, 5000);
-        return () => clearInterval(inv);
-    }, [publicClient, campaigns]);
+    }, []);
+
+    const campaignAddresses = useMemo(
+        () => Array.from(new Set(refunds.map(refund => refund.campaign_address || refund.campaign).filter(Boolean))),
+        [refunds]
+    );
+
+    useEffect(() => {
+        const fetchCampaigns = async () => {
+            if (campaignAddresses.length === 0) {
+                setCampaignTitles({});
+                return;
+            }
+
+            try {
+                const { data, error } = await supabase
+                    .from('campaigns')
+                    .select('address, title')
+                    .in('address', campaignAddresses);
+
+                if (error) throw error;
+                setCampaignTitles(Object.fromEntries((data ?? []).map((campaign: any) => [campaign.address, campaign.title])));
+            } catch (e) {
+                console.error(e);
+                setCampaignTitles({});
+            }
+        };
+
+        fetchCampaigns();
+    }, [campaignAddresses]);
 
     return (
         <div className="fade-in">
@@ -77,16 +67,36 @@ export function RefundHistoryView() {
             <div className="text-center" style={{ marginBottom: '1.5rem' }}>
                 <div style={{ fontSize: '2.5rem', marginBottom: '0.5rem' }}>🔄</div>
                 <h2>Refund History</h2>
-                <p style={{ marginTop: '0.25rem' }}>Refunds issued from failed campaigns</p>
+                <p style={{ marginTop: '0.25rem' }}>Refund records loaded from the database</p>
             </div>
 
             <div style={{ maxWidth: '800px', margin: '0 auto', background: 'var(--bg-secondary)', borderRadius: '12px', padding: '1rem' }}>
                 {isLoading ? (
                     <div className="text-center" style={{ padding: '2rem 0' }}><div className="spinner" /></div>
-                ) : refundLogs.length === 0 ? (
-                    <p style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '1rem' }}>No refunds issued yet.</p>
+                ) : refunds.length === 0 ? (
+                    <p style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '1rem' }}>
+                        {dbMessage || 'No refunds issued yet.'}
+                    </p>
                 ) : (
-                    refundLogs.map((log, i) => <RefundRow key={i} log={log} />)
+                    refunds.map((refund, i) => {
+                        const campaignAddress = refund.campaign_address || refund.campaign;
+                        const title = campaignTitles[campaignAddress] || `${String(campaignAddress).slice(0, 6)}...`;
+                        const amount = Number(refund.amount_eth ?? refund.amount ?? 0).toFixed(4);
+
+                        return (
+                            <div key={refund.id || i} className="history-item" style={{ padding: '0.75rem', borderBottom: '1px solid var(--border)' }}>
+                                <div className="history-item-icon">🔄</div>
+                                <div className="history-item-content">
+                                    <p style={{ fontSize: '0.9rem', lineHeight: '1.4' }}>
+                                        Refunded <strong>{amount} ETH</strong> from <strong>{title}</strong>
+                                    </p>
+                                    <p className="history-item-meta" style={{ marginTop: '0.25rem' }}>
+                                        {refund.created_at ? new Date(refund.created_at).toLocaleString() : 'Unknown time'}
+                                    </p>
+                                </div>
+                            </div>
+                        );
+                    })
                 )}
             </div>
         </div>

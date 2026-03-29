@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useReadContract, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
+import { useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
 import { useAccount } from 'wagmi';
 import { parseEther } from 'viem';
 import { supabase } from '../lib/supabase';
@@ -7,46 +7,10 @@ import { supabase } from '../lib/supabase';
 const CAMPAIGN_ABI = [
     {
         "type": "function",
-        "name": "getCampaignInfo",
-        "inputs": [],
-        "outputs": [
-            {
-                "type": "tuple",
-                "components": [
-                    { "name": "creator", "type": "address" },
-                    { "name": "title", "type": "string" },
-                    { "name": "description", "type": "string" },
-                    { "name": "fundingTarget", "type": "uint256" },
-                    { "name": "deadline", "type": "uint256" },
-                    { "name": "totalFunded", "type": "uint256" },
-                    { "name": "goalReached", "type": "bool" },
-                    { "name": "fundsWithdrawn", "type": "bool" },
-                    { "name": "isCancelled", "type": "bool" }
-                ]
-            }
-        ],
-        "stateMutability": "view"
-    },
-    {
-        "type": "function",
-        "name": "getContribution",
-        "inputs": [{ "name": "_contributor", "type": "address" }],
-        "outputs": [{ "type": "uint256" }],
-        "stateMutability": "view"
-    },
-    {
-        "type": "function",
         "name": "contribute",
         "inputs": [],
         "outputs": [],
         "stateMutability": "payable"
-    },
-    {
-        "type": "function",
-        "name": "totalFunded",
-        "inputs": [],
-        "outputs": [{ "type": "uint256" }],
-        "stateMutability": "view"
     }
 ] as const;
 
@@ -62,79 +26,114 @@ export type CampaignInfo = {
     isCancelled: boolean;
 };
 
+const toWei = (value: string | number | null | undefined) => {
+    const normalized = value == null ? '0' : String(value);
+    try {
+        return parseEther(normalized);
+    } catch {
+        return 0n;
+    }
+};
+
+const getDeadlineSeconds = (row: any) => {
+    if (row?.deadline != null) {
+        if (typeof row.deadline === 'number') return BigInt(row.deadline);
+        const parsed = Date.parse(String(row.deadline));
+        if (!Number.isNaN(parsed)) return BigInt(Math.floor(parsed / 1000));
+    }
+
+    const createdAtMs = row?.created_at ? Date.parse(String(row.created_at)) : Number.NaN;
+    const durationDays = Number(row?.duration_days ?? 0);
+
+    if (Number.isNaN(createdAtMs) || !Number.isFinite(durationDays)) {
+        return 0n;
+    }
+
+    return BigInt(Math.floor((createdAtMs + durationDays * 86400000) / 1000));
+};
+
 export function useCampaign(campaignAddress?: `0x${string}`) {
     const { address } = useAccount();
     const { writeContract, data: hash, isPending: isContributing, error: contributeError } = useWriteContract();
 
-    const enabled = !!campaignAddress;
-    const [pendingAmount, setPendingAmount] = useState<string>("");
-
-    // Supabase State for Contributors
+    const [pendingAmount, setPendingAmount] = useState<string>('');
     const [contributors, setContributors] = useState<string[]>([]);
+    const [campaignRow, setCampaignRow] = useState<any>(null);
+    const [campaignDonations, setCampaignDonations] = useState<any[]>([]);
+    const [isLoadingInfo, setIsLoadingInfo] = useState(false);
 
-    // Read campaign info
-    const { data: rawInfo, refetch: refetchInfo, isLoading: isLoadingInfo } = useReadContract({
-        address: campaignAddress,
-        abi: CAMPAIGN_ABI,
-        functionName: 'getCampaignInfo',
-        query: { enabled },
-    });
+    const fetchCampaignData = async () => {
+        if (!campaignAddress) {
+            setCampaignRow(null);
+            setCampaignDonations([]);
+            setContributors([]);
+            return;
+        }
 
-    // Read user's contribution
-    const { data: contribution, refetch: refetchContribution } = useReadContract({
-        address: campaignAddress,
-        abi: CAMPAIGN_ABI,
-        functionName: 'getContribution',
-        args: address ? [address] : undefined,
-        query: { enabled: enabled && !!address },
-    });
+        setIsLoadingInfo(true);
+        try {
+            const [campaignResult, donationsResult] = await Promise.all([
+                supabase
+                    .from('campaigns')
+                    .select('*')
+                    .eq('address', campaignAddress)
+                    .limit(1),
+                supabase
+                    .from('donations')
+                    .select('*')
+                    .eq('campaign_address', campaignAddress)
+                    .order('created_at', { ascending: true }),
+            ]);
 
-    // Fetch contributors from Supabase
-    const fetchContributors = async () => {
-        if (!campaignAddress) return;
-        const { data } = await supabase
-            .from('donations')
-            .select('donor_address')
-            .eq('campaign_address', campaignAddress);
-        
-        if (data) {
-            // Get unique contributors
-            const unique = Array.from(new Set(data.map(d => d.donor_address)));
-            setContributors(unique);
+            if (campaignResult.error) throw campaignResult.error;
+            if (donationsResult.error) throw donationsResult.error;
+
+            const row = campaignResult.data?.[0] ?? null;
+            const donationRows = donationsResult.data ?? [];
+
+            setCampaignRow(row);
+            setCampaignDonations(donationRows);
+            setContributors(Array.from(new Set(donationRows.map((donation: any) => donation.donor_address))));
+        } catch (err) {
+            console.error('Failed to fetch campaign from Supabase', err);
+            setCampaignRow(null);
+            setCampaignDonations([]);
+            setContributors([]);
+        } finally {
+            setIsLoadingInfo(false);
         }
     };
 
     useEffect(() => {
-        fetchContributors();
-    }, [campaignAddress]);
+        fetchCampaignData();
+    }, [campaignAddress, address]);
 
-    // Watch tx confirmation
     const { data: receipt, isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransactionReceipt({ hash });
 
     useEffect(() => {
         const syncToSupabase = async () => {
-            if (isConfirmed && pendingAmount && campaignAddress && address) {
-                try {
-                    await supabase.from('donations').insert({
-                        donor_address: address,
-                        campaign_address: campaignAddress,
-                        amount_eth: pendingAmount
-                    });
-                    setPendingAmount("");
-                    
-                    refetchInfo();
-                    refetchContribution();
-                    fetchContributors();
-                } catch (e) {
-                    console.error("Failed to sync donation to Supabase", e);
-                }
+            if (!isConfirmed || !pendingAmount || !campaignAddress || !address) return;
+
+            try {
+                await supabase.from('donations').insert({
+                    donor_address: address,
+                    campaign_address: campaignAddress,
+                    amount_eth: pendingAmount,
+                });
+            } catch (e) {
+                console.error('Failed to sync donation to Supabase', e);
+            } finally {
+                setPendingAmount('');
+                fetchCampaignData();
             }
         };
+
         syncToSupabase();
-    }, [isConfirmed, receipt]);
+    }, [address, campaignAddress, isConfirmed, pendingAmount, receipt]);
 
     const contribute = (amountEth: string) => {
         if (!campaignAddress) return;
+
         setPendingAmount(amountEth);
         writeContract({
             address: campaignAddress,
@@ -144,26 +143,36 @@ export function useCampaign(campaignAddress?: `0x${string}`) {
         });
     };
 
-    const info: CampaignInfo | null = rawInfo
+    const fundingTarget = toWei(campaignRow?.target_eth);
+    const totalFunded = campaignDonations.reduce((sum, donation) => sum + toWei(donation.amount_eth), 0n);
+    const contribution = address
+        ? campaignDonations
+            .filter(donation => donation.donor_address?.toLowerCase() === address.toLowerCase())
+            .reduce((sum, donation) => sum + toWei(donation.amount_eth), 0n)
+        : 0n;
+    const deadline = getDeadlineSeconds(campaignRow);
+    const goalReached = fundingTarget > 0n && totalFunded >= fundingTarget;
+
+    const info: CampaignInfo | null = campaignRow
         ? {
-            creator: rawInfo.creator,
-            title: rawInfo.title,
-            description: rawInfo.description,
-            fundingTarget: rawInfo.fundingTarget,
-            deadline: rawInfo.deadline,
-            totalFunded: rawInfo.totalFunded,
-            goalReached: rawInfo.goalReached,
-            fundsWithdrawn: rawInfo.fundsWithdrawn,
-            isCancelled: rawInfo.isCancelled,
+            creator: (campaignRow.creator_address || '0x0000000000000000000000000000000000000000') as `0x${string}`,
+            title: campaignRow.title || 'Untitled Campaign',
+            description: campaignRow.description || '',
+            fundingTarget,
+            deadline,
+            totalFunded,
+            goalReached,
+            fundsWithdrawn: Boolean(campaignRow.funds_withdrawn),
+            isCancelled: Boolean(campaignRow.is_cancelled),
         }
         : null;
 
     return {
         info,
-        contribution: contribution ?? 0n,
+        contribution,
         contributors,
         contribute,
-        refetchInfo,
+        refetchInfo: fetchCampaignData,
         status: {
             isLoadingInfo,
             isContributing,
