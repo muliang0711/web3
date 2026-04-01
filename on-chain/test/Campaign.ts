@@ -44,6 +44,11 @@ describe("Campaign Module", async function () {
         });
     };
 
+    const deployCampaignFactory = async () => {
+        const userRegistry = await viem.deployContract("UserRegistry");
+        return viem.deployContract("CampaignFactory", [userRegistry.address]);
+    };
+
     // Advance time past the campaign deadline
     const advanceTime = async (days: number) => {
         const publicClient = await viem.getPublicClient();
@@ -63,7 +68,7 @@ describe("Campaign Module", async function () {
     // ══════════════════════════════════════════════════════════
 
     it("Should create a campaign via factory", async function () {
-        const factory = await viem.deployContract("CampaignFactory");
+        const factory = await deployCampaignFactory();
         const [owner] = await viem.getWalletClients();
 
         console.log(`\n    [Test: Create Campaign via Factory]`);
@@ -96,7 +101,7 @@ describe("Campaign Module", async function () {
     });
 
     it("Should track campaigns by user", async function () {
-        const factory = await viem.deployContract("CampaignFactory");
+        const factory = await deployCampaignFactory();
         const [owner] = await viem.getWalletClients();
 
         console.log(`\n    [Test: Track Campaigns by User]`);
@@ -121,7 +126,7 @@ describe("Campaign Module", async function () {
     // ══════════════════════════════════════════════════════════
 
     it("Should accept contributions", async function () {
-        const factory = await viem.deployContract("CampaignFactory");
+        const factory = await deployCampaignFactory();
 
         console.log(`\n    [Test: Accept Contributions]`);
 
@@ -149,7 +154,7 @@ describe("Campaign Module", async function () {
     });
 
     it("Should handle multiple contributors", async function () {
-        const factory = await viem.deployContract("CampaignFactory");
+        const factory = await deployCampaignFactory();
 
         console.log(`\n    [Test: Multiple Contributors]`);
 
@@ -163,7 +168,7 @@ describe("Campaign Module", async function () {
         await c2.write.contribute([], { value: parseEther("5") });
 
         const campaignRead = await getCampaignContract(campaigns[0]);
-        const totalFunded = await campaignRead.read.totalFunded() as readonly `0x${string}`[];
+        const totalFunded = await campaignRead.read.totalFunded();
         const contributorsList = await campaignRead.read.getContributors() as readonly `0x${string}`[];
 
         console.log(`    Total funded: ${formatEther(totalFunded)} ETH`);
@@ -174,7 +179,7 @@ describe("Campaign Module", async function () {
     });
 
     it("Should fail to contribute after deadline", async function () {
-        const factory = await viem.deployContract("CampaignFactory");
+        const factory = await deployCampaignFactory();
 
         console.log(`\n    [Test: Fail Contribute After Deadline]`);
 
@@ -201,7 +206,7 @@ describe("Campaign Module", async function () {
     // ══════════════════════════════════════════════════════════
 
     it("Should allow creator to withdraw after successful campaign", async function () {
-        const factory = await viem.deployContract("CampaignFactory");
+        const factory = await deployCampaignFactory();
         const [creator] = await viem.getWalletClients();
         const publicClient = await viem.getPublicClient();
 
@@ -238,7 +243,7 @@ describe("Campaign Module", async function () {
     });
 
     it("Should fail withdrawal if target not met", async function () {
-        const factory = await viem.deployContract("CampaignFactory");
+        const factory = await deployCampaignFactory();
 
         console.log(`\n    [Test: Fail Withdraw If Target Not Met]`);
 
@@ -265,7 +270,7 @@ describe("Campaign Module", async function () {
     });
 
     it("Should fail withdrawal by non-creator", async function () {
-        const factory = await viem.deployContract("CampaignFactory");
+        const factory = await deployCampaignFactory();
 
         console.log(`\n    [Test: Fail Withdraw By Non-Creator]`);
 
@@ -295,7 +300,7 @@ describe("Campaign Module", async function () {
     // ══════════════════════════════════════════════════════════
 
     it("Should refund contributors if target not met", async function () {
-        const factory = await viem.deployContract("CampaignFactory");
+        const factory = await deployCampaignFactory();
         const [, contributor] = await viem.getWalletClients();
         const publicClient = await viem.getPublicClient();
 
@@ -326,7 +331,7 @@ describe("Campaign Module", async function () {
     });
 
     it("Should fail refund if target was met", async function () {
-        const factory = await viem.deployContract("CampaignFactory");
+        const factory = await deployCampaignFactory();
 
         console.log(`\n    [Test: Fail Refund If Target Met]`);
 
@@ -346,6 +351,21 @@ describe("Campaign Module", async function () {
                 const reason = getRevertReason(err);
                 console.log(`    Expected Revert: "${reason}"`);
                 return /Funding target was reached/.test(reason) || /Funding target was reached/.test(err.message);
+            }
+        );
+    });
+
+    it("Should fail to create a campaign with zero target", async function () {
+        const factory = await deployCampaignFactory();
+
+        console.log(`\n    [Test: Fail Create Campaign With Zero Target]`);
+
+        await assert.rejects(
+            () => factory.write.createCampaign(["Invalid", "Description", 0n, 30n]),
+            (err: any) => {
+                const reason = getRevertReason(err);
+                console.log(`    Expected Revert: "${reason}"`);
+                return /Funding target must be greater than 0/.test(reason) || /Funding target must be greater than 0/.test(err.message);
             }
         );
     });
@@ -378,5 +398,21 @@ describe("Campaign Module", async function () {
         assert.equal(balance, rewardAmount);
         assert.equal(tokenName, "CrowdfundReward");
         assert.equal(tokenSymbol, "CFR");
+    });
+
+    it("Should fail to mint zero reward tokens", async function () {
+        const [, contributor] = await viem.getWalletClients();
+        const rewardToken = await viem.deployContract("RewardToken");
+
+        console.log(`\n    [Test: Fail Mint Zero Reward Tokens]`);
+
+        await assert.rejects(
+            () => rewardToken.write.mint([contributor.account.address, 0n]),
+            (err: any) => {
+                const reason = getRevertReason(err);
+                console.log(`    Expected Revert: "${reason}"`);
+                return /Mint amount must be greater than 0/.test(reason) || /Mint amount must be greater than 0/.test(err.message);
+            }
+        );
     });
 });

@@ -15,6 +15,12 @@ contract RewardToken is ERC20, Ownable {
     /// @param _to Address of the contributor
     /// @param _amount Amount of tokens to mint (in wei-equivalent units)
     function mint(address _to, uint256 _amount) external onlyOwner {
+        if (_to == address(0)) {
+            revert("Invalid recipient address");
+        }
+        if (_amount == 0) {
+            revert("Mint amount must be greater than 0");
+        }
         _mint(_to, _amount);
     }
 }

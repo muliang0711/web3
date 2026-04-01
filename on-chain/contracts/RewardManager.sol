@@ -24,6 +24,12 @@ contract RewardManager {
 
     // Constructor
     constructor(address _tokenAddress, address _registryAddress) {
+        if (_tokenAddress == address(0)) {
+            revert("Invalid token address");
+        }
+        if (_registryAddress == address(0)) {
+            revert("Invalid registry address");
+        }
         rewardToken = IRewardToken(_tokenAddress);
         userRegistry = IUserRegistry(_registryAddress);
         owner = msg.sender;

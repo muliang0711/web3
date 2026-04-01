@@ -42,10 +42,9 @@ contract Campaign {
 
     // ── Modifiers ──────────────────────────────────────────── // nelvyin and cyao : able to explain how it work
     modifier onlyCreator() {
-        require(
-            msg.sender == creator,
-            "Only the campaign creator can call this"
-        );
+        if (msg.sender != creator) {
+            revert("Only the campaign creator can call this");
+        }
         _;
     }
 
@@ -76,9 +75,18 @@ contract Campaign {
 
     /// @notice Contribute ETH to this campaign // nelvyn
     function contribute() external payable {
-        require(block.timestamp < deadline, "Campaign has ended");
-        require(!isCancelled, "Campaign is cancelled");
-        require(msg.value > 0, "Contribution must be greater than 0");
+        if (block.timestamp >= deadline) {
+            revert("Campaign has ended");
+        }
+        if (isCancelled) {
+            revert("Campaign is cancelled");
+        }
+        if (msg.value == 0) {
+            revert("Contribution must be greater than 0");
+        }
+        if (address(userRegistry) == address(0)) {
+            revert("User registry not configured");
+        }
 
         if (contributions[msg.sender] == 0) {
             contributors.push(msg.sender);
@@ -89,6 +97,9 @@ contract Campaign {
         if (totalFunded >= fundingTarget) {
             goalReached = true;
         }
+
+        assert(totalFunded >= contributions[msg.sender]);
+        assert(!goalReached || totalFunded >= fundingTarget);
 
         userRegistry.recordDonation(msg.sender, msg.value);
 
@@ -106,6 +117,7 @@ contract Campaign {
 
         (bool success, ) = payable(creator).call{value: amount}("");
         require(success, "Transfer failed");
+        assert(address(this).balance == 0);
 
         emit FundsWithdrawn(creator, amount);
     }

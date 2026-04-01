@@ -10,7 +10,9 @@ contract CampaignFactory {
     address public userRegistryAddress;
 
     constructor(address _userRegistryAddress) {
-        require(_userRegistryAddress != address(0), "Invalid registry address");
+        if (_userRegistryAddress == address(0)) {
+            revert("Invalid registry address");
+        }
         userRegistryAddress = _userRegistryAddress;
     }
 
@@ -37,6 +39,16 @@ contract CampaignFactory {
         uint256 _fundingTarget,
         uint256 _durationInDays
     ) external returns (address) {
+        if (bytes(_title).length == 0) {
+            revert("Title cannot be empty");
+        }
+        if (_fundingTarget == 0) {
+            revert("Funding target must be greater than 0");
+        }
+        if (_durationInDays == 0) {
+            revert("Duration must be greater than 0");
+        }
+
         Campaign newCampaign = new Campaign(
             msg.sender,
             _title,
@@ -49,6 +61,12 @@ contract CampaignFactory {
         address campaignAddress = address(newCampaign);
         campaigns.push(campaignAddress);
         userCampaigns[msg.sender].push(campaignAddress);
+
+        assert(campaigns[campaigns.length - 1] == campaignAddress);
+        assert(
+            userCampaigns[msg.sender][userCampaigns[msg.sender].length - 1] ==
+                campaignAddress
+        );
 
         emit CampaignCreated(
             campaignAddress,

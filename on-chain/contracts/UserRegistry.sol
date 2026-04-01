@@ -61,6 +61,13 @@ contract UserRegistry {
     }
 
     function recordDonation(address _user, uint256 _amount) external {
+        if (_user == address(0)) {
+            revert("Invalid user address");
+        }
+        if (_amount == 0) {
+            revert("Donation amount must be greater than 0");
+        }
+
         userDonations[_user].push(DonationRecord(msg.sender, _amount, block.timestamp));
         emit DonationRecorded(_user, msg.sender, _amount, block.timestamp);
     }
@@ -83,6 +90,9 @@ contract UserRegistry {
 
     // onlyOwner so hackers can't change the manager
     function setRewardManager(address _rewardManager) external onlyOwner {
+        if (_rewardManager == address(0)) {
+            revert("Invalid reward manager");
+        }
         rewardManager = _rewardManager;
     }
 }
