@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
 import { useAccount } from 'wagmi';
 import { supabase } from '../lib/supabase';
@@ -22,97 +23,101 @@ type AppUser = {
     claimableRewards?: string | number | null;
 };
 
+const USER_LOOKUP_TIMEOUT_MS = 8000;
+
+function withTimeout<T>(promiseLike: PromiseLike<T>, label: string, timeoutMs = USER_LOOKUP_TIMEOUT_MS): Promise<T> {
+    return new Promise<T>((resolve, reject) => {
+        const timer = window.setTimeout(() => {
+            reject(new Error(`${label} timed out after ${timeoutMs}ms`));
+        }, timeoutMs);
+
+        Promise.resolve(promiseLike)
+            .then((value) => {
+                window.clearTimeout(timer);
+                resolve(value);
+            })
+            .catch((error) => {
+                window.clearTimeout(timer);
+                reject(error);
+            });
+    });
+}
+
+async function fetchUserByAddress(address: string): Promise<AppUser | null> {
+    const { data, error } = await withTimeout(
+        supabase
+            .from('users')
+            .select('*')
+            .ilike('wallet_address', address)
+            .order('created_at', { ascending: false })
+            .limit(1),
+        'User lookup'
+    );
+
+    if (error) throw error;
+
+    const row = data?.[0];
+    return row ? {
+        name: row.name,
+        isRegistered: true,
+        walletAddress: row.wallet_address,
+        createdAt: row.created_at,
+        claimableRewards: row.claimable_rewards ?? row.claimableRewards ?? null,
+    } : null;
+}
+
+async function fetchDonationsByAddress(address: string) {
+    const { data, error } = await supabase
+        .from('donations')
+        .select('*')
+        .ilike('donor_address', address)
+        .order('created_at', { ascending: false });
+
+    if (error) throw error;
+
+    const donationsData = data ?? [];
+    const campaignAddresses = Array.from(new Set(donationsData.map((donation: any) => donation.campaign_address).filter(Boolean)));
+
+    if (campaignAddresses.length === 0) {
+        return donationsData;
+    }
+
+    const { data: campaigns, error: campaignsError } = await supabase
+        .from('campaigns')
+        .select('address, title')
+        .in('address', campaignAddresses);
+
+    if (campaignsError) throw campaignsError;
+
+    const campaignMap = new Map((campaigns ?? []).map((campaign: any) => [campaign.address, campaign.title]));
+    return donationsData.map((donation: any) => ({
+        ...donation,
+        campaign_name: campaignMap.get(donation.campaign_address) || donation.campaign_name || 'Campaign Donation',
+    }));
+}
+
 export function useUserRegistry() {
     const { address } = useAccount();
+    const queryClient = useQueryClient();
     const { writeContract, data: hash, isPending: isRegistering, error: registerError } = useWriteContract();
 
     const [pendingName, setPendingName] = useState<string>('');
-    const [user, setUser] = useState<AppUser | null>(null);
-    const [donations, setDonations] = useState<any[]>([]);
-    const [isReading, setIsReading] = useState(false);
-    const [isReadingDonations, setIsReadingDonations] = useState(false);
 
-    const fetchUser = async () => {
-        if (!address) {
-            setUser(null);
-            return;
-        }
+    const userQuery = useQuery({
+        queryKey: ['userRegistryUser', address],
+        queryFn: () => fetchUserByAddress(address!),
+        enabled: Boolean(address),
+        staleTime: 1000 * 30,
+        retry: 1,
+    });
 
-        setIsReading(true);
-        try {
-            const { data, error } = await supabase
-                .from('users')
-                .select('*')
-                .eq('wallet_address', address)
-                .order('created_at', { ascending: false })
-                .limit(1);
-
-            if (error) throw error;
-
-            const row = data?.[0];
-            setUser(row ? {
-                name: row.name,
-                isRegistered: true,
-                walletAddress: row.wallet_address,
-                createdAt: row.created_at,
-                claimableRewards: row.claimable_rewards ?? row.claimableRewards ?? null,
-            } : null);
-        } catch (e) {
-            console.error('Failed to fetch user from Supabase', e);
-            setUser(null);
-        } finally {
-            setIsReading(false);
-        }
-    };
-
-    const fetchDonations = async () => {
-        if (!address) {
-            setDonations([]);
-            return;
-        }
-
-        setIsReadingDonations(true);
-        try {
-            const { data, error } = await supabase
-                .from('donations')
-                .select('*')
-                .eq('donor_address', address)
-                .order('created_at', { ascending: false });
-
-            if (error) throw error;
-
-            const donationsData = data ?? [];
-            const campaignAddresses = Array.from(new Set(donationsData.map((donation: any) => donation.campaign_address).filter(Boolean)));
-
-            if (campaignAddresses.length === 0) {
-                setDonations(donationsData);
-                return;
-            }
-
-            const { data: campaigns, error: campaignsError } = await supabase
-                .from('campaigns')
-                .select('address, title')
-                .in('address', campaignAddresses);
-
-            if (campaignsError) throw campaignsError;
-
-            const campaignMap = new Map((campaigns ?? []).map((campaign: any) => [campaign.address, campaign.title]));
-            setDonations(donationsData.map((donation: any) => ({
-                ...donation,
-                campaign_name: campaignMap.get(donation.campaign_address) || donation.campaign_name || 'Campaign Donation',
-            })));
-        } catch (e) {
-            console.error('Failed to fetch donations from Supabase', e);
-            setDonations([]);
-        } finally {
-            setIsReadingDonations(false);
-        }
-    };
-
-    useEffect(() => {
-        fetchUser();
-        fetchDonations();
-    }, [address]);
+    const donationsQuery = useQuery({
+        queryKey: ['userRegistryDonations', address],
+        queryFn: () => fetchDonationsByAddress(address!),
+        enabled: Boolean(address),
+        staleTime: 1000 * 30,
+        retry: 1,
+    });
 
     const { data: receipt, isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransactionReceipt({
         hash,
@@ -127,19 +132,28 @@ export function useUserRegistry() {
                     wallet_address: address,
                     name: pendingName,
                 });
+
+                queryClient.setQueryData(['userRegistryUser', address], {
+                    name: pendingName,
+                    isRegistered: true,
+                    walletAddress: address,
+                    createdAt: new Date().toISOString(),
+                    claimableRewards: null,
+                } satisfies AppUser);
+
+                await queryClient.invalidateQueries({ queryKey: ['userRegistryUser', address] });
             } catch (e) {
                 console.error('Failed to sync new user to Supabase', e);
             } finally {
                 setPendingName('');
-                fetchUser();
             }
         };
 
         syncToSupabase();
-    }, [address, isConfirmed, pendingName, receipt]);
+    }, [address, isConfirmed, pendingName, queryClient, receipt]);
 
     const register = (name: string) => {
-        if (user?.isRegistered) {
+        if (userQuery.data?.isRegistered) {
             alert(`You are already registered with this wallet address: ${address}!`);
             return;
         }
@@ -154,17 +168,22 @@ export function useUserRegistry() {
         });
     };
 
+    const hasResolvedUser = !address || userQuery.isFetched || userQuery.isError;
+    const isReading = Boolean(address) && !hasResolvedUser;
+
     return {
-        user,
-        donations,
+        user: userQuery.data ?? null,
+        donations: donationsQuery.data ?? [],
         register,
-        refetchUser: fetchUser,
-        refetchDonations: fetchDonations,
+        refetchUser: userQuery.refetch,
+        refetchDonations: donationsQuery.refetch,
         status: {
             isRegistering,
             isConfirming,
             isReading,
-            isReadingDonations,
+            isReadingDonations: donationsQuery.isPending || donationsQuery.isFetching,
+            hasResolvedUser,
+            userLookupError: userQuery.error instanceof Error ? userQuery.error.message : null,
             error: registerError,
             txHash: hash
         }

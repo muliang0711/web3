@@ -76,12 +76,12 @@ export function useCampaign(campaignAddress?: `0x${string}`) {
                 supabase
                     .from('campaigns')
                     .select('*')
-                    .eq('address', campaignAddress)
+                    .ilike('address', campaignAddress)
                     .limit(1),
                 supabase
                     .from('donations')
                     .select('*')
-                    .eq('campaign_address', campaignAddress)
+                    .ilike('campaign_address', campaignAddress)
                     .order('created_at', { ascending: true }),
             ]);
 

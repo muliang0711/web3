@@ -7,33 +7,29 @@ export function Web3Gate() {
     const { user, status } = useUserRegistry();
     const location = useLocation();
 
-    // 1. Not connected -> Redirect to login
+    if (location.pathname === '/login' || location.pathname === '/register') {
+        if (isConnected && status.hasResolvedUser && user?.isRegistered) {
+            return <Navigate to="/dashboard" replace />;
+        }
+        return <Outlet />;
+    }
+
     if (!isConnected) {
-        if (location.pathname === '/login') return <Outlet />;
         return <Navigate to="/login" replace />;
     }
 
-    // 2. Data is loading -> Show loader
-    if (status.isReading) {
+    if (!status.hasResolvedUser && status.isReading) {
         return (
             <div className="text-center fade-in" style={{ padding: '3rem 0' }}>
                 <div className="spinner" />
-                <p style={{ marginTop: '1rem', fontSize: '0.85rem' }}>Syncing with blockchain…</p>
+                <p style={{ marginTop: '1rem', fontSize: '0.85rem' }}>Syncing with database...</p>
             </div>
         );
     }
 
-    // 3. Connected but not registered -> Redirect to register
     if (!user || !user.isRegistered) {
-        if (location.pathname === '/register') return <Outlet />;
         return <Navigate to="/register" replace />;
     }
 
-    // 4. Registered but trying to access login/register -> Redirect to dashboard
-    if (location.pathname === '/login' || location.pathname === '/register') {
-        return <Navigate to="/dashboard" replace />;
-    }
-
-    // 5. All clear -> Pass through to nested routes
     return <Outlet />;
 }
