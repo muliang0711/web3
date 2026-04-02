@@ -124,17 +124,50 @@ contract Campaign {
 
     /// @notice Contributors can get a refund if the campaign failed // nelvyn
     function refund() external {
-        require(block.timestamp >= deadline, "Campaign has not ended yet");
+        require(block.timestamp >= deadline || isCancelled, "Campaign has not ended yet");
         require(!goalReached, "Funding target was reached, no refunds");
         require(contributions[msg.sender] > 0, "No contribution to refund");
 
         uint256 amount = contributions[msg.sender];
         contributions[msg.sender] = 0;
+        totalFunded -= amount;
 
         (bool success, ) = payable(msg.sender).call{value: amount}("");
         require(success, "Refund transfer failed");
 
         emit RefundIssued(msg.sender, amount);
+    }
+
+    /// @notice Creator can process all pending refunds after a failed campaign
+    function refundAll() external onlyCreator {
+        require(!goalReached, "Funding target was reached, no refunds");
+        require(!fundsWithdrawn, "Funds already withdrawn");
+
+        uint256 refundedCount = 0;
+        uint256 refundedAmount = 0;
+
+        isCancelled = true;
+
+        for (uint256 i = 0; i < contributors.length; i++) {
+            address contributor = contributors[i];
+            uint256 amount = contributions[contributor];
+
+            if (amount == 0) {
+                continue;
+            }
+
+            contributions[contributor] = 0;
+            refundedCount += 1;
+            refundedAmount += amount;
+
+            (bool success, ) = payable(contributor).call{value: amount}("");
+            require(success, "Refund transfer failed");
+
+            emit RefundIssued(contributor, amount);
+        }
+
+        require(refundedCount > 0, "No contributions to refund");
+        totalFunded -= refundedAmount;
     }
 
     // ── View Functions ───────────────────────────────────────
@@ -165,5 +198,18 @@ contract Campaign {
     /// @notice Get all contributor addresses // nelvyn
     function getContributors() external view returns (address[] memory) {
         return contributors;
+    }
+
+    /// @notice Count contributors that still have claimable refunds
+    function getOutstandingRefundCount() external view returns (uint256) {
+        uint256 count = 0;
+
+        for (uint256 i = 0; i < contributors.length; i++) {
+            if (contributions[contributors[i]] > 0) {
+                count += 1;
+            }
+        }
+
+        return count;
     }
 }

@@ -1,9 +1,10 @@
-import { useEffect } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useAccount, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
 import { useNavigate } from 'react-router-dom';
 import { useUserRegistry } from '../../hooks/useUserRegistry';
 import { useCampaignFactory } from '../../hooks/useCampaignFactory';
 import { useCampaign } from '../../hooks/useCampaign';
+import { useRefundHistory } from '../../hooks/useRefundHistory';
 import { REWARD_MANAGER_ADDRESS } from '../../lib/contracts';
 
 const REWARD_MANAGER_ABI = [
@@ -15,18 +16,45 @@ function DonationRecordRow({ record }: { record: any }) {
     const { info } = useCampaign(campaignAddr as `0x${string}`);
     const date = record.created_at ? new Date(record.created_at).toLocaleString() : 'Unknown time';
     const amountEth = Number(record.amount_eth || 0);
-    const tokensEarned = amountEth;
+    const points = amountEth;
 
     return (
         <div className="history-item">
-            <div className="history-item-icon">⭐</div>
+            <div className="history-item-icon">+</div>
             <div className="history-item-content">
-                <p className="history-item-text" style={{ fontSize: '0.9rem', lineHeight: '1.4' }}>
-                    On <strong>{date}</strong>, you donated <strong>{amountEth.toFixed(4)} ETH</strong> to <strong>{info ? info.title : (campaignAddr?.slice(0, 6) + '...')}</strong>
+                <p className="history-item-text" style={{ fontSize: '0.95rem' }}>
+                    Donated <strong>{amountEth.toFixed(4)} ETH</strong> to <strong>{info ? info.title : (campaignAddr?.slice(0, 6) + '...')}</strong>
                 </p>
-                <p className="history-item-meta" style={{ marginTop: '0.25rem', color: '#00b894', fontWeight: 'bold' }}>
-                    🏆 Earned {tokensEarned.toFixed(4)} CFR Tokens
+                <p className="history-item-meta">
+                    {date}
                 </p>
+            </div>
+            <div className="history-points">
+                <strong>+{points.toFixed(4)} CFR</strong>
+                <small>points in tx</small>
+            </div>
+        </div>
+    );
+}
+
+function RefundRecordRow({ record }: { record: any }) {
+    const amount = Number(record.amount_eth ?? record.amount ?? 0);
+    const points = amount;
+
+    return (
+        <div className="history-item">
+            <div className="history-item-icon">-</div>
+            <div className="history-item-content">
+                <p className="history-item-text" style={{ fontSize: '0.95rem' }}>
+                    Refunded <strong>{amount.toFixed(4)} ETH</strong> from <strong>{record.campaign_title}</strong>
+                </p>
+                <p className="history-item-meta">
+                    {record.created_at ? new Date(record.created_at).toLocaleString() : 'Unknown time'}
+                </p>
+            </div>
+            <div className="history-points negative">
+                <strong>-{points.toFixed(4)} CFR</strong>
+                <small>points in tx</small>
             </div>
         </div>
     );
@@ -34,15 +62,33 @@ function DonationRecordRow({ record }: { record: any }) {
 
 export function ProfileView() {
     const { address } = useAccount();
-    const { user, donations, refetchUser, status: userStatus } = useUserRegistry();
-    const { campaigns } = useCampaignFactory();
+    const {
+        user,
+        donations,
+        uploadProfileImage,
+        refetchUser,
+        status: userStatus,
+    } = useUserRegistry();
+    const { campaigns, userCampaigns } = useCampaignFactory();
+    const { refunds, status: refundStatus } = useRefundHistory(address);
     const navigate = useNavigate();
 
     const { data: hash, writeContract, isPending } = useWriteContract();
     const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash });
+    const [profileImageRefreshKey, setProfileImageRefreshKey] = useState(Date.now());
+    const [profileImageFailed, setProfileImageFailed] = useState(false);
+    const [uploadError, setUploadError] = useState<string | null>(null);
 
     const displayRewards = Number(user?.claimableRewards ?? 0).toFixed(4);
     const hasRewards = Number(user?.claimableRewards ?? 0) > 0;
+    const totalDonated = useMemo(
+        () => donations.reduce((acc, current: any) => acc + Number(current.amount_eth || 0), 0),
+        [donations]
+    );
+    const totalRefunded = useMemo(
+        () => refunds.reduce((acc, current: any) => acc + Number(current.amount_eth ?? current.amount ?? 0), 0),
+        [refunds]
+    );
 
     useEffect(() => {
         if (!isSuccess) {
@@ -62,83 +108,145 @@ export function ProfileView() {
         });
     };
 
-    const totalDonated = donations.reduce((acc, current: any) => acc + Number(current.amount_eth || 0), 0);
+    const handleProfileImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (!file) return;
+
+        setUploadError(null);
+        setProfileImageFailed(false);
+
+        try {
+            await uploadProfileImage(file);
+            setProfileImageRefreshKey(Date.now());
+        } catch (error: any) {
+            console.error(error);
+            setUploadError(error?.message || 'Failed to upload profile image.');
+        } finally {
+            event.target.value = '';
+        }
+    };
+
+    const profileImageSrc = user?.profileImageUrl ? `${user.profileImageUrl}?v=${profileImageRefreshKey}` : null;
 
     return (
         <div className="fade-in">
             <button className="btn-back" onClick={() => navigate('/dashboard')}>
-                ← Back
+                Back
             </button>
 
-            <div className="text-center" style={{ marginBottom: '1.5rem' }}>
-                <div style={{ fontSize: '2.5rem', marginBottom: '0.5rem' }}>👤</div>
-                <h2>{user?.name || 'Anonymous Donor'}</h2>
-                <p style={{ fontSize: '0.75rem', fontFamily: 'monospace', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
-                    {address}
-                </p>
-            </div>
+            <section className="profile-shell">
+                <div className="profile-hero-card">
+                    <div className="profile-avatar-stack">
+                        {!profileImageFailed && profileImageSrc ? (
+                            <img
+                                src={profileImageSrc}
+                                alt={`${user?.name || 'User'} profile`}
+                                className="profile-avatar-image"
+                                onError={() => setProfileImageFailed(true)}
+                            />
+                        ) : (
+                            <div className="profile-avatar-fallback">
+                                {(user?.name || 'U').slice(0, 1).toUpperCase()}
+                            </div>
+                        )}
 
-            <div className="stat-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
-                <div className="stat-card">
-                    <span className="stat-value">{campaigns.length}</span>
-                    <span className="stat-label">Campaigns Available</span>
+                        <label className="profile-upload-button">
+                            {userStatus.isUploadingProfileImage ? 'Uploading...' : 'Upload photo'}
+                            <input type="file" accept="image/*" onChange={handleProfileImageUpload} hidden disabled={userStatus.isUploadingProfileImage} />
+                        </label>
+                    </div>
+
+                    <div className="profile-hero-copy">
+                        <div className="auth-kicker">Participant profile</div>
+                        <h2>{user?.name || 'Anonymous donor'}</h2>
+                        <p className="profile-wallet">{address}</p>
+                        <p>Track donations, refunds, rewards, and your created campaigns in one place.</p>
+                        {uploadError && <p className="text-danger">{uploadError}</p>}
+                    </div>
                 </div>
 
-                <div className="stat-card">
-                    <span className="stat-value accent">💎 {totalDonated.toFixed(4)} ETH</span>
-                    <span className="stat-label">Total Lifetime Donated</span>
+                <div className="profile-stat-grid">
+                    <div className="quick-stat-card">
+                        <span className="quick-stat-label">Campaigns available</span>
+                        <span className="quick-stat-value">{campaigns.length}</span>
+                    </div>
+                    <div className="quick-stat-card">
+                        <span className="quick-stat-label">Created by you</span>
+                        <span className="quick-stat-value">{userCampaigns.length}</span>
+                    </div>
+                    <div className="quick-stat-card">
+                        <span className="quick-stat-label">Total donated</span>
+                        <span className="quick-stat-value" style={{ color: 'var(--success)' }}>{totalDonated.toFixed(4)} ETH</span>
+                    </div>
+                    <div className="quick-stat-card">
+                        <span className="quick-stat-label">Total refunded</span>
+                        <span className="quick-stat-value" style={{ color: 'var(--danger)' }}>{totalRefunded.toFixed(4)} ETH</span>
+                    </div>
                 </div>
 
-                <div className="stat-card" style={{
-                    background: hasRewards ? 'rgba(108, 92, 231, 0.1)' : 'var(--bg-card)',
-                    border: hasRewards ? '1px solid var(--primary)' : '1px solid var(--border)',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    justifyContent: 'center'
-                }}>
-                    <span className="stat-value" style={{ color: hasRewards ? 'var(--primary)' : 'var(--text)' }}>
-                        🎁 {displayRewards} CFR
-                    </span>
-                    <span className="stat-label">Claimable Rewards</span>
-
+                <div className="profile-reward-panel">
+                    <div>
+                        <div className="auth-kicker">Rewards</div>
+                        <h3>{displayRewards} CFR available</h3>
+                        <p>Reward balance comes from the contract. Each donation record below also shows the points earned in that transaction.</p>
+                    </div>
                     <button
                         onClick={handleClaim}
                         disabled={!hasRewards || isPending || isConfirming}
-                        style={{
-                            marginTop: '0.75rem', width: '100%', padding: '0.5rem', borderRadius: '8px', border: 'none',
-                            background: (!hasRewards || isPending || isConfirming) ? 'rgba(255,255,255,0.05)' : 'var(--primary)',
-                            color: (!hasRewards || isPending || isConfirming) ? 'var(--text-muted)' : 'white',
-                            cursor: (!hasRewards || isPending || isConfirming) ? 'not-allowed' : 'pointer',
-                            fontWeight: 'bold', transition: 'all 0.2s'
-                        }}
+                        className="btn-primary profile-claim-button"
                     >
-                        {isPending ? 'Confirming...' : isConfirming ? 'Claiming...' : isSuccess ? 'Claimed!' : 'Claim Tokens'}
+                        {isPending ? 'Confirming...' : isConfirming ? 'Claiming...' : isSuccess ? 'Claimed' : 'Claim tokens'}
                     </button>
                 </div>
-            </div>
 
-            <div style={{ marginTop: '2rem' }}>
-                <h3 style={{ fontSize: '1.1rem', fontWeight: 600, marginBottom: '1rem', color: 'var(--text)' }}>
-                    📜 My Transaction History
-                </h3>
+                <section className="profile-history-section">
+                    <div className="profile-section-heading">
+                        <div>
+                            <div className="auth-kicker">Donation history</div>
+                            <h3>Transaction records</h3>
+                        </div>
+                    </div>
 
-                {userStatus.isReadingDonations ? (
-                    <div className="text-center" style={{ padding: '2rem 0' }}>
-                        <div className="spinner" />
-                        <p style={{ marginTop: '0.75rem', fontSize: '0.8rem' }}>Loading history...</p>
+                    {userStatus.isReadingDonations ? (
+                        <div className="text-center" style={{ padding: '2rem 0' }}>
+                            <div className="spinner" />
+                        </div>
+                    ) : donations.length === 0 ? (
+                        <div className="empty-state-card">No donation transactions found yet.</div>
+                    ) : (
+                        <div className="history-list">
+                            {donations.map((record, idx) => (
+                                <DonationRecordRow key={record.id || idx} record={record} />
+                            ))}
+                        </div>
+                    )}
+                </section>
+
+                <section className="profile-history-section">
+                    <div className="profile-section-heading">
+                        <div>
+                            <div className="auth-kicker">Refund history</div>
+                            <h3>Refund transaction records</h3>
+                        </div>
                     </div>
-                ) : donations.length === 0 ? (
-                    <div style={{ padding: '1.5rem', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.85rem', border: '1px dashed var(--border)', borderRadius: '12px' }}>
-                        No transactions found yet.
-                    </div>
-                ) : (
-                    <div className="history-list">
-                        {donations.map((record, idx) => (
-                            <DonationRecordRow key={record.id || idx} record={record} />
-                        ))}
-                    </div>
-                )}
-            </div>
+
+                    {refundStatus.isLoading ? (
+                        <div className="text-center" style={{ padding: '2rem 0' }}>
+                            <div className="spinner" />
+                        </div>
+                    ) : refunds.length === 0 ? (
+                        <div className="empty-state-card">
+                            {refundStatus.error || 'No refund records found yet.'}
+                        </div>
+                    ) : (
+                        <div className="history-list">
+                            {refunds.map((record, idx) => (
+                                <RefundRecordRow key={record.id || idx} record={record} />
+                            ))}
+                        </div>
+                    )}
+                </section>
+            </section>
         </div>
     );
 }

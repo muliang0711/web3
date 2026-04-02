@@ -15,6 +15,7 @@ type CampaignInfo = {
     totalFunded: bigint;
     goalReached: boolean;
     fundsWithdrawn: boolean;
+    isCancelled: boolean;
 };
 
 // Load Campaign ABI from compiled artifact
@@ -343,6 +344,75 @@ describe("Campaign Module", async function () {
 
         assert.equal(remaining, 0n);
         assert.ok(balanceAfter > balanceBefore, "Contributor balance should increase after refund");
+    });
+
+    it("Should allow the creator to process all refunds after a failed campaign", async function () {
+        const factory = await deployCampaignFactory();
+        const [, contributorOne, contributorTwo] = await viem.getWalletClients();
+
+        console.log(`\n    [Test: Creator Refund All]`);
+
+        await factory.write.createCampaign(["Owner Refund", "Description", parseEther("100"), 1n]);
+        const campaigns = await factory.read.getCampaigns();
+
+        const campaignForContributorOne = await getCampaignContract(campaigns[0], 1);
+        const campaignForContributorTwo = await getCampaignContract(campaigns[0], 2);
+
+        await campaignForContributorOne.write.contribute([], { value: parseEther("2") });
+        await campaignForContributorTwo.write.contribute([], { value: parseEther("3") });
+
+        await advanceTime(2);
+
+        const creatorCampaign = await getCampaignContract(campaigns[0], 0);
+        const outstandingRefundsBefore = await creatorCampaign.read.getOutstandingRefundCount();
+        assert.equal(outstandingRefundsBefore, 2n);
+
+        await creatorCampaign.write.refundAll();
+
+        const contributionOneAfter = await creatorCampaign.read.getContribution([contributorOne.account.address]);
+        const contributionTwoAfter = await creatorCampaign.read.getContribution([contributorTwo.account.address]);
+        const outstandingRefundsAfter = await creatorCampaign.read.getOutstandingRefundCount();
+
+        console.log(`    Outstanding refunds after processing: ${outstandingRefundsAfter}`);
+        assert.equal(contributionOneAfter, 0n);
+        assert.equal(contributionTwoAfter, 0n);
+        assert.equal(outstandingRefundsAfter, 0n);
+    });
+
+    it("Should allow the creator to manually refund all contributors before the deadline", async function () {
+        const factory = await deployCampaignFactory();
+        const [, contributorOne, contributorTwo] = await viem.getWalletClients();
+
+        console.log(`\n    [Test: Manual Owner Refund Before Deadline]`);
+
+        await factory.write.createCampaign(["Manual Refund", "Description", parseEther("100"), 30n]);
+        const campaigns = await factory.read.getCampaigns();
+
+        const campaignForContributorOne = await getCampaignContract(campaigns[0], 1);
+        const campaignForContributorTwo = await getCampaignContract(campaigns[0], 2);
+
+        await campaignForContributorOne.write.contribute([], { value: parseEther("1") });
+        await campaignForContributorTwo.write.contribute([], { value: parseEther("2") });
+
+        const creatorCampaign = await getCampaignContract(campaigns[0], 0);
+        const outstandingRefundsBefore = await creatorCampaign.read.getOutstandingRefundCount();
+        assert.equal(outstandingRefundsBefore, 2n);
+
+        await creatorCampaign.write.refundAll();
+
+        const infoAfter = await creatorCampaign.read.getCampaignInfo() as CampaignInfo;
+        const contributionOneAfter = await creatorCampaign.read.getContribution([contributorOne.account.address]);
+        const contributionTwoAfter = await creatorCampaign.read.getContribution([contributorTwo.account.address]);
+        const outstandingRefundsAfter = await creatorCampaign.read.getOutstandingRefundCount();
+
+        console.log(`    Campaign cancelled: ${infoAfter.isCancelled}`);
+        console.log(`    Outstanding refunds after manual processing: ${outstandingRefundsAfter}`);
+
+        assert.equal(infoAfter.isCancelled, true);
+        assert.equal(infoAfter.totalFunded, 0n);
+        assert.equal(contributionOneAfter, 0n);
+        assert.equal(contributionTwoAfter, 0n);
+        assert.equal(outstandingRefundsAfter, 0n);
     });
 
     it("Should fail refund if target was met", async function () {

@@ -16,6 +16,8 @@ import { GlobalHistoryView } from './views/hy/GlobalHistory';
 import { CampaignsView } from './views/cy/Campaigns';
 import { CampaignDetailView } from './views/cy/CampaignDetail';
 import { CreateCampaignView } from './views/cy/CreateCampaign';
+import { DonationSuccessView } from './views/cy/DonationSuccess';
+import { CampaignReportView } from './views/cy/CampaignReport';
 
 
 // ccy - Transaction module
@@ -47,6 +49,8 @@ function App() {
               <Route path="/campaigns" element={<CampaignsView />} />
               <Route path="/campaigns/create" element={<CreateCampaignView />} />
               <Route path="/campaigns/:address" element={<CampaignDetailView />} />
+              <Route path="/campaigns/:address/report" element={<CampaignReportView />} />
+              <Route path="/campaigns/:address/success" element={<DonationSuccessView />} />
 
 
 

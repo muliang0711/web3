@@ -1,22 +1,22 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { formatEther } from 'viem';
 import { useCampaignFactory } from '../../hooks/useCampaignFactory';
 import { useCampaign } from '../../hooks/useCampaign';
 
-// Sub-component: renders one campaign card
-function CampaignCard({ campaignAddress }: { campaignAddress: `0x${string}` }) {
-    const { info, status } = useCampaign(campaignAddress);
+function CampaignCard({ campaign }: { campaign: { address: `0x${string}`; imageUrl?: string | null } }) {
+    const { info, status } = useCampaign(campaign.address);
     const navigate = useNavigate();
+    const [imageFailed, setImageFailed] = useState(false);
 
     if (!info) {
         if (status.isLoadingInfo) {
             return (
-                <div className="campaign-card skeleton-card">
+                <div className="campaign-showcase-card skeleton-card">
                     <div className="spinner" style={{ width: 24, height: 24, borderWidth: 2 }} />
                 </div>
             );
         }
-        // If not loading but still no info — the address is stale/invalid, hide it
         return null;
     }
 
@@ -26,37 +26,79 @@ function CampaignCard({ campaignAddress }: { campaignAddress: `0x${string}` }) {
 
     const deadlineDate = new Date(Number(info.deadline) * 1000);
     const isExpired = deadlineDate < new Date();
-
-    // Dynamic gradient thumbnail from address
-    const hue1 = parseInt(campaignAddress.slice(2, 4), 16) || 60;
-    const hue2 = parseInt(campaignAddress.slice(4, 6), 16) || 180;
-    const gradient = `linear-gradient(135deg, hsl(${hue1}, 70%, 45%), hsl(${hue2}, 80%, 30%))`;
+    const imageUrl = campaign.imageUrl || null;
+    const badgeClass = info.isCancelled
+        ? 'badge-cancelled'
+        : info.goalReached
+            ? 'badge-success'
+            : isExpired
+                ? 'badge-danger'
+                : 'badge-active';
+    const badgeLabel = info.isCancelled
+        ? 'Cancelled'
+        : info.goalReached
+            ? 'Funded'
+            : isExpired
+                ? 'Ended'
+                : 'Active';
 
     return (
         <button
-            className="campaign-card"
-            onClick={() => navigate(`/campaigns/${campaignAddress}`)}
+            className={`campaign-showcase-card ${info.isCancelled ? 'campaign-showcase-card-cancelled' : ''}`}
+            onClick={() => navigate(`/campaigns/${campaign.address}`)}
         >
-                <div className="campaign-card-thumb" style={{ background: gradient }}>
-                    <span className={`campaign-card-badge ${info.goalReached ? 'badge-success' : isExpired ? 'badge-danger' : 'badge-active'}`}>
-                        {info.goalReached ? 'Funded' : isExpired ? 'Ended' : 'Active'}
-                    </span>
+            <div className="campaign-showcase-media">
+                {imageUrl && !imageFailed ? (
+                    <img
+                        src={imageUrl}
+                        alt={info.title}
+                        className="media-cover-image"
+                        onError={() => setImageFailed(true)}
+                    />
+                ) : (
+                    <div className="media-cover-placeholder">
+                        <span>{info.title.slice(0, 1)}</span>
+                        <small>Campaign visual</small>
+                    </div>
+                )}
+
+                <span className={`campaign-card-badge ${badgeClass}`}>
+                    {badgeLabel}
+                </span>
+            </div>
+
+            <div className="campaign-showcase-content">
+                <div className="campaign-showcase-header">
+                    <h3 className="campaign-card-title">{info.title}</h3>
+                    <span className="campaign-showcase-progress">{progress}%</span>
                 </div>
-            <div className="campaign-card-content">
-                <h4 className="campaign-card-title">{info.title}</h4>
+
                 <p className="campaign-card-desc">{info.description}</p>
-                <div className="progress-bar-container">
-                    <div className="progress-bar" style={{ height: '8px' }}>
-                        <div className="progress-fill" style={{ width: `${Math.min(progress, 100)}%` }} />
-                    </div>
-                    <div className="campaign-card-stats" style={{ marginTop: '0.5rem' }}>
-                        <span><strong>{formatEther(info.totalFunded)}</strong> / {formatEther(info.fundingTarget)} ETH</span>
-                        <span style={{ color: progress >= 100 ? 'var(--success)' : 'var(--text-secondary)' }}>{progress}%</span>
-                    </div>
+
+                <div className="progress-bar">
+                    <div className="progress-fill" style={{ width: `${Math.min(progress, 100)}%` }} />
+                </div>
+
+                <div className="campaign-card-stats">
+                    <span><strong>{formatEther(info.totalFunded)}</strong> ETH raised</span>
+                    <span>{contributorsLabel(info.title, deadlineDate)}</span>
+                </div>
+
+                <div className="campaign-showcase-footer">
+                    <span>Goal: {formatEther(info.fundingTarget)} ETH</span>
+                    <span>{deadlineDate.toLocaleDateString()}</span>
                 </div>
             </div>
         </button>
     );
+}
+
+function contributorsLabel(_title: string, deadlineDate: Date) {
+    const daysLeft = Math.ceil((deadlineDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+    if (daysLeft <= 0) {
+        return 'Closed';
+    }
+    return `${daysLeft} day${daysLeft === 1 ? '' : 's'} left`;
 }
 
 export function CampaignsView() {
@@ -65,21 +107,18 @@ export function CampaignsView() {
 
     return (
         <div className="fade-in">
-            {/* Back button */}
             <button className="btn-back" onClick={() => navigate('/dashboard')}>
                 Back
             </button>
 
-            <div className="text-center" style={{ marginBottom: '1.5rem' }}>
-                <h2>Campaigns</h2>
-                <p style={{ marginTop: '0.25rem' }}>Browse or create fundraising campaigns for the survey ecosystem</p>
-            </div>
+            <div className="campaigns-header">
+                <div>
+                    <div className="auth-kicker">Campaign board</div>
+                    <h2>Browse campaign cards</h2>
+                    <p>Each campaign is presented as a cleaner visual card with room for imagery, progress, and quick scanning.</p>
+                </div>
 
-            <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-                <button
-                    className="btn-primary"
-                    onClick={() => navigate('/campaigns/create')}
-                >
+                <button className="btn-primary campaigns-header-cta" onClick={() => navigate('/campaigns/create')}>
                     Create a new campaign
                 </button>
             </div>
@@ -90,13 +129,13 @@ export function CampaignsView() {
                     <p style={{ marginTop: '0.75rem', fontSize: '0.8rem' }}>Loading campaigns...</p>
                 </div>
             ) : campaigns.length === 0 ? (
-                <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.85rem', background: 'var(--bg-input)', borderRadius: '12px', border: '1px dashed var(--border)' }}>
+                <div className="empty-state-card">
                     No campaigns yet. Create the first one.
                 </div>
             ) : (
-                <div className="campaign-list">
-                    {[...campaigns].reverse().map((camp) => (
-                        <CampaignCard key={camp.address || camp} campaignAddress={camp.address || camp} />
+                <div className="campaigns-grid">
+                    {[...campaigns].reverse().map((campaign) => (
+                        <CampaignCard key={campaign.address} campaign={campaign} />
                     ))}
                 </div>
             )}

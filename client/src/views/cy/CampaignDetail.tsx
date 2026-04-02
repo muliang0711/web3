@@ -1,32 +1,46 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { formatEther } from 'viem';
 import { useAccount } from 'wagmi';
 import { useCampaign } from '../../hooks/useCampaign';
+import { getCampaignImageUrl } from '../../lib/media';
 
 export function CampaignDetailView() {
     const { address: campaignAddress } = useParams<{ address: string }>();
     const { address: userAddress } = useAccount();
     const navigate = useNavigate();
     const [donateAmount, setDonateAmount] = useState('');
+    const [imageFailed, setImageFailed] = useState(false);
+    const [pendingSuccessAmount, setPendingSuccessAmount] = useState<string | null>(null);
 
     const {
         info,
         contribution,
         contributors,
         contribute,
+        withdrawFunds,
         status,
     } = useCampaign(campaignAddress as `0x${string}` | undefined);
 
     const handleDonate = (e: React.FormEvent) => {
         e.preventDefault();
         if (donateAmount && Number(donateAmount) > 0) {
+            setPendingSuccessAmount(donateAmount);
             contribute(donateAmount);
             setDonateAmount('');
         }
     };
 
-    const isProcessing = status.isContributing || status.isConfirming;
+    useEffect(() => {
+        if (!campaignAddress || !pendingSuccessAmount || !status.isConfirmed || !status.txHash) {
+            return;
+        }
+
+        navigate(
+            `/campaigns/${campaignAddress}/success?amount=${encodeURIComponent(pendingSuccessAmount)}&tx=${status.txHash}`,
+            { replace: true }
+        );
+    }, [campaignAddress, navigate, pendingSuccessAmount, status.isConfirmed, status.txHash]);
 
     if (status.isLoadingInfo) {
         return (
@@ -37,12 +51,12 @@ export function CampaignDetailView() {
         );
     }
 
-    if (!info) {
+    if (!info || !campaignAddress) {
         return (
             <div className="fade-in text-center" style={{ padding: '3rem 0' }}>
                 <p>Campaign not found.</p>
                 <button className="btn-ghost" onClick={() => navigate('/campaigns')} style={{ marginTop: '1rem' }}>
-                    ← Back to Campaigns
+                    Back to campaigns
                 </button>
             </div>
         );
@@ -56,74 +70,98 @@ export function CampaignDetailView() {
     const isExpired = deadlineDate < new Date();
     const canDonate = !isExpired && !info.goalReached && !info.isCancelled;
     const isCreator = userAddress?.toLowerCase() === info.creator.toLowerCase();
+    const canWithdraw = isExpired && info.goalReached && isCreator && !info.fundsWithdrawn;
+    const imageUrl = getCampaignImageUrl(campaignAddress);
+    const badgeClass = info.isCancelled
+        ? 'badge-cancelled'
+        : info.goalReached
+            ? 'badge-success'
+            : isExpired
+                ? 'badge-danger'
+                : 'badge-active';
+    const badgeLabel = info.isCancelled
+        ? 'Cancelled'
+        : info.goalReached
+            ? 'Funded'
+            : isExpired
+                ? 'Ended'
+                : 'Active';
 
     return (
         <div className="fade-in campaign-detail-wrapper">
-            {/* Back button */}
             <button className="btn-back" onClick={() => navigate('/campaigns')}>
-                ← Back to Campaigns
+                Back to campaigns
             </button>
 
             <div className="campaign-detail-grid">
-                {/* Left Column: Campaign Info */}
                 <div className="campaign-info-section">
-                    <div className="campaign-detail-header">
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem' }}>
-                            <h2 style={{ fontSize: '2rem', margin: 0, lineHeight: 1.2 }}>{info.title}</h2>
-                            <span className={`campaign-card-badge ${info.goalReached ? 'badge-success' : isExpired ? 'badge-danger' : 'badge-active'}`} style={{ position: 'static' }}>
-                                {info.goalReached ? '✅ Funded' : isExpired ? '❌ Ended' : '🟢 Active'}
-                            </span>
+                    <div className="campaign-detail-hero-card">
+                        <div className="campaign-detail-media">
+                            {!imageFailed ? (
+                                <img
+                                    src={imageUrl}
+                                    alt={info.title}
+                                    className="media-cover-image"
+                                    onError={() => setImageFailed(true)}
+                                />
+                            ) : (
+                                <div className="media-cover-placeholder">
+                                    <span>{info.title.slice(0, 1)}</span>
+                                    <small>Campaign picture</small>
+                                </div>
+                            )}
                         </div>
-                        <p className="campaign-detail-desc">
-                            {info.description}
-                        </p>
-                        <p className="campaign-creator">
-                            <span style={{ color: 'var(--text-muted)' }}>Created by:</span>{' '}
-                            <span style={{ fontFamily: 'monospace', color: 'var(--primary-light)' }}>
-                                {info.creator.slice(0, 6)}...{info.creator.slice(-4)}
-                            </span>
-                            {isCreator && <span style={{ color: 'var(--accent)', marginLeft: '0.5rem' }}>(You)</span>}
-                        </p>
+
+                        <div className="campaign-detail-header">
+                            <div className="campaign-detail-title-row">
+                                <h2 style={{ fontSize: '2rem', lineHeight: 1.2 }}>{info.title}</h2>
+                                <span className={`campaign-card-badge ${badgeClass}`}>
+                                    {badgeLabel}
+                                </span>
+                            </div>
+
+                            <p className="campaign-detail-desc">{info.description}</p>
+
+                            <div className="campaign-detail-meta-grid">
+                                <div className="campaign-meta-pill">
+                                    <span>Creator</span>
+                                    <strong>{info.creator.slice(0, 6)}...{info.creator.slice(-4)} {isCreator ? '(You)' : ''}</strong>
+                                </div>
+                                <div className="campaign-meta-pill">
+                                    <span>Deadline</span>
+                                    <strong>{deadlineDate.toLocaleDateString()}</strong>
+                                </div>
+                                <div className="campaign-meta-pill">
+                                    <span>Backers</span>
+                                    <strong>{contributors.length}</strong>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
-                    <div className="campaign-stats-row border-top" style={{ marginTop: '1.5rem', paddingTop: '1.5rem', display: 'flex', gap: '2rem' }}>
-                        <div className="stat-card transparent">
-                            <span className="stat-value">{contributors.length}</span>
-                            <span className="stat-label">Backers</span>
-                        </div>
-                        <div className="stat-card transparent">
-                            <span className="stat-value">{deadlineDate.toLocaleDateString()}</span>
-                            <span className="stat-label">Deadline</span>
-                        </div>
-                    </div>
-
-                    {/* Your Contribution */}
                     {contribution > 0n && (
                         <div className="contribution-banner">
-                            <span style={{ fontSize: '1.25rem' }}>💜</span> You've contributed <strong>{formatEther(contribution)} ETH</strong> to this campaign!
+                            You contributed <strong>{formatEther(contribution)} ETH</strong>. Points earned from this transaction: <strong>{formatEther(contribution)} CFR</strong>.
                         </div>
                     )}
                 </div>
 
-                {/* Right Column: Donation Card */}
                 <div className="campaign-donate-card">
                     <div className="funding-progress-header">
                         <span className="amount-raised"><strong>{formatEther(info.totalFunded)} ETH</strong></span>
                         <span className="amount-target">raised of {formatEther(info.fundingTarget)} ETH goal</span>
                     </div>
 
-                    <div className="progress-bar" style={{ height: '10px', borderRadius: '5px', marginBottom: '1rem' }}>
-                        <div className="progress-fill" style={{ width: `${Math.min(progress, 100)}%`, borderRadius: '5px' }} />
+                    <div className="progress-bar" style={{ marginBottom: '1rem' }}>
+                        <div className="progress-fill" style={{ width: `${Math.min(progress, 100)}%` }} />
                     </div>
 
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', marginBottom: '2rem' }}>
-                        <span style={{ color: 'var(--text-muted)' }}>{contributors.length} donations</span>
-                        <span style={{ color: progress >= 100 ? 'var(--success)' : 'var(--text-secondary)', fontWeight: 600 }}>
-                            {progress}% Funded
-                        </span>
+                    <div className="campaign-card-stats" style={{ marginBottom: '1.5rem' }}>
+                        <span>{contributors.length} contributors</span>
+                        <span>{progress}% funded</span>
                     </div>
 
-                    {canDonate ? (
+                    {canDonate && (
                         <form onSubmit={handleDonate} className="donate-form-integrated">
                             <div className="input-with-symbol">
                                 <span className="currency-symbol">ETH</span>
@@ -134,30 +172,41 @@ export function CampaignDetailView() {
                                     min="0.01"
                                     placeholder="0.00"
                                     value={donateAmount}
-                                    onChange={e => setDonateAmount(e.target.value)}
+                                    onChange={(e) => setDonateAmount(e.target.value)}
                                     required
-                                    disabled={isProcessing}
+                                    disabled={status.isContributing || status.isConfirming}
                                 />
                             </div>
-                            <button className="btn-success large-btn" type="submit" disabled={isProcessing}>
-                                {isProcessing ? (
-                                    <><div className="spinner-small" /> Processing...</>
-                                ) : 'Donate to this Campaign'}
+
+                            <button className="btn-success large-btn" type="submit" disabled={status.isContributing || status.isConfirming}>
+                                {status.isContributing || status.isConfirming ? 'Processing...' : 'Donate to this campaign'}
                             </button>
                         </form>
-                    ) : (
+                    )}
+
+                    {canWithdraw && (
+                        <button className="btn-success large-btn" type="button" onClick={withdrawFunds} disabled={status.isWithdrawing || status.isConfirming}>
+                            {status.isWithdrawing || status.isConfirming ? 'Processing...' : 'Withdraw funds'}
+                        </button>
+                    )}
+
+                    {!canDonate && !canWithdraw && (
                         <div className="campaign-closed-message">
-                            {info.goalReached ? '🎉 This campaign has successfully reached its funding goal!' : 'This campaign is no longer accepting donations.'}
+                            {info.goalReached
+                                ? 'This campaign has reached its goal. Waiting for the creator to withdraw.'
+                                : info.isCancelled
+                                    ? 'This campaign was cancelled by the owner.'
+                                    : 'This campaign is closed and not accepting new donations.'}
                         </div>
                     )}
 
                     {status.error && (
-                        <p className="text-danger" style={{ marginTop: '1rem', textAlign: 'center' }}>⚠ {status.error.message}</p>
+                        <p className="text-danger" style={{ marginTop: '1rem', textAlign: 'center' }}>{status.error.message}</p>
                     )}
 
                     {status.isConfirmed && (
-                        <p style={{ color: 'var(--success)', fontSize: '0.9rem', textAlign: 'center', marginTop: '1rem', fontWeight: 600 }}>
-                            ✅ Donation confirmed successfully!
+                        <p style={{ color: 'var(--success)', fontSize: '0.9rem', textAlign: 'center', marginTop: '1rem', fontWeight: 700 }}>
+                            Transaction confirmed successfully.
                         </p>
                     )}
                 </div>

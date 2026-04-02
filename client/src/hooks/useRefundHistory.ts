@@ -1,0 +1,74 @@
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '../lib/supabase';
+
+function getRefundUserAddress(refund: any) {
+  return refund.user_address || refund.wallet_address || refund.recipient_address || refund.userAddress || null;
+}
+
+export function useRefundHistory(address?: string) {
+  const query = useQuery({
+    queryKey: ['refundHistory', address],
+    enabled: Boolean(address),
+    staleTime: 1000 * 30,
+    retry: 1,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('refunds')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        throw error;
+      }
+
+      const refunds = (data ?? []).filter((refund: any) => {
+        const refundUserAddress = getRefundUserAddress(refund);
+        return refundUserAddress && refundUserAddress.toLowerCase() === address!.toLowerCase();
+      });
+
+      const campaignAddresses = Array.from(
+        new Set(
+          refunds
+            .map((refund: any) => refund.campaign_address || refund.campaign)
+            .filter(Boolean)
+        )
+      );
+
+      if (campaignAddresses.length === 0) {
+        return [];
+      }
+
+      const { data: campaigns, error: campaignError } = await supabase
+        .from('campaigns')
+        .select('address, title')
+        .in('address', campaignAddresses);
+
+      if (campaignError) {
+        throw campaignError;
+      }
+
+      const titleByAddress = new Map((campaigns ?? []).map((campaign: any) => [campaign.address, campaign.title]));
+
+      return refunds.map((refund: any) => {
+        const campaignAddress = refund.campaign_address || refund.campaign;
+        const amount = Number(refund.amount_eth ?? refund.amount ?? 0);
+
+        return {
+          ...refund,
+          campaign_title: titleByAddress.get(campaignAddress) || 'Campaign refund',
+          campaign_address: campaignAddress,
+          points: amount,
+        };
+      });
+    },
+  });
+
+  return {
+    refunds: query.data ?? [],
+    refetchRefunds: query.refetch,
+    status: {
+      isLoading: query.isPending || query.isFetching,
+      error: query.error instanceof Error ? query.error.message : null,
+    },
+  };
+}

@@ -61,6 +61,7 @@ Create `client/.env` with:
 ```env
 VITE_SUPABASE_URL=your_supabase_url
 VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+VITE_SUPABASE_MEDIA_BUCKET=app-media
 ```
 
 Optional contract overrides:
@@ -75,7 +76,33 @@ VITE_REWARD_MANAGER_ADDRESS=0x...
 Notes:
 
 - If Supabase env vars are missing, the frontend can still load, but user sync, campaign metadata sync, and donation history sync will fail.
+- The repo now includes a bootstrap SQL file at `supabase/setup.sql` for the required tables, policies, and storage bucket.
+- The client expects a public storage bucket named `app-media` unless you override `VITE_SUPABASE_MEDIA_BUCKET`.
 - If you use the standard local deployment flow below on a fresh chain, the default addresses in `client/src/lib/contracts.ts` already match it.
+
+## 3A. Supabase bootstrap
+
+Create a Supabase project, then in the dashboard:
+
+1. Open `SQL Editor`.
+2. Paste and run `c:\Code\project\web3\supabase\setup.sql`.
+3. Copy the project URL and anon key into `client/.env`.
+
+This SQL creates:
+
+- `users`
+- `campaigns`
+- `donations`
+- `refunds`
+- public storage bucket `app-media`
+
+Current app behavior depends on those resources:
+
+- user registration writes to `users`
+- campaign metadata and image URLs write to `campaigns`
+- donation history writes to `donations`
+- refund history writes to `refunds`
+- campaign and profile images upload to `app-media`
 
 ## 4. Verify the codebase before running
 

@@ -5,6 +5,7 @@ import { useWriteContract, useWaitForTransactionReceipt, usePublicClient } from 
 import { useAccount } from 'wagmi';
 import { supabase } from '../lib/supabase';
 import { USER_REGISTRY_ADDRESS } from '../lib/contracts';
+import { getProfileImagePath, getProfileImageUrl, uploadMediaFile } from '../lib/media';
 
 const CONTRACT_ABI = [
     {
@@ -44,6 +45,7 @@ type AppUser = {
     walletAddress: string;
     createdAt?: string | null;
     claimableRewards?: string | number | null;
+    profileImageUrl?: string | null;
 };
 
 const USER_LOOKUP_TIMEOUT_MS = 8000;
@@ -120,6 +122,7 @@ async function fetchUserByAddress(publicClient: NonNullable<ReturnType<typeof us
         walletAddress: row?.wallet_address ?? address,
         createdAt: row?.created_at ?? null,
         claimableRewards: formatEther(claimableRewards),
+        profileImageUrl: row?.profile_image_url ?? row?.avatar_url ?? row?.image_url ?? getProfileImageUrl(address),
     };
 }
 
@@ -160,6 +163,7 @@ export function useUserRegistry() {
     const { writeContract, data: hash, isPending: isRegistering, error: registerError } = useWriteContract();
 
     const [pendingName, setPendingName] = useState<string>('');
+    const [isUploadingProfileImage, setIsUploadingProfileImage] = useState(false);
     const userQueryKey = ['userRegistryUser', address, publicClient?.chain?.id] as const;
 
     const userQuery = useQuery({
@@ -198,6 +202,7 @@ export function useUserRegistry() {
                     walletAddress: address,
                     createdAt: new Date().toISOString(),
                     claimableRewards: '0',
+                    profileImageUrl: getProfileImageUrl(address),
                 } satisfies AppUser);
 
                 await queryClient.invalidateQueries({ queryKey: ['userRegistryUser', address] });
@@ -227,6 +232,36 @@ export function useUserRegistry() {
         });
     };
 
+    const uploadProfileImage = async (file: File) => {
+        if (!address) {
+            throw new Error('Wallet not connected');
+        }
+
+        setIsUploadingProfileImage(true);
+        try {
+            const path = getProfileImagePath(address);
+            const publicUrl = await uploadMediaFile(file, path);
+
+            try {
+                const { error } = await supabase
+                    .from('users')
+                    .update({ profile_image_url: publicUrl })
+                    .ilike('wallet_address', address);
+
+                if (error) {
+                    throw error;
+                }
+            } catch (profileSyncError) {
+                console.warn('Profile image uploaded, but failed to persist profile_image_url column.', profileSyncError);
+            }
+
+            await queryClient.invalidateQueries({ queryKey: ['userRegistryUser', address] });
+            return publicUrl;
+        } finally {
+            setIsUploadingProfileImage(false);
+        }
+    };
+
     const hasResolvedUser = !address || !publicClient || userQuery.isFetched || userQuery.isError;
     const isReading = Boolean(address && publicClient) && !hasResolvedUser;
 
@@ -234,11 +269,13 @@ export function useUserRegistry() {
         user: userQuery.data ?? null,
         donations: donationsQuery.data ?? [],
         register,
+        uploadProfileImage,
         refetchUser: userQuery.refetch,
         refetchDonations: donationsQuery.refetch,
         status: {
             isRegistering,
             isConfirming,
+            isUploadingProfileImage,
             isReading,
             isReadingDonations: donationsQuery.isPending || donationsQuery.isFetching,
             hasResolvedUser,

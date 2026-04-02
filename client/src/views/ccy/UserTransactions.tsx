@@ -20,6 +20,7 @@ export function UserTransactionsView() {
     const [dateFrom, setDateFrom] = useState('');
     const [dateTo, setDateTo] = useState('');
     const [userNames, setUserNames] = useState<Record<string, string>>({});
+    const [copiedAddress, setCopiedAddress] = useState<string | null>(null);
 
     useEffect(() => {
         const fetchDonations = async () => {
@@ -73,6 +74,18 @@ export function UserTransactionsView() {
         () => Object.fromEntries(campaigns.map(campaign => [campaign.address, campaign.title || formatAddress(campaign.address)])),
         [campaigns]
     );
+
+    const handleCopyAddress = async (value?: string) => {
+        if (!value) return;
+
+        try {
+            await navigator.clipboard.writeText(value);
+            setCopiedAddress(value);
+            window.setTimeout(() => setCopiedAddress((current) => (current === value ? null : current)), 1600);
+        } catch (error) {
+            console.error('Failed to copy address', error);
+        }
+    };
 
     const totalDonations = donations.length;
     const uniqueDonors = new Set(donations.map(donation => donation.donor_address)).size;
@@ -177,19 +190,20 @@ export function UserTransactionsView() {
                                 <th style={{ padding: '1rem', fontWeight: '600', fontSize: '0.75rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '1px' }}>Sender (Donor)</th>
                                 <th style={{ padding: '1rem', fontWeight: '600', fontSize: '0.75rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '1px' }}>Campaign</th>
                                 <th style={{ padding: '1rem', fontWeight: '600', fontSize: '0.75rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '1px', textAlign: 'right' }}>Value</th>
+                                <th style={{ padding: '1rem', fontWeight: '600', fontSize: '0.75rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '1px', textAlign: 'right' }}>Token Earned</th>
                             </tr>
                         </thead>
                         <tbody>
                             {isLoading ? (
                                 <tr>
-                                    <td colSpan={4} style={{ padding: '6rem 0', textAlign: 'center' }}>
+                                    <td colSpan={5} style={{ padding: '6rem 0', textAlign: 'center' }}>
                                         <div className="spinner" style={{ margin: '0 auto', width: '40px', height: '40px', borderWidth: '4px' }}></div>
                                         <p style={{ color: 'var(--text-secondary)', marginTop: '1.5rem', fontWeight: '500' }}>Querying the database...</p>
                                     </td>
                                 </tr>
                             ) : filtered.length === 0 ? (
                                 <tr>
-                                    <td colSpan={4} style={{ whiteSpace: 'normal' }}>
+                                    <td colSpan={5} style={{ whiteSpace: 'normal' }}>
                                         <div style={{ padding: '5rem 2rem', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
                                             <h3 style={{ color: 'var(--text)', fontSize: '1.25rem', marginBottom: '0.75rem', fontWeight: '600', letterSpacing: '0.5px' }}>
                                                 No Transactions Found
@@ -201,24 +215,48 @@ export function UserTransactionsView() {
                                     </td>
                                 </tr>
                             ) : (
-                                filtered.map((donation, i) => (
+                                filtered.map((donation, i) => {
+                                    const donorAddress = donation.donor_address;
+                                    const campaignAddress = donation.campaign_address;
+                                    const amount = Number(donation.amount_eth || 0).toFixed(4);
+                                    const donorLabel = userNames[donorAddress] || formatAddress(donorAddress);
+                                    const campaignLabel = campaignMap[campaignAddress] || formatAddress(campaignAddress);
+
+                                    return (
                                     <tr key={donation.id || i} style={{ borderBottom: '1px solid var(--border)' }}>
                                         <td style={{ padding: '1.25rem 1rem', color: 'var(--text-secondary)' }}>
                                             {donation.created_at ? new Date(donation.created_at).toLocaleString() : 'Unknown'}
                                         </td>
                                         <td style={{ padding: '1.25rem 1rem', fontWeight: '500', color: 'var(--text)' }}>
-                                            <span style={{ background: 'rgba(255,255,255,0.05)', padding: '0.2rem 0.6rem', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                                                {userNames[donation.donor_address] || formatAddress(donation.donor_address)}
-                                            </span>
+                                            <button
+                                                type="button"
+                                                className="copyable-record-value"
+                                                onClick={() => void handleCopyAddress(donorAddress)}
+                                                title={donorAddress ? `Copy ${donorAddress}` : 'Address unavailable'}
+                                            >
+                                                <span>{donorLabel}</span>
+                                                <small>{copiedAddress === donorAddress ? 'Copied address' : formatAddress(donorAddress)}</small>
+                                            </button>
                                         </td>
                                         <td style={{ padding: '1.25rem 1rem', color: 'var(--text)' }}>
-                                            {campaignMap[donation.campaign_address] || formatAddress(donation.campaign_address)}
+                                            <button
+                                                type="button"
+                                                className="copyable-record-value"
+                                                onClick={() => void handleCopyAddress(campaignAddress)}
+                                                title={campaignAddress ? `Copy ${campaignAddress}` : 'Address unavailable'}
+                                            >
+                                                <span>{campaignLabel}</span>
+                                                <small>{copiedAddress === campaignAddress ? 'Copied address' : formatAddress(campaignAddress)}</small>
+                                            </button>
                                         </td>
                                         <td style={{ padding: '1.25rem 1rem', textAlign: 'right', fontWeight: 'bold', fontSize: '1.05rem', color: 'var(--text)' }}>
-                                            {Number(donation.amount_eth || 0).toFixed(4)} <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 'normal' }}>ETH</span>
+                                            {amount} <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 'normal' }}>ETH</span>
+                                        </td>
+                                        <td style={{ padding: '1.25rem 1rem', textAlign: 'right', fontWeight: 'bold', fontSize: '1.05rem', color: 'var(--success)' }}>
+                                            +{amount} <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 'normal' }}>CFR</span>
                                         </td>
                                     </tr>
-                                ))
+                                )})
                             )}
                         </tbody>
                     </table>

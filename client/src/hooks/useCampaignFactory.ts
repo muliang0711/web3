@@ -4,6 +4,7 @@ import { useAccount } from 'wagmi';
 import { parseEther, decodeEventLog } from 'viem';
 import { supabase } from '../lib/supabase';
 import { CAMPAIGN_FACTORY_ADDRESS } from '../lib/contracts';
+import { getCampaignImagePath, getCampaignImageUrl, uploadMediaFile } from '../lib/media';
 
 const FACTORY_ABI = [
     {
@@ -53,6 +54,7 @@ type CampaignRecord = {
     target_eth?: string | number | null;
     duration_days?: number | null;
     created_at?: string | null;
+    imageUrl?: string | null;
 };
 
 export function useCampaignFactory() {
@@ -116,6 +118,7 @@ export function useCampaignFactory() {
                         target_eth: row.target_eth,
                         duration_days: row.duration_days,
                         created_at: row.created_at,
+                        imageUrl: row.image_url ?? row.campaign_image_url ?? row.cover_image_url ?? getCampaignImageUrl(row.address),
                     } satisfies CampaignRecord,
                 ])
             );
@@ -125,6 +128,7 @@ export function useCampaignFactory() {
                     address: campaignAddress,
                     creator: null,
                     title: null,
+                    imageUrl: getCampaignImageUrl(campaignAddress),
                 }
             );
 
@@ -166,7 +170,7 @@ export function useCampaignFactory() {
                     }
                 }
 
-                await supabase.from('campaigns').upsert({
+                const { error: campaignSyncError } = await supabase.from('campaigns').upsert({
                     address: newCampaignAddress,
                     creator_address: address,
                     title: pendingCampaign.title,
@@ -174,6 +178,28 @@ export function useCampaignFactory() {
                     target_eth: pendingCampaign.targetEth,
                     duration_days: pendingCampaign.durationDays,
                 }, { onConflict: 'address' });
+
+                if (campaignSyncError) {
+                    throw campaignSyncError;
+                }
+
+                if (pendingCampaign.imageFile) {
+                    const imagePath = getCampaignImagePath(newCampaignAddress);
+                    const imageUrl = await uploadMediaFile(pendingCampaign.imageFile, imagePath);
+
+                    try {
+                        const { error: imageColumnError } = await supabase
+                            .from('campaigns')
+                            .update({ image_url: imageUrl })
+                            .eq('address', newCampaignAddress);
+
+                        if (imageColumnError) {
+                            throw imageColumnError;
+                        }
+                    } catch (imageSyncError) {
+                        console.warn('Campaign image uploaded, but failed to persist image_url column.', imageSyncError);
+                    }
+                }
             } catch (err) {
                 console.error('Failed to sync campaign to Supabase', err);
             } finally {
@@ -185,8 +211,8 @@ export function useCampaignFactory() {
         void syncToSupabase();
     }, [address, isConfirmed, pendingCampaign, receipt, publicClient]);
 
-    const createCampaign = (title: string, description: string, targetEth: string, durationDays: number) => {
-        setPendingCampaign({ title, description, targetEth, durationDays });
+    const createCampaign = (title: string, description: string, targetEth: string, durationDays: number, imageFile?: File | null) => {
+        setPendingCampaign({ title, description, targetEth, durationDays, imageFile: imageFile ?? null });
         writeContract({
             address: CAMPAIGN_FACTORY_ADDRESS,
             abi: FACTORY_ABI,
