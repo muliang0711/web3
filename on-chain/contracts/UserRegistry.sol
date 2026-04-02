@@ -21,9 +21,11 @@ contract UserRegistry {
 
     // mapping to track points (JJ)
     mapping(address => uint256) public claimableRewards;
+    mapping(address => bool) public authorizedCampaigns;
 
     // Security & Architecture variables (JJ)
     address public rewardManager;
+    address public campaignFactory;
     address public owner;
 
     // 3. events :
@@ -44,6 +46,10 @@ contract UserRegistry {
         require(msg.sender == owner, "Not authorized");
         _;
     }
+    modifier onlyCampaignFactory() {
+        require(msg.sender == campaignFactory, "Only CampaignFactory can call this");
+        _;
+    }
 
     // 4. functions :
     function register(string memory _name) public {
@@ -61,6 +67,7 @@ contract UserRegistry {
     }
 
     function recordDonation(address _user, uint256 _amount) external {
+        require(authorizedCampaigns[msg.sender], "Only authorized campaigns can record donations");
         if (_user == address(0)) {
             revert("Invalid user address");
         }
@@ -69,6 +76,7 @@ contract UserRegistry {
         }
 
         userDonations[_user].push(DonationRecord(msg.sender, _amount, block.timestamp));
+        claimableRewards[_user] += _amount;
         emit DonationRecorded(_user, msg.sender, _amount, block.timestamp);
     }
 
@@ -94,5 +102,19 @@ contract UserRegistry {
             revert("Invalid reward manager");
         }
         rewardManager = _rewardManager;
+    }
+
+    function setCampaignFactory(address _campaignFactory) external onlyOwner {
+        if (_campaignFactory == address(0)) {
+            revert("Invalid campaign factory");
+        }
+        campaignFactory = _campaignFactory;
+    }
+
+    function authorizeCampaign(address _campaign) external onlyCampaignFactory {
+        if (_campaign == address(0)) {
+            revert("Invalid campaign address");
+        }
+        authorizedCampaigns[_campaign] = true;
     }
 }

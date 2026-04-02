@@ -68,4 +68,20 @@ describe("UserRegistry", async function () {
             }
         );
     });
+
+    it("Should reject donation recording from unauthorized callers", async function () {
+        const userRegistry = await viem.deployContract("UserRegistry");
+        const [, donor] = await viem.getWalletClients();
+
+        console.log(`\n    [Test: Reject Unauthorized Donation Recording]`);
+
+        await assert.rejects(
+            () => userRegistry.write.recordDonation([donor.account.address, 1n]),
+            (err: any) => {
+                const reason = getRevertReason(err);
+                console.log(`    Expected Revert Reason found: "${reason}"`);
+                return /Only authorized campaigns can record donations/.test(reason) || /Only authorized campaigns can record donations/.test(err.message);
+            }
+        );
+    });
 });

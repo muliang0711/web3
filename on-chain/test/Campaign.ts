@@ -46,7 +46,22 @@ describe("Campaign Module", async function () {
 
     const deployCampaignFactory = async () => {
         const userRegistry = await viem.deployContract("UserRegistry");
-        return viem.deployContract("CampaignFactory", [userRegistry.address]);
+        const factory = await viem.deployContract("CampaignFactory", [userRegistry.address]);
+        await userRegistry.write.setCampaignFactory([factory.address]);
+        return factory;
+    };
+
+    const deployRewardStack = async () => {
+        const userRegistry = await viem.deployContract("UserRegistry");
+        const factory = await viem.deployContract("CampaignFactory", [userRegistry.address]);
+        await userRegistry.write.setCampaignFactory([factory.address]);
+        const rewardToken = await viem.deployContract("RewardToken");
+        const rewardManager = await viem.deployContract("RewardManager", [rewardToken.address, userRegistry.address]);
+
+        await userRegistry.write.setRewardManager([rewardManager.address]);
+        await rewardToken.write.transferOwnership([rewardManager.address]);
+
+        return { userRegistry, factory, rewardToken, rewardManager };
     };
 
     // Advance time past the campaign deadline
@@ -373,6 +388,35 @@ describe("Campaign Module", async function () {
     // ══════════════════════════════════════════════════════════
     // 5. REWARD TOKEN TESTS
     // ══════════════════════════════════════════════════════════
+
+    it("Should let contributors claim CFR rewards after donating", async function () {
+        const { userRegistry, factory, rewardToken, rewardManager } = await deployRewardStack();
+        const [, contributor] = await viem.getWalletClients();
+
+        console.log(`\n    [Test: Claim Rewards After Donation]`);
+
+        const donationAmount = parseEther("4");
+        await factory.write.createCampaign(["Rewarded Campaign", "Description", parseEther("10"), 30n]);
+
+        const campaigns = await factory.read.getCampaigns();
+        const contributorCampaign = await getCampaignContract(campaigns[0], 1);
+        await contributorCampaign.write.contribute([], { value: donationAmount });
+
+        const claimableRewardsBefore = await userRegistry.read.getClaimableRewards([contributor.account.address]);
+        console.log(`    Claimable rewards before claim: ${formatEther(claimableRewardsBefore)} CFR`);
+        assert.equal(claimableRewardsBefore, donationAmount);
+
+        await rewardManager.write.claimRewards([], { account: contributor.account });
+
+        const claimableRewardsAfter = await userRegistry.read.getClaimableRewards([contributor.account.address]);
+        const tokenBalance = await rewardToken.read.balanceOf([contributor.account.address]);
+
+        console.log(`    Claimable rewards after claim: ${formatEther(claimableRewardsAfter)} CFR`);
+        console.log(`    Contributor CFR balance: ${formatEther(tokenBalance)} CFR`);
+
+        assert.equal(claimableRewardsAfter, 0n);
+        assert.equal(tokenBalance, donationAmount);
+    });
 
     it("Should deploy RewardToken and mint to contributors", async function () {
         const [, contributor] = await viem.getWalletClients();

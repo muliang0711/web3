@@ -3,6 +3,10 @@ pragma solidity ^0.8.28;
 
 import "./Campaign.sol";
 
+interface IUserRegistryAdmin {
+    function authorizeCampaign(address _campaign) external;
+}
+
 contract CampaignFactory {
     // ── State Variables ────────────────────────────────────── // cyao : need to be able explain why need these state variable
     address[] public campaigns; // cyao : need to be able explain why need this state variable
@@ -61,6 +65,7 @@ contract CampaignFactory {
         address campaignAddress = address(newCampaign);
         campaigns.push(campaignAddress);
         userCampaigns[msg.sender].push(campaignAddress);
+        IUserRegistryAdmin(userRegistryAddress).authorizeCampaign(campaignAddress);
 
         assert(campaigns[campaigns.length - 1] == campaignAddress);
         assert(

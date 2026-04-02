@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
+import { useWriteContract, useWaitForTransactionReceipt, usePublicClient } from 'wagmi';
 import { useAccount } from 'wagmi';
 import { parseEther, decodeEventLog } from 'viem';
 import { supabase } from '../lib/supabase';
@@ -17,6 +17,20 @@ const FACTORY_ABI = [
         ],
         "outputs": [{ "type": "address" }],
         "stateMutability": "nonpayable"
+    },
+    {
+        "type": "function",
+        "name": "getCampaigns",
+        "inputs": [],
+        "outputs": [{ "type": "address[]" }],
+        "stateMutability": "view"
+    },
+    {
+        "type": "function",
+        "name": "getUserCampaigns",
+        "inputs": [{ "name": "_user", "type": "address" }],
+        "outputs": [{ "type": "address[]" }],
+        "stateMutability": "view"
     },
     {
         "type": "event",
@@ -43,6 +57,7 @@ type CampaignRecord = {
 
 export function useCampaignFactory() {
     const { address } = useAccount();
+    const publicClient = usePublicClient();
     const { writeContract, data: hash, isPending: isCreating, error: createError } = useWriteContract();
 
     const [campaigns, setCampaigns] = useState<CampaignRecord[]>([]);
@@ -53,35 +68,70 @@ export function useCampaignFactory() {
     const { data: receipt, isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransactionReceipt({ hash });
 
     const fetchCampaigns = async () => {
+        if (!publicClient) {
+            setCampaigns([]);
+            setUserCampaigns([]);
+            return;
+        }
+
         setIsLoadingCampaigns(true);
         try {
+            const [chainCampaigns, chainUserCampaigns] = await Promise.all([
+                publicClient.readContract({
+                    address: CAMPAIGN_FACTORY_ADDRESS,
+                    abi: FACTORY_ABI,
+                    functionName: 'getCampaigns',
+                }) as Promise<readonly `0x${string}`[]>,
+                address
+                    ? publicClient.readContract({
+                        address: CAMPAIGN_FACTORY_ADDRESS,
+                        abi: FACTORY_ABI,
+                        functionName: 'getUserCampaigns',
+                        args: [address],
+                    }) as Promise<readonly `0x${string}`[]>
+                    : Promise.resolve([] as const),
+            ]);
+
+            if (chainCampaigns.length === 0) {
+                setCampaigns([]);
+                setUserCampaigns([]);
+                return;
+            }
+
             const { data, error } = await supabase
                 .from('campaigns')
                 .select('*')
-                .order('created_at', { ascending: false });
+                .in('address', [...chainCampaigns]);
 
             if (error) throw error;
 
-            const all = (data ?? []).map((row: any) => ({
-                address: row.address as `0x${string}`,
-                creator: row.creator_address,
-                title: row.title,
-                description: row.description,
-                target_eth: row.target_eth,
-                duration_days: row.duration_days,
-                created_at: row.created_at,
-            }));
+            const rowByAddress = new Map(
+                (data ?? []).map((row: any) => [
+                    String(row.address).toLowerCase(),
+                    {
+                        address: row.address as `0x${string}`,
+                        creator: row.creator_address,
+                        title: row.title,
+                        description: row.description,
+                        target_eth: row.target_eth,
+                        duration_days: row.duration_days,
+                        created_at: row.created_at,
+                    } satisfies CampaignRecord,
+                ])
+            );
 
-            setCampaigns(all);
+            const toRecord = (campaignAddress: `0x${string}`): CampaignRecord => (
+                rowByAddress.get(campaignAddress.toLowerCase()) ?? {
+                    address: campaignAddress,
+                    creator: null,
+                    title: null,
+                }
+            );
 
-            if (address) {
-                const mine = all.filter(c => c.creator?.toLowerCase() === address.toLowerCase());
-                setUserCampaigns(mine);
-            } else {
-                setUserCampaigns([]);
-            }
+            setCampaigns([...chainCampaigns].map(toRecord));
+            setUserCampaigns([...chainUserCampaigns].map(toRecord));
         } catch (err) {
-            console.error('Failed to fetch campaigns from Supabase', err);
+            console.error('Failed to fetch campaigns', err);
             setCampaigns([]);
             setUserCampaigns([]);
         } finally {
@@ -90,8 +140,8 @@ export function useCampaignFactory() {
     };
 
     useEffect(() => {
-        fetchCampaigns();
-    }, [address]);
+        void fetchCampaigns();
+    }, [address, publicClient]);
 
     useEffect(() => {
         const syncToSupabase = async () => {
@@ -128,12 +178,12 @@ export function useCampaignFactory() {
                 console.error('Failed to sync campaign to Supabase', err);
             } finally {
                 setPendingCampaign(null);
-                fetchCampaigns();
+                void fetchCampaigns();
             }
         };
 
-        syncToSupabase();
-    }, [address, isConfirmed, pendingCampaign, receipt]);
+        void syncToSupabase();
+    }, [address, isConfirmed, pendingCampaign, receipt, publicClient]);
 
     const createCampaign = (title: string, description: string, targetEth: string, durationDays: number) => {
         setPendingCampaign({ title, description, targetEth, durationDays });

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
+import { useWriteContract, useWaitForTransactionReceipt, usePublicClient } from 'wagmi';
 import { useAccount } from 'wagmi';
 import { parseEther } from 'viem';
 import { supabase } from '../lib/supabase';
@@ -11,6 +11,42 @@ const CAMPAIGN_ABI = [
         "inputs": [],
         "outputs": [],
         "stateMutability": "payable"
+    },
+    {
+        "type": "function",
+        "name": "getCampaignInfo",
+        "inputs": [],
+        "outputs": [
+            {
+                "type": "tuple",
+                "components": [
+                    { "name": "creator", "type": "address" },
+                    { "name": "title", "type": "string" },
+                    { "name": "description", "type": "string" },
+                    { "name": "fundingTarget", "type": "uint256" },
+                    { "name": "deadline", "type": "uint256" },
+                    { "name": "totalFunded", "type": "uint256" },
+                    { "name": "goalReached", "type": "bool" },
+                    { "name": "fundsWithdrawn", "type": "bool" },
+                    { "name": "isCancelled", "type": "bool" }
+                ]
+            }
+        ],
+        "stateMutability": "view"
+    },
+    {
+        "type": "function",
+        "name": "getContribution",
+        "inputs": [{ "name": "_contributor", "type": "address" }],
+        "outputs": [{ "type": "uint256" }],
+        "stateMutability": "view"
+    },
+    {
+        "type": "function",
+        "name": "getContributors",
+        "inputs": [],
+        "outputs": [{ "type": "address[]" }],
+        "stateMutability": "view"
     }
 ] as const;
 
@@ -26,78 +62,55 @@ export type CampaignInfo = {
     isCancelled: boolean;
 };
 
-const toWei = (value: string | number | null | undefined) => {
-    const normalized = value == null ? '0' : String(value);
-    try {
-        return parseEther(normalized);
-    } catch {
-        return 0n;
-    }
-};
-
-const getDeadlineSeconds = (row: any) => {
-    if (row?.deadline != null) {
-        if (typeof row.deadline === 'number') return BigInt(row.deadline);
-        const parsed = Date.parse(String(row.deadline));
-        if (!Number.isNaN(parsed)) return BigInt(Math.floor(parsed / 1000));
-    }
-
-    const createdAtMs = row?.created_at ? Date.parse(String(row.created_at)) : Number.NaN;
-    const durationDays = Number(row?.duration_days ?? 0);
-
-    if (Number.isNaN(createdAtMs) || !Number.isFinite(durationDays)) {
-        return 0n;
-    }
-
-    return BigInt(Math.floor((createdAtMs + durationDays * 86400000) / 1000));
-};
-
 export function useCampaign(campaignAddress?: `0x${string}`) {
     const { address } = useAccount();
+    const publicClient = usePublicClient();
     const { writeContract, data: hash, isPending: isContributing, error: contributeError } = useWriteContract();
 
     const [pendingAmount, setPendingAmount] = useState<string>('');
+    const [info, setInfo] = useState<CampaignInfo | null>(null);
+    const [contribution, setContribution] = useState<bigint>(0n);
     const [contributors, setContributors] = useState<string[]>([]);
-    const [campaignRow, setCampaignRow] = useState<any>(null);
-    const [campaignDonations, setCampaignDonations] = useState<any[]>([]);
     const [isLoadingInfo, setIsLoadingInfo] = useState(false);
 
     const fetchCampaignData = async () => {
-        if (!campaignAddress) {
-            setCampaignRow(null);
-            setCampaignDonations([]);
+        if (!campaignAddress || !publicClient) {
+            setInfo(null);
+            setContribution(0n);
             setContributors([]);
             return;
         }
 
         setIsLoadingInfo(true);
         try {
-            const [campaignResult, donationsResult] = await Promise.all([
-                supabase
-                    .from('campaigns')
-                    .select('*')
-                    .ilike('address', campaignAddress)
-                    .limit(1),
-                supabase
-                    .from('donations')
-                    .select('*')
-                    .ilike('campaign_address', campaignAddress)
-                    .order('created_at', { ascending: true }),
+            const [campaignInfo, contributorList, connectedContribution] = await Promise.all([
+                publicClient.readContract({
+                    address: campaignAddress,
+                    abi: CAMPAIGN_ABI,
+                    functionName: 'getCampaignInfo',
+                }) as Promise<CampaignInfo>,
+                publicClient.readContract({
+                    address: campaignAddress,
+                    abi: CAMPAIGN_ABI,
+                    functionName: 'getContributors',
+                }) as Promise<readonly `0x${string}`[]>,
+                address
+                    ? publicClient.readContract({
+                        address: campaignAddress,
+                        abi: CAMPAIGN_ABI,
+                        functionName: 'getContribution',
+                        args: [address],
+                    }) as Promise<bigint>
+                    : Promise.resolve(0n),
             ]);
 
-            if (campaignResult.error) throw campaignResult.error;
-            if (donationsResult.error) throw donationsResult.error;
-
-            const row = campaignResult.data?.[0] ?? null;
-            const donationRows = donationsResult.data ?? [];
-
-            setCampaignRow(row);
-            setCampaignDonations(donationRows);
-            setContributors(Array.from(new Set(donationRows.map((donation: any) => donation.donor_address))));
+            setInfo(campaignInfo);
+            setContribution(connectedContribution);
+            setContributors([...contributorList]);
         } catch (err) {
-            console.error('Failed to fetch campaign from Supabase', err);
-            setCampaignRow(null);
-            setCampaignDonations([]);
+            console.error('Failed to fetch campaign from chain', err);
+            setInfo(null);
+            setContribution(0n);
             setContributors([]);
         } finally {
             setIsLoadingInfo(false);
@@ -105,8 +118,8 @@ export function useCampaign(campaignAddress?: `0x${string}`) {
     };
 
     useEffect(() => {
-        fetchCampaignData();
-    }, [campaignAddress, address]);
+        void fetchCampaignData();
+    }, [address, campaignAddress, publicClient]);
 
     const { data: receipt, isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransactionReceipt({ hash });
 
@@ -124,12 +137,12 @@ export function useCampaign(campaignAddress?: `0x${string}`) {
                 console.error('Failed to sync donation to Supabase', e);
             } finally {
                 setPendingAmount('');
-                fetchCampaignData();
+                void fetchCampaignData();
             }
         };
 
-        syncToSupabase();
-    }, [address, campaignAddress, isConfirmed, pendingAmount, receipt]);
+        void syncToSupabase();
+    }, [address, campaignAddress, isConfirmed, pendingAmount, receipt, publicClient]);
 
     const contribute = (amountEth: string) => {
         if (!campaignAddress) return;
@@ -142,30 +155,6 @@ export function useCampaign(campaignAddress?: `0x${string}`) {
             value: parseEther(amountEth),
         });
     };
-
-    const fundingTarget = toWei(campaignRow?.target_eth);
-    const totalFunded = campaignDonations.reduce((sum, donation) => sum + toWei(donation.amount_eth), 0n);
-    const contribution = address
-        ? campaignDonations
-            .filter(donation => donation.donor_address?.toLowerCase() === address.toLowerCase())
-            .reduce((sum, donation) => sum + toWei(donation.amount_eth), 0n)
-        : 0n;
-    const deadline = getDeadlineSeconds(campaignRow);
-    const goalReached = fundingTarget > 0n && totalFunded >= fundingTarget;
-
-    const info: CampaignInfo | null = campaignRow
-        ? {
-            creator: (campaignRow.creator_address || '0x0000000000000000000000000000000000000000') as `0x${string}`,
-            title: campaignRow.title || 'Untitled Campaign',
-            description: campaignRow.description || '',
-            fundingTarget,
-            deadline,
-            totalFunded,
-            goalReached,
-            fundsWithdrawn: Boolean(campaignRow.funds_withdrawn),
-            isCancelled: Boolean(campaignRow.is_cancelled),
-        }
-        : null;
 
     return {
         info,

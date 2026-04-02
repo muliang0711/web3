@@ -1,10 +1,11 @@
+import { useEffect } from 'react';
 import { useAccount, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
 import { useNavigate } from 'react-router-dom';
 import { useUserRegistry } from '../../hooks/useUserRegistry';
 import { useCampaignFactory } from '../../hooks/useCampaignFactory';
 import { useCampaign } from '../../hooks/useCampaign';
+import { REWARD_MANAGER_ADDRESS } from '../../lib/contracts';
 
-const REWARD_MANAGER_ADDR = '0xDc64a140Aa3E981100a9becA4E685f962f0cF6C9' as const;
 const REWARD_MANAGER_ABI = [
     { type: 'function', name: 'claimRewards', inputs: [], outputs: [], stateMutability: 'nonpayable' }
 ] as const;
@@ -33,7 +34,7 @@ function DonationRecordRow({ record }: { record: any }) {
 
 export function ProfileView() {
     const { address } = useAccount();
-    const { user, donations, status: userStatus } = useUserRegistry();
+    const { user, donations, refetchUser, status: userStatus } = useUserRegistry();
     const { campaigns } = useCampaignFactory();
     const navigate = useNavigate();
 
@@ -43,11 +44,19 @@ export function ProfileView() {
     const displayRewards = Number(user?.claimableRewards ?? 0).toFixed(4);
     const hasRewards = Number(user?.claimableRewards ?? 0) > 0;
 
+    useEffect(() => {
+        if (!isSuccess) {
+            return;
+        }
+
+        void refetchUser();
+    }, [isSuccess, refetchUser]);
+
     const handleClaim = () => {
         if (!hasRewards) return;
 
         writeContract({
-            address: REWARD_MANAGER_ADDR,
+            address: REWARD_MANAGER_ADDRESS,
             abi: REWARD_MANAGER_ABI,
             functionName: 'claimRewards',
         });

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
+import { formatEther } from 'viem';
+import { useWriteContract, useWaitForTransactionReceipt, usePublicClient } from 'wagmi';
 import { useAccount } from 'wagmi';
 import { supabase } from '../lib/supabase';
 import { USER_REGISTRY_ADDRESS } from '../lib/contracts';
@@ -12,6 +13,28 @@ const CONTRACT_ABI = [
         "inputs": [{ "name": "_name", "type": "string" }],
         "outputs": [],
         "stateMutability": "nonpayable"
+    },
+    {
+        "type": "function",
+        "name": "getUser",
+        "inputs": [{ "name": "_userAddress", "type": "address" }],
+        "outputs": [
+            {
+                "type": "tuple",
+                "components": [
+                    { "name": "name", "type": "string" },
+                    { "name": "isRegistered", "type": "bool" }
+                ]
+            }
+        ],
+        "stateMutability": "view"
+    },
+    {
+        "type": "function",
+        "name": "getClaimableRewards",
+        "inputs": [{ "name": "_user", "type": "address" }],
+        "outputs": [{ "type": "uint256" }],
+        "stateMutability": "view"
     }
 ] as const;
 
@@ -24,6 +47,10 @@ type AppUser = {
 };
 
 const USER_LOOKUP_TIMEOUT_MS = 8000;
+type ChainUser = {
+    name: string;
+    isRegistered: boolean;
+};
 
 function withTimeout<T>(promiseLike: PromiseLike<T>, label: string, timeoutMs = USER_LOOKUP_TIMEOUT_MS): Promise<T> {
     return new Promise<T>((resolve, reject) => {
@@ -43,7 +70,7 @@ function withTimeout<T>(promiseLike: PromiseLike<T>, label: string, timeoutMs = 
     });
 }
 
-async function fetchUserByAddress(address: string): Promise<AppUser | null> {
+async function fetchUserRowByAddress(address: string) {
     const { data, error } = await withTimeout(
         supabase
             .from('users')
@@ -56,14 +83,44 @@ async function fetchUserByAddress(address: string): Promise<AppUser | null> {
 
     if (error) throw error;
 
-    const row = data?.[0];
-    return row ? {
-        name: row.name,
-        isRegistered: true,
-        walletAddress: row.wallet_address,
-        createdAt: row.created_at,
-        claimableRewards: row.claimable_rewards ?? row.claimableRewards ?? null,
-    } : null;
+    return data?.[0] ?? null;
+}
+
+async function fetchUserByAddress(publicClient: NonNullable<ReturnType<typeof usePublicClient>>, address: string): Promise<AppUser | null> {
+    let row: any = null;
+
+    try {
+        row = await fetchUserRowByAddress(address);
+    } catch (error) {
+        console.warn('Failed to load user row from Supabase, falling back to chain data only.', error);
+    }
+
+    const [chainUser, claimableRewards] = await Promise.all([
+        publicClient.readContract({
+            address: USER_REGISTRY_ADDRESS,
+            abi: CONTRACT_ABI,
+            functionName: 'getUser',
+            args: [address as `0x${string}`],
+        }) as Promise<ChainUser>,
+        publicClient.readContract({
+            address: USER_REGISTRY_ADDRESS,
+            abi: CONTRACT_ABI,
+            functionName: 'getClaimableRewards',
+            args: [address as `0x${string}`],
+        }) as Promise<bigint>,
+    ]);
+
+    if (!row && !chainUser.isRegistered) {
+        return null;
+    }
+
+    return {
+        name: chainUser.isRegistered ? chainUser.name : row?.name ?? '',
+        isRegistered: chainUser.isRegistered || Boolean(row),
+        walletAddress: row?.wallet_address ?? address,
+        createdAt: row?.created_at ?? null,
+        claimableRewards: formatEther(claimableRewards),
+    };
 }
 
 async function fetchDonationsByAddress(address: string) {
@@ -98,15 +155,17 @@ async function fetchDonationsByAddress(address: string) {
 
 export function useUserRegistry() {
     const { address } = useAccount();
+    const publicClient = usePublicClient();
     const queryClient = useQueryClient();
     const { writeContract, data: hash, isPending: isRegistering, error: registerError } = useWriteContract();
 
     const [pendingName, setPendingName] = useState<string>('');
+    const userQueryKey = ['userRegistryUser', address, publicClient?.chain?.id] as const;
 
     const userQuery = useQuery({
-        queryKey: ['userRegistryUser', address],
-        queryFn: () => fetchUserByAddress(address!),
-        enabled: Boolean(address),
+        queryKey: userQueryKey,
+        queryFn: () => fetchUserByAddress(publicClient!, address!),
+        enabled: Boolean(address && publicClient),
         staleTime: 1000 * 30,
         retry: 1,
     });
@@ -133,12 +192,12 @@ export function useUserRegistry() {
                     name: pendingName,
                 });
 
-                queryClient.setQueryData(['userRegistryUser', address], {
+                queryClient.setQueryData(userQueryKey, {
                     name: pendingName,
                     isRegistered: true,
                     walletAddress: address,
                     createdAt: new Date().toISOString(),
-                    claimableRewards: null,
+                    claimableRewards: '0',
                 } satisfies AppUser);
 
                 await queryClient.invalidateQueries({ queryKey: ['userRegistryUser', address] });
@@ -168,8 +227,8 @@ export function useUserRegistry() {
         });
     };
 
-    const hasResolvedUser = !address || userQuery.isFetched || userQuery.isError;
-    const isReading = Boolean(address) && !hasResolvedUser;
+    const hasResolvedUser = !address || !publicClient || userQuery.isFetched || userQuery.isError;
+    const isReading = Boolean(address && publicClient) && !hasResolvedUser;
 
     return {
         user: userQuery.data ?? null,

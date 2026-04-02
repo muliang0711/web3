@@ -1,47 +1,106 @@
-# Start Guide: Run On-Chain Backend For Frontend Testing
+# Start Guide
 
-This guide is based on the current codebase in `web3/`.
+This guide reflects the current repo state in `c:\Code\project\web3` as of April 2, 2026.
 
-## Current setup (important)
+## 1. Current project structure
 
-- Frontend chain config is Hardhat local chain (`chainId: 31337`) in `client/src/providers/wagmi.ts`.
-- Frontend uses hardcoded contract addresses:
-  - `UserRegistry`: `0x5FbDB2315678afecb367f032d93F642f64180aa3` in `client/src/hooks/useUserRegistry.ts`
-  - `CampaignFactory`: `0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512` in `client/src/hooks/useCampaignFactory.ts`
-- To match these addresses on a fresh local node, deploy in this order:
-  1. `UserRegistry`
-  2. `CampaignFactory`
+### On-chain contracts
 
-## 1. Install dependencies (one time)
+- `UserRegistry.sol`
+- `CampaignFactory.sol`
+- `Campaign.sol`
+- `RewardToken.sol`
+- `RewardManager.sol`
 
-Open terminal at repo root:
+### What is wired today
+
+- The frontend runs against Hardhat local chain `31337`.
+- Core contract addresses are loaded from `client/src/lib/contracts.ts`.
+- The frontend uses Supabase for user rows, campaign metadata, and donation history tables.
+- Claimable rewards come from the blockchain through `UserRegistry.getClaimableRewards(...)`.
+
+### Reward flow now implemented
+
+Current runtime behavior:
+
+1. A factory-created campaign is authorized in `UserRegistry`.
+2. When a user donates through `Campaign.contribute()`, the campaign records the donation in `UserRegistry`.
+3. `UserRegistry` increases `claimableRewards` 1:1 with the donated amount.
+4. `RewardManager.claimRewards()` reads the user reward amount, resets it in `UserRegistry`, and mints CFR through `RewardToken`.
+
+Security note:
+
+- `UserRegistry.recordDonation(...)` now only accepts calls from authorized campaign contracts created by `CampaignFactory`.
+
+## 2. One-time setup
+
+From repo root:
 
 ```powershell
 cd c:\Code\project\web3
 ```
 
-Install on-chain deps:
+Install on-chain dependencies:
 
 ```powershell
-cd on-chain
+cd .\on-chain
 npm install
 ```
 
-Install client deps:
+Install client dependencies:
 
 ```powershell
 cd ..\client
 npm install
 ```
 
-If compile fails with OpenZeppelin import error, run:
+## 3. Client environment
 
-```powershell
-cd ..\on-chain
-npm install @openzeppelin/contracts
+Create `client/.env` with:
+
+```env
+VITE_SUPABASE_URL=your_supabase_url
+VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
 ```
 
-## 2. Start local blockchain (Terminal A)
+Optional contract overrides:
+
+```env
+VITE_USER_REGISTRY_ADDRESS=0x...
+VITE_CAMPAIGN_FACTORY_ADDRESS=0x...
+VITE_REWARD_TOKEN_ADDRESS=0x...
+VITE_REWARD_MANAGER_ADDRESS=0x...
+```
+
+Notes:
+
+- If Supabase env vars are missing, the frontend can still load, but user sync, campaign metadata sync, and donation history sync will fail.
+- If you use the standard local deployment flow below on a fresh chain, the default addresses in `client/src/lib/contracts.ts` already match it.
+
+## 4. Verify the codebase before running
+
+From `on-chain`:
+
+```powershell
+cd c:\Code\project\web3\on-chain
+npx hardhat test
+```
+
+From `client`:
+
+```powershell
+cd c:\Code\project\web3\client
+npm run build
+```
+
+Current status from this repo snapshot:
+
+- `npx hardhat test` passes.
+- `npm run build` passes.
+
+## 5. Start local blockchain
+
+Open Terminal A:
 
 ```powershell
 cd c:\Code\project\web3\on-chain
@@ -50,31 +109,48 @@ npx hardhat node
 
 Keep this terminal running.
 
-## 3. Deploy contracts to local node (Terminal B)
+## 6. Deploy the full reward-enabled stack
+
+Open Terminal B:
 
 ```powershell
 cd c:\Code\project\web3\on-chain
-npx hardhat ignition deploy --network localhost ignition/modules/UserRegistry.ts
-npx hardhat ignition deploy --network localhost ignition/modules/CampaignFactory.ts
+npx hardhat ignition deploy --network localhost ignition/modules/RewardSystem.ts
 ```
 
-## 4. Verify deployed addresses
+This module deploys and wires:
+
+1. `UserRegistry`
+2. `CampaignFactory`
+3. `UserRegistry.setCampaignFactory(...)`
+4. `RewardToken`
+5. `RewardManager`
+6. `UserRegistry.setRewardManager(...)`
+7. `RewardToken.transferOwnership(...)` to `RewardManager`
+
+## 7. Verify deployed addresses
+
+Check:
 
 ```powershell
 Get-Content c:\Code\project\web3\on-chain\ignition\deployments\chain-31337\deployed_addresses.json
 ```
 
-Expected on fresh chain:
+Expected addresses on a clean local deployment:
 
 - `UserRegistryModule#UserRegistry` -> `0x5FbDB2315678afecb367f032d93F642f64180aa3`
 - `CampaignFactoryModule#CampaignFactory` -> `0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512`
+- `RewardSystemModule#RewardToken` -> `0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9`
+- `RewardSystemModule#RewardManager` -> `0xDc64a140Aa3E981100a9becA4E685f962f0cF6C9`
 
-If your addresses differ, update:
+If your addresses differ:
 
-- `client/src/hooks/useUserRegistry.ts`
-- `client/src/hooks/useCampaignFactory.ts`
+1. Put them in `client/.env`.
+2. Restart the Vite dev server.
 
-## 5. Start frontend (Terminal C)
+## 8. Start the frontend
+
+Open Terminal C:
 
 ```powershell
 cd c:\Code\project\web3\client
@@ -83,30 +159,42 @@ npm run dev
 
 Open the local URL shown by Vite.
 
-## 6. Wallet setup for testing
+## 9. Wallet setup
 
 In MetaMask:
 
-1. Add/switch to local network:
-   - RPC: `http://127.0.0.1:8545`
-   - Chain ID: `31337`
-   - Symbol: `ETH`
-2. Import one Hardhat account private key from Terminal A output.
-3. Connect wallet in `/login`.
+1. Add or switch to the local Hardhat network.
+2. Use RPC URL `http://127.0.0.1:8545`.
+3. Use Chain ID `31337`.
+4. Use currency symbol `ETH`.
+5. Import one of the private keys printed by `npx hardhat node`.
 
-## 7. Quick test flow
+## 10. Reward-enabled test flow
 
-1. Connect wallet on `/login`
-2. Register on `/register`
-3. Create campaign on `/campaigns`
-4. Open campaign detail and donate
-5. Check profile donation history on `/profile`
+This is the current local end-to-end flow:
 
-## 8. If things break
+1. Open `/login` and connect wallet.
+2. Open `/register` and register a user.
+3. Open `/campaigns/create` and create a campaign.
+4. Open the campaign detail page and donate from another wallet.
+5. Open `/profile` for the donor wallet.
+6. Confirm `Claimable Rewards` increased.
+7. Click `Claim Tokens`.
 
-- `ContractFunctionExecutionError` / read revert:
-  - Usually wrong address, wrong network, or contracts not deployed.
-- Wallet connected but app redirects oddly:
-  - Ensure wallet is on `31337` and contracts are deployed.
-- Local chain reset after restart:
-  - Re-run both deploy commands in Step 3.
+Expected result:
+
+- `Claimable Rewards` drops to `0`.
+- CFR tokens are minted by `RewardToken` through `RewardManager`.
+
+## 11. If things break
+
+- `ContractFunctionExecutionError` or read revert:
+  Usually wrong network, wrong address, or contracts were not deployed after a local node reset.
+- Donation fails with an authorization-style revert:
+  The campaign stack was not deployed with `RewardSystem.ts`, or `UserRegistry.setCampaignFactory(...)` was not executed.
+- Claim button is visible but claim fails:
+  Check `RewardManager` address, deployment wiring, and wallet network.
+- UI loads but history or names are missing:
+  Check `client/.env` and Supabase connectivity.
+- Local node restarted:
+  Re-run the deployment command in Section 6.
