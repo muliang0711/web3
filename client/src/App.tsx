@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Web3Provider } from './providers/Web3Provider';
 import { MainLayout } from './components/layout/MainLayout';
 import { Web3Gate } from './components/guards/Web3Gate';
+import { LandingPage } from './views/marketing/LandingPage';
 
 // hy - User module
 import { LoginView } from './views/hy/Login';
@@ -30,6 +31,8 @@ function App() {
       <BrowserRouter>
         <MainLayout>
           <Routes>
+            <Route path="/" element={<LandingPage />} />
+
             {/* The Gate wraps all routes to enforce state-based redirection */}
             <Route element={<Web3Gate />}>
               {/* hy - User module */}
@@ -52,10 +55,9 @@ function App() {
               <Route path="/transactions/campaign" element={<CampaignTransactionsView />} />
               <Route path="/transactions/filter" element={<TransactionFilterView />} />
 
-              {/* Default catch-all */}
-              <Route path="/" element={<Navigate to="/dashboard" replace />} />
-              <Route path="*" element={<Navigate to="/dashboard" replace />} />
             </Route>
+
+            <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </MainLayout>
       </BrowserRouter>

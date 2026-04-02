@@ -1,91 +1,103 @@
+import type { ReactNode } from 'react';
 import { useLocation, NavLink, useNavigate } from 'react-router-dom';
 import { useAccount, useDisconnect } from 'wagmi';
 
-export function MainLayout({ children }: { children: React.ReactNode }) {
+export function MainLayout({ children }: { children: ReactNode }) {
     const location = useLocation();
     const navigate = useNavigate();
     const { address } = useAccount();
     const { disconnect } = useDisconnect();
 
     const isAuthRoute = location.pathname === '/login' || location.pathname === '/register';
+    const isPublicRoute = location.pathname === '/';
+
+    if (isPublicRoute) {
+        return <div className="marketing-layout fade-in">{children}</div>;
+    }
 
     if (isAuthRoute) {
         return (
             <div className="auth-layout fade-in">
-                <div className="app-container">{children}</div>
+                <div className="auth-backdrop" aria-hidden="true" />
+                <div className="auth-shell">
+                    <button type="button" className="auth-home-link" onClick={() => navigate('/')}>
+                        Back to campaign
+                    </button>
+                    <div className="app-container">{children}</div>
+                </div>
             </div>
         );
     }
 
     return (
         <div className="app-wrapper fade-in">
-            {/* Left Sidebar Navigation */}
             <aside className="sidebar">
-                <div className="sidebar-logo" onClick={() => navigate('/dashboard')} style={{ cursor: 'pointer' }}>
-                    <span style={{ fontSize: '1.5rem' }}>⛓️</span> Web3 Fund
-                </div>
+                <button type="button" className="sidebar-logo" onClick={() => navigate('/dashboard')}>
+                    <span className="sidebar-logo-mark">PS</span>
+                    <span>
+                        <strong>Pet Survey</strong>
+                        <small>Campaign Portal</small>
+                    </span>
+                </button>
 
                 <div className="sidebar-nav-group">
-                    <div className="sidebar-nav-header">User</div>
+                    <div className="sidebar-nav-header">Participant</div>
                     <NavLink to="/profile" className={({ isActive }) => `sidebar-nav-link ${isActive ? 'active' : ''}`}>
-                        <span style={{ fontSize: '1.2rem' }}>👤</span> My Profile
+                        Profile
                     </NavLink>
                     <NavLink to="/user/created-history" className={({ isActive }) => `sidebar-nav-link ${isActive ? 'active' : ''}`}>
-                        <span style={{ fontSize: '1.2rem' }}>📝</span> My Campaigns
+                        Created campaigns
                     </NavLink>
                     <NavLink to="/global-history" className={({ isActive }) => `sidebar-nav-link ${isActive ? 'active' : ''}`}>
-                        <span style={{ fontSize: '1.2rem' }}>🌍</span> Registrations
+                        Registry log
                     </NavLink>
                 </div>
 
                 <div className="sidebar-nav-group">
-                    <div className="sidebar-nav-header">Campaigns</div>
+                    <div className="sidebar-nav-header">Campaign</div>
                     <NavLink to="/campaigns" className={({ isActive }) => `sidebar-nav-link ${isActive ? 'active' : ''}`}>
-                        <span style={{ fontSize: '1.2rem' }}>📋</span> Browse
+                        Browse campaigns
                     </NavLink>
                     <NavLink to="/campaigns/create" className={({ isActive }) => `sidebar-nav-link ${isActive ? 'active' : ''}`}>
-                        <span style={{ fontSize: '1.2rem' }}>➕</span> Create
+                        Create campaign
                     </NavLink>
                 </div>
 
                 <div className="sidebar-nav-group" style={{ flex: 1 }}>
-                    <div className="sidebar-nav-header">Transactions</div>
+                    <div className="sidebar-nav-header">Records</div>
                     <NavLink to="/transactions/user" className={({ isActive }) => `sidebar-nav-link ${isActive ? 'active' : ''}`}>
-                        <span style={{ fontSize: '1.2rem' }}>📊</span> Explorer
+                        Transactions
                     </NavLink>
                 </div>
 
                 <div className="sidebar-footer">
                     <button
                         className="sidebar-logout-btn"
-                        onClick={() => { disconnect(); navigate('/login'); }}
+                        onClick={() => {
+                            disconnect();
+                            navigate('/login');
+                        }}
                         title="Disconnect wallet and log out"
                     >
-                        <span style={{ fontSize: '1.1rem' }}>🚪</span> Disconnect
+                        Disconnect wallet
                     </button>
                 </div>
             </aside>
 
-            {/* Main Content Area */}
             <main className="main-content">
-                {/* Top Bar */}
                 <header className="top-bar">
-                    <div className="top-bar-badge">
-                        ✅ Your on-chain identity is verified
-                    </div>
+                    <div className="top-bar-badge">Reward-ready participant workspace</div>
                     <div className="user-profile-widget">
-                        <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontFamily: 'monospace' }}>
+                        <span className="wallet-pill">
                             {address ? `${address.slice(0, 6)}...${address.slice(-4)}` : ''}
                         </span>
-                        <div className="user-avatar" onClick={() => navigate('/profile')} title="Profile">
-                            {address?.slice(2, 4)?.toUpperCase() || 'U'}
-                        </div>
+                        <button type="button" className="user-avatar" onClick={() => navigate('/profile')} title="Open profile">
+                            {address?.slice(2, 4)?.toUpperCase() || 'PS'}
+                        </button>
                     </div>
                 </header>
 
-                <div className="dashboard-content">
-                    {children}
-                </div>
+                <div className="dashboard-content">{children}</div>
             </main>
         </div>
     );

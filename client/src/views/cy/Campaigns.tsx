@@ -37,11 +37,11 @@ function CampaignCard({ campaignAddress }: { campaignAddress: `0x${string}` }) {
             className="campaign-card"
             onClick={() => navigate(`/campaigns/${campaignAddress}`)}
         >
-            <div className="campaign-card-thumb" style={{ background: gradient }}>
-                <span className={`campaign-card-badge ${info.goalReached ? 'badge-success' : isExpired ? 'badge-danger' : 'badge-active'}`}>
-                    {info.goalReached ? '✅ Funded' : isExpired ? '❌ Ended' : '🟢 Active'}
-                </span>
-            </div>
+                <div className="campaign-card-thumb" style={{ background: gradient }}>
+                    <span className={`campaign-card-badge ${info.goalReached ? 'badge-success' : isExpired ? 'badge-danger' : 'badge-active'}`}>
+                        {info.goalReached ? 'Funded' : isExpired ? 'Ended' : 'Active'}
+                    </span>
+                </div>
             <div className="campaign-card-content">
                 <h4 className="campaign-card-title">{info.title}</h4>
                 <p className="campaign-card-desc">{info.description}</p>
@@ -67,27 +67,23 @@ export function CampaignsView() {
         <div className="fade-in">
             {/* Back button */}
             <button className="btn-back" onClick={() => navigate('/dashboard')}>
-                ← Back
+                Back
             </button>
 
-            {/* Header */}
             <div className="text-center" style={{ marginBottom: '1.5rem' }}>
-                <div style={{ fontSize: '2.5rem', marginBottom: '0.5rem' }}>📋</div>
                 <h2>Campaigns</h2>
-                <p style={{ marginTop: '0.25rem' }}>Browse or create crowdfunding campaigns</p>
+                <p style={{ marginTop: '0.25rem' }}>Browse or create fundraising campaigns for the survey ecosystem</p>
             </div>
 
-            {/* Create Campaign Button Container */}
             <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
                 <button
                     className="btn-primary"
                     onClick={() => navigate('/campaigns/create')}
                 >
-                    ➕ Create New Campaign
+                    Create a new campaign
                 </button>
             </div>
 
-            {/* Campaign List */}
             {status.isLoadingCampaigns ? (
                 <div className="text-center" style={{ padding: '2rem 0' }}>
                     <div className="spinner" />
@@ -95,7 +91,7 @@ export function CampaignsView() {
                 </div>
             ) : campaigns.length === 0 ? (
                 <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.85rem', background: 'var(--bg-input)', borderRadius: '12px', border: '1px dashed var(--border)' }}>
-                    No campaigns yet. Create the first one! 🎉
+                    No campaigns yet. Create the first one.
                 </div>
             ) : (
                 <div className="campaign-list">

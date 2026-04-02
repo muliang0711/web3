@@ -32,10 +32,10 @@ export function RegisterView() {
 
     return (
         <div className="fade-in text-center">
-            <div style={{ fontSize: '2.5rem', marginBottom: '0.75rem' }}>📝</div>
-            <h2>Create Your Account</h2>
+            <div className="auth-kicker">Registration</div>
+            <h2>Create your participant profile</h2>
             <p style={{ margin: '0.5rem 0 1.75rem' }}>
-                Register your wallet in the database to start using the platform.
+                Register this wallet to join the pet survey campaign and unlock the reward-aware participant dashboard.
             </p>
 
             <div style={{ marginBottom: '1.25rem', padding: '1rem', borderRadius: '12px', background: 'var(--bg-input)', border: '1px solid var(--border)' }}>
@@ -57,7 +57,7 @@ export function RegisterView() {
 
             {!isCheckingWallet && status.userLookupError && (
                 <p className="text-danger" style={{ marginBottom: '1rem' }}>
-                    ⚠ {status.userLookupError}
+                    {status.userLookupError}
                 </p>
             )}
 
@@ -77,7 +77,7 @@ export function RegisterView() {
                     type="submit"
                     disabled={isProcessing || isCheckingWallet || !name.trim() || Boolean(user?.isRegistered)}
                 >
-                    {isProcessing ? '⏳ Processing...' : '✅ Register'}
+                    {isProcessing ? 'Processing...' : 'Register profile'}
                 </button>
             </form>
 
@@ -92,7 +92,7 @@ export function RegisterView() {
 
             {status.error && (
                 <p className="text-danger" style={{ marginTop: '1rem' }}>
-                    ⚠ {status.error.message}
+                    {status.error.message}
                 </p>
             )}
 

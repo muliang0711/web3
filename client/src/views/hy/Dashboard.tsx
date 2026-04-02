@@ -45,13 +45,17 @@ export function DashboardView() {
 
     return (
         <div className="fade-in">
-            {/* Header / Welcome */}
-            <div style={{ marginBottom: '2.5rem' }}>
-                <h1 style={{ fontSize: '1.8rem', marginBottom: '0.25rem' }}>Overview</h1>
-                <p>Welcome back, {user?.name || 'Explorer'}</p>
+            <div className="dashboard-hero">
+                <div>
+                    <div className="auth-kicker">Campaign overview</div>
+                    <h1 style={{ fontSize: '2.25rem', marginBottom: '0.5rem' }}>Welcome back, {user?.name || 'Participant'}</h1>
+                    <p>Track your campaign activity, review survey-related contributions, and move quickly into the next action.</p>
+                </div>
+                <div className="dashboard-hero-note">
+                    Reward balance updates are tied to recorded donations and can be claimed later from your profile.
+                </div>
             </div>
 
-            {/* Quick Stats Row */}
             <div className="quick-stats-row">
                 <div className="quick-stat-card">
                     <span className="quick-stat-label">My Campaigns</span>
@@ -69,23 +73,21 @@ export function DashboardView() {
                 </div>
             </div>
 
-            {/* Quick Actions Row */}
-            <h2 style={{ fontSize: '1.2rem', marginBottom: '1rem', color: 'var(--text)' }}>Quick Actions</h2>
+            <h2 style={{ fontSize: '1.2rem', marginBottom: '1rem', color: 'var(--text)' }}>Quick actions</h2>
             <div className="quick-actions-row">
                 <button className="quick-action-btn quick-action-primary" onClick={() => navigate('/campaigns/create')}>
-                    <span style={{ fontSize: '1.4rem' }}>➕</span> Create New Campaign
+                    Create a campaign
                 </button>
                 <button className="quick-action-btn quick-action-secondary" onClick={() => navigate('/campaigns')}>
-                    <span style={{ fontSize: '1.4rem' }}>💰</span> Browse & Donate
+                    Browse campaigns
                 </button>
             </div>
 
-            {/* Recent Activity Table */}
             <div className="recent-activity-section">
-                <h2 className="recent-activity-header">Recent Activity / Logs</h2>
+                <h2 className="recent-activity-header">Recent activity</h2>
                 {recentActivity.length === 0 ? (
                     <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.9rem', background: 'var(--bg-input)', borderRadius: '12px', border: '1px dashed var(--border)' }}>
-                        No donation activity yet. <button className="btn-link" onClick={() => navigate('/campaigns')}>Browse campaigns →</button>
+                        No donation activity yet. <button className="btn-link" onClick={() => navigate('/campaigns')}>Browse campaigns</button>
                     </div>
                 ) : (
                     <div style={{ overflowX: 'auto' }}>

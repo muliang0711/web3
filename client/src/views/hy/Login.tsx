@@ -34,10 +34,10 @@ export function LoginView() {
 
     return (
         <div className="fade-in text-center">
-            <div style={{ fontSize: '2.5rem', marginBottom: '0.75rem' }}>🚀</div>
-            <h1>Crowdfunding Platform</h1>
+            <div className="auth-kicker">Participant access</div>
+            <h1>Open the pet survey campaign portal</h1>
             <p style={{ margin: '0.75rem 0 2rem' }}>
-                Decentralized · Transparent · Trustless
+                Connect your wallet to review the campaign, participate, and manage reward claims in one calm workspace.
             </p>
 
             {!isConnected && (
@@ -46,7 +46,7 @@ export function LoginView() {
                         className="btn-primary"
                         onClick={() => connect({ connector: injected() })}
                     >
-                        🦊 Connect Wallet
+                        Connect wallet
                     </button>
 
                     <p style={{ marginTop: '1.5rem', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
@@ -68,7 +68,7 @@ export function LoginView() {
 
                     {!isCheckingWallet && status.userLookupError && (
                         <p className="text-danger" style={{ marginTop: '0.9rem' }}>
-                            ⚠ {status.userLookupError}
+                            {status.userLookupError}
                         </p>
                     )}
 
