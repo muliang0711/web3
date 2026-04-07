@@ -26,22 +26,14 @@ function IconSpark(props: IconProps) {
     );
 }
 
-function IconShield(props: IconProps) {
+function IconClipboard(props: IconProps) {
     return (
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" {...props}>
-            <path d="M12 3 5 6v5.6c0 4.4 2.9 8.5 7 9.4 4.1-.9 7-5 7-9.4V6l-7-3Z" />
-            <path d="m9.5 12.2 1.7 1.8 3.4-4" />
-        </svg>
-    );
-}
-
-function IconChart(props: IconProps) {
-    return (
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" {...props}>
-            <path d="M4 19V5" />
-            <path d="M4 19h16" />
-            <path d="m7 15 3-4 3 2 4-6" />
-            <path d="m17 7 0 3h3" />
+            <path d="M9 4.5h6" />
+            <path d="M9.8 3h4.4c.9 0 1.6.7 1.6 1.6V6H8.2V4.6C8.2 3.7 8.9 3 9.8 3Z" />
+            <path d="M7 6h10a2 2 0 0 1 2 2v10.2a2.8 2.8 0 0 1-2.8 2.8H7.8A2.8 2.8 0 0 1 5 18.2V8a2 2 0 0 1 2-2Z" />
+            <path d="M8.5 11.5h7" />
+            <path d="M8.5 15.5h4.5" />
         </svg>
     );
 }
@@ -54,44 +46,59 @@ function IconHeart(props: IconProps) {
     );
 }
 
-const highlights = [
+function IconShield(props: IconProps) {
+    return (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" {...props}>
+            <path d="M12 3 5 6v5.6c0 4.4 2.9 8.5 7 9.4 4.1-.9 7-5 7-9.4V6l-7-3Z" />
+            <path d="m9.5 12.2 1.7 1.8 3.4-4" />
+        </svg>
+    );
+}
+
+const storyCards = [
     {
-        title: 'A softer way to support research',
-        body: 'The campaign is built to gather honest pet-owner feedback without making the experience feel clinical or overwhelming.',
+        title: 'Daily care patterns',
+        body: 'Capture feeding, play, rest, and routine habits so campaign owners understand what life with a pet actually looks like.',
+        icon: IconPaw,
+    },
+    {
+        title: 'Health and comfort signals',
+        body: 'Surface practical feedback around nutrition, checkups, anxiety, and home conditions without turning the experience into a cold form.',
         icon: IconHeart,
     },
     {
-        title: 'Clear survey topics',
-        body: 'Questions are grouped around daily care, routines, wellbeing, and adoption support so participants can answer quickly and confidently.',
-        icon: IconChart,
-    },
-    {
-        title: 'Trusted reward flow',
-        body: 'Participants can join with their wallet, support the campaign, and claim rewards through the on-chain reward manager once eligible.',
-        icon: IconShield,
+        title: 'Adoption and rescue insight',
+        body: 'Highlight the support, trust cues, and community resources that make rescue journeys smoother for both pets and owners.',
+        icon: IconClipboard,
     },
 ];
 
-const surveyCards = [
-    'Pet routines and home habits',
-    'Health, nutrition, and comfort',
-    'Adoption support and rescue insights',
-    'Community expectations and trust signals',
+const signalTracks = [
+    'Routine and lifestyle',
+    'Wellbeing and nutrition',
+    'Rescue and adoption support',
+    'Trust, rewards, and transparency',
 ];
 
-const steps = [
+const journeySteps = [
     {
-        title: 'Connect',
-        body: 'Open the participant portal, connect a wallet, and enter the campaign flow in a few taps.',
+        title: 'Connect your wallet',
+        body: 'Enter the campaign through the participant portal and let the app recognize whether the wallet is already registered.',
     },
     {
-        title: 'Participate',
-        body: 'Review the campaign, contribute if relevant, and move through a calm, easy-to-scan survey experience.',
+        title: 'Join the survey flow',
+        body: 'Move through focused questions designed for pet owners, with a shorter and friendlier reading rhythm than a standard form.',
     },
     {
-        title: 'Claim',
-        body: 'Eligible reward balance appears in your profile, where CFR can be claimed through the reward manager.',
+        title: 'Track and claim rewards',
+        body: 'When participation qualifies, reward status becomes visible in the workspace and can be claimed through the existing on-chain flow.',
     },
+];
+
+const trustNotes = [
+    'Short, readable question tracks',
+    'Campaign-first storytelling instead of generic donation UI',
+    'Wallet-based participation with reward visibility',
 ];
 
 export function LandingPage() {
@@ -109,15 +116,15 @@ export function LandingPage() {
                         <IconPaw className="landing-icon" />
                     </span>
                     <span>
-                        <strong>Example Campaign</strong>
-                        <small>for Pet Survey</small>
+                        <strong>Pet Survey Campaign</strong>
+                        <small>Community insight portal</small>
                     </span>
                 </button>
 
                 <nav className="landing-nav-links" aria-label="Landing sections">
-                    <a href="#overview">Overview</a>
-                    <a href="#survey">Survey</a>
-                    <a href="#process">Process</a>
+                    <a href="#mission">Mission</a>
+                    <a href="#tracks">Survey tracks</a>
+                    <a href="#journey">Journey</a>
                 </nav>
 
                 <div className="landing-nav-actions">
@@ -135,77 +142,80 @@ export function LandingPage() {
                     <div className="landing-hero-copy">
                         <div className="landing-eyebrow">
                             <IconSpark className="landing-inline-icon" />
-                            Calm, clear, pet-first campaign design
+                            Fresh campaign experience for pet-owner feedback
                         </div>
-                        <h1>Example Campaign for Pet Survey</h1>
+
+                        <h1>Pet Survey Campaign</h1>
                         <p className="landing-hero-text">
-                            A modern, friendly campaign page designed to help pet owners share thoughtful feedback with confidence. The experience is clean,
-                            trustworthy, and reward-aware from the first impression to the final claim.
+                            A bold, friendly front page for collecting meaningful pet-owner insight around care, wellbeing, and adoption support. The interface now reads like a real campaign,
+                            not a generic web3 dashboard.
                         </p>
 
                         <div className="landing-hero-actions">
                             <button type="button" className="landing-hero-cta" onClick={primaryAction}>
                                 {primaryLabel}
                             </button>
-                            <a className="landing-text-link" href="#overview">
-                                Explore the campaign
-                            </a>
+                            <button type="button" className="landing-secondary-link" onClick={() => navigate('/register')}>
+                                Register participant
+                            </button>
                         </div>
 
-                        <div className="landing-metrics" aria-label="Campaign highlights">
+                        <div className="landing-metrics" aria-label="Campaign metrics">
                             <div className="landing-metric">
-                                <span>5 min</span>
-                                <small>gentle survey flow</small>
+                                <span>05</span>
+                                <small>minute survey target</small>
                             </div>
                             <div className="landing-metric">
-                                <span>4 themes</span>
-                                <small>clear response sections</small>
+                                <span>04</span>
+                                <small>clear response tracks</small>
                             </div>
                             <div className="landing-metric">
-                                <span>1:1 CFR</span>
-                                <small>reward balance logic</small>
+                                <span>CFR</span>
+                                <small>reward-ready participation</small>
                             </div>
                         </div>
                     </div>
 
                     <div className="landing-hero-visual" aria-hidden="true">
-                        <div className="hero-card hero-card-primary">
-                            <div className="hero-card-label">Survey snapshot</div>
-                            <h2>Help shape a calmer pet care experience</h2>
-                            <ul>
-                                {surveyCards.map((item) => (
-                                    <li key={item}>{item}</li>
+                        <article className="hero-board hero-board-primary">
+                            <div className="hero-board-topline">Campaign board</div>
+                            <h2>What this survey is mapping</h2>
+                            <div className="hero-topic-grid">
+                                {signalTracks.map((item) => (
+                                    <span key={item} className="hero-topic-chip">
+                                        {item}
+                                    </span>
                                 ))}
-                            </ul>
-                        </div>
-
-                        <div className="hero-card hero-card-float">
-                            <div className="hero-mini-row">
-                                <span className="hero-badge">Live rewards</span>
-                                <span className="hero-badge subtle">On-chain</span>
                             </div>
-                            <strong>Profile-ready reward claims</strong>
-                            <p>Once participation is recorded, claimable CFR appears in the participant profile.</p>
-                        </div>
+                        </article>
 
-                        <div className="hero-card hero-card-note">
+                        <article className="hero-board hero-board-accent">
+                            <div className="hero-mini-row">
+                                <span className="hero-badge">Live flow</span>
+                                <span className="hero-badge subtle">Wallet gated</span>
+                            </div>
+                            <strong>Survey story first, web3 second</strong>
+                            <p>The landing page leads with the campaign purpose, then routes users into the existing wallet and reward flow.</p>
+                        </article>
+
+                        <article className="hero-board hero-board-note">
                             <IconShield className="landing-inline-icon" />
-                            <span>Only authorized campaign contracts can record rewardable donations.</span>
-                        </div>
+                            <span>Reward visibility stays tied to the current on-chain manager and participant profile.</span>
+                        </article>
                     </div>
                 </section>
 
-                <section id="overview" className="landing-section">
+                <section id="mission" className="landing-section landing-section-story">
                     <div className="landing-section-heading">
-                        <span className="landing-section-label">Why this page works</span>
-                        <h2>A calmer structure for a softer campaign story</h2>
+                        <span className="landing-section-label">Campaign direction</span>
+                        <h2>Designed to feel like a living pet community campaign</h2>
                         <p>
-                            The page is intentionally light, breathable, and modular so visitors can understand the campaign quickly without getting lost in dense blocks or heavy UI.
+                            The new frontend uses warmer editorial styling, clearer hierarchy, and more specific campaign language so the product matches the title instead of feeling like a reused template.
                         </p>
                     </div>
 
                     <div className="landing-card-grid">
-                        {highlights.map(({ title, body, icon: Icon }) => (
+                        {storyCards.map(({ title, body, icon: Icon }) => (
                             <article key={title} className="landing-feature-card">
                                 <div className="landing-feature-icon">
                                     <Icon className="landing-icon" />
@@ -217,36 +227,42 @@ export function LandingPage() {
                     </div>
                 </section>
 
-                <section id="survey" className="landing-section landing-section-soft">
-                    <div className="landing-bento">
-                        <article className="landing-bento-main">
-                            <span className="landing-section-label">Survey focus</span>
-                            <h2>Designed around real pet-owner questions</h2>
-                            <p>
-                                Instead of presenting a generic donation interface, this landing page frames the campaign around practical input: what pets need, where owners need support,
-                                and which signals make a survey feel respectful and worth completing.
-                            </p>
-                        </article>
+                <section id="tracks" className="landing-section landing-section-grid">
+                    <article className="landing-bento-main">
+                        <span className="landing-section-label">Survey tracks</span>
+                        <h2>Focused questions, clearer campaign framing</h2>
+                        <p>
+                            Instead of a flat promotional block, the page now explains what participants are helping discover and why each topic matters to the campaign owner.
+                        </p>
+                    </article>
 
-                        <article className="landing-bento-aside">
-                            <h3>Inside the experience</h3>
-                            <ul className="landing-list">
-                                {surveyCards.map((item) => (
-                                    <li key={item}>{item}</li>
-                                ))}
-                            </ul>
-                        </article>
-                    </div>
+                    <article className="landing-bento-aside">
+                        <h3>Inside the current concept</h3>
+                        <ul className="landing-list">
+                            {signalTracks.map((item) => (
+                                <li key={item}>{item}</li>
+                            ))}
+                        </ul>
+                    </article>
+
+                    <article className="landing-bento-notes">
+                        <h3>Why it feels fresher</h3>
+                        <ul className="landing-note-list">
+                            {trustNotes.map((item) => (
+                                <li key={item}>{item}</li>
+                            ))}
+                        </ul>
+                    </article>
                 </section>
 
-                <section id="process" className="landing-section">
+                <section id="journey" className="landing-section">
                     <div className="landing-section-heading">
-                        <span className="landing-section-label">Participation flow</span>
-                        <h2>Easy to follow from first click to reward claim</h2>
+                        <span className="landing-section-label">Participant journey</span>
+                        <h2>The same product flow, presented with a stronger story</h2>
                     </div>
 
                     <div className="landing-step-grid">
-                        {steps.map((step, index) => (
+                        {journeySteps.map((step, index) => (
                             <article key={step.title} className="landing-step-card">
                                 <div className="landing-step-number">0{index + 1}</div>
                                 <h3>{step.title}</h3>
@@ -259,18 +275,19 @@ export function LandingPage() {
                 <section className="landing-section">
                     <div className="landing-cta-panel">
                         <div>
-                            <span className="landing-section-label">Ready to launch</span>
-                            <h2>Bring the campaign into a cleaner, more premium flow</h2>
+                            <span className="landing-section-label">Launch-ready frontend</span>
+                            <h2>Bring users into a pet-focused campaign, not a recycled dashboard</h2>
                             <p>
-                                The landing page now introduces the campaign clearly, makes the primary call-to-action obvious, and supports the current on-chain reward setup without visual clutter.
+                                The new direction is intentionally more expressive, more memorable, and more aligned with the product name while preserving the current routes, auth flow, and reward actions.
                             </p>
                         </div>
+
                         <div className="landing-cta-actions">
                             <button type="button" className="landing-hero-cta" onClick={primaryAction}>
                                 {primaryLabel}
                             </button>
-                            <button type="button" className="btn-ghost landing-nav-ghost" onClick={() => navigate('/register')}>
-                                Register a participant wallet
+                            <button type="button" className="btn-ghost landing-nav-ghost" onClick={() => navigate('/campaigns')}>
+                                View campaigns
                             </button>
                         </div>
                     </div>

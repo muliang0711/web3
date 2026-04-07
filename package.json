@@ -1,0 +1,8 @@
+{
+  "name": "web3-workspace",
+  "private": true,
+  "scripts": {
+    "dev": "powershell -ExecutionPolicy Bypass -File ./scripts/dev.ps1",
+    "dev:skip-deploy": "powershell -ExecutionPolicy Bypass -File ./scripts/dev.ps1 -SkipDeploy"
+  }
+}

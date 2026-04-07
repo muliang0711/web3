@@ -125,7 +125,29 @@ Current status from this repo snapshot:
 - `npx hardhat test` passes.
 - `npm run build` passes.
 
-## 5. Start local blockchain
+## 5. Fast start
+
+From repo root, you can now start the local stack with one command:
+
+```powershell
+cd c:\Code\project\web3
+npm run dev
+```
+
+What it does:
+
+1. Opens a new terminal window for `npx hardhat node`
+2. Waits for the local RPC at `http://127.0.0.1:8545`
+3. Deploys `ignition/modules/RewardSystem.ts`
+4. Opens a new terminal window for `npm run dev` in `client`
+
+If you already have a local node and deployment running, use:
+
+```powershell
+npm run dev:skip-deploy
+```
+
+## 6. Manual start local blockchain
 
 Open Terminal A:
 
@@ -136,7 +158,7 @@ npx hardhat node
 
 Keep this terminal running.
 
-## 6. Deploy the full reward-enabled stack
+## 7. Deploy the full reward-enabled stack
 
 Open Terminal B:
 
@@ -155,7 +177,7 @@ This module deploys and wires:
 6. `UserRegistry.setRewardManager(...)`
 7. `RewardToken.transferOwnership(...)` to `RewardManager`
 
-## 7. Verify deployed addresses
+## 8. Verify deployed addresses
 
 Check:
 
@@ -175,7 +197,7 @@ If your addresses differ:
 1. Put them in `client/.env`.
 2. Restart the Vite dev server.
 
-## 8. Start the frontend
+## 9. Start the frontend
 
 Open Terminal C:
 
@@ -186,7 +208,7 @@ npm run dev
 
 Open the local URL shown by Vite.
 
-## 9. Wallet setup
+## 10. Wallet setup
 
 In MetaMask:
 
@@ -196,7 +218,7 @@ In MetaMask:
 4. Use currency symbol `ETH`.
 5. Import one of the private keys printed by `npx hardhat node`.
 
-## 10. Reward-enabled test flow
+## 11. Reward-enabled test flow
 
 This is the current local end-to-end flow:
 
@@ -213,7 +235,7 @@ Expected result:
 - `Claimable Rewards` drops to `0`.
 - CFR tokens are minted by `RewardToken` through `RewardManager`.
 
-## 11. If things break
+## 12. If things break
 
 - `ContractFunctionExecutionError` or read revert:
   Usually wrong network, wrong address, or contracts were not deployed after a local node reset.
@@ -224,4 +246,4 @@ Expected result:
 - UI loads but history or names are missing:
   Check `client/.env` and Supabase connectivity.
 - Local node restarted:
-  Re-run the deployment command in Section 6.
+  Re-run `npm run dev`, or manually repeat the deployment command from Section 7.

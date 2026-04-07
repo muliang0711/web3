@@ -36,7 +36,7 @@ export function MainLayout({ children }: { children: ReactNode }) {
                     <span className="sidebar-logo-mark">PS</span>
                     <span>
                         <strong>Pet Survey</strong>
-                        <small>Campaign Portal</small>
+                        <small>Campaign workspace</small>
                     </span>
                 </button>
 
@@ -86,7 +86,7 @@ export function MainLayout({ children }: { children: ReactNode }) {
 
             <main className="main-content">
                 <header className="top-bar">
-                    <div className="top-bar-badge">Reward-ready participant workspace</div>
+                    <div className="top-bar-badge">Pet-owner insight workspace</div>
                     <div className="user-profile-widget">
                         <span className="wallet-pill">
                             {address ? `${address.slice(0, 6)}...${address.slice(-4)}` : ''}
