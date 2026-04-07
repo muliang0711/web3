@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { formatEther } from 'viem';
-import { useAccount } from 'wagmi';
+import { useAccount, usePublicClient } from 'wagmi';
 import { useCampaign } from '../../hooks/useCampaign';
+import { enrichDonationRowsWithChainTimestamps, enrichRefundRowsWithChainTimestamps } from '../../lib/chainActivity';
 import { getCampaignImageUrl } from '../../lib/media';
 import { supabase } from '../../lib/supabase';
 
@@ -31,6 +32,7 @@ type RefundRow = {
 export function CampaignReportView() {
     const navigate = useNavigate();
     const { address } = useAccount();
+    const publicClient = usePublicClient();
     const { address: campaignAddress } = useParams<{ address: string }>();
     const [imageFailed, setImageFailed] = useState(false);
     const [donations, setDonations] = useState<DonationRow[]>([]);
@@ -81,8 +83,19 @@ export function CampaignReportView() {
             if (donationError) throw donationError;
             if (refundError) throw refundError;
 
-            const safeDonations = donationData ?? [];
-            const safeRefunds = refundData ?? [];
+            let safeDonations = donationData ?? [];
+            let safeRefunds = refundData ?? [];
+
+            if (publicClient) {
+                try {
+                    [safeDonations, safeRefunds] = await Promise.all([
+                        enrichDonationRowsWithChainTimestamps(publicClient, safeDonations),
+                        enrichRefundRowsWithChainTimestamps(publicClient, safeRefunds),
+                    ]);
+                } catch (timestampError) {
+                    console.warn('Failed to load on-chain timestamps for owner campaign report.', timestampError);
+                }
+            }
 
             setDonations(safeDonations);
             setRefunds(safeRefunds);
@@ -118,7 +131,7 @@ export function CampaignReportView() {
         } finally {
             setIsLoadingReport(false);
         }
-    }, [campaignAddress]);
+    }, [campaignAddress, publicClient]);
 
     useEffect(() => {
         void fetchReport();
@@ -294,7 +307,7 @@ export function CampaignReportView() {
                 <div>
                     <div className="auth-kicker">Actions</div>
                     <h3>Manage campaign outcome</h3>
-                    <p>Use this view to review incoming donation records, inspect refunds, and run owner-only settlement actions.</p>
+                    <p>Use this view to review incoming donation records, inspect refunds, and run owner-only settlement actions with chain-derived time where available.</p>
                 </div>
                 <div className="owner-report-actions">
                     <button type="button" className="btn-ghost" onClick={() => navigate(`/campaigns/${campaignAddress}`)}>
@@ -336,6 +349,7 @@ export function CampaignReportView() {
                         <div>
                             <div className="auth-kicker">Donation history</div>
                             <h3>Incoming transactions</h3>
+                            <p>Times shown here prefer the on-chain donation event timestamp.</p>
                         </div>
                     </div>
 
@@ -360,7 +374,7 @@ export function CampaignReportView() {
                                                 <strong>{donorName}</strong> donated <strong>{amount.toFixed(4)} ETH</strong>
                                             </p>
                                             <p className="history-item-meta">
-                                                {row.created_at ? new Date(row.created_at).toLocaleString() : 'Unknown time'}
+                                                {row.created_at ? new Date(row.created_at).toLocaleString() : 'Unknown chain time'}
                                             </p>
                                         </div>
                                         <div className="history-points">
@@ -379,6 +393,7 @@ export function CampaignReportView() {
                         <div>
                             <div className="auth-kicker">Refund history</div>
                             <h3>Processed refunds</h3>
+                            <p>Refund times prefer the block time of the `RefundIssued` event.</p>
                         </div>
                     </div>
 
@@ -403,7 +418,7 @@ export function CampaignReportView() {
                                                 <strong>{userName}</strong> refunded <strong>{amount.toFixed(4)} ETH</strong>
                                             </p>
                                             <p className="history-item-meta">
-                                                {row.created_at ? new Date(row.created_at).toLocaleString() : 'Unknown time'}
+                                                {row.created_at ? new Date(row.created_at).toLocaleString() : 'Unknown chain time'}
                                             </p>
                                         </div>
                                         <div className="history-points negative">

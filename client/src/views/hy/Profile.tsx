@@ -14,7 +14,7 @@ const REWARD_MANAGER_ABI = [
 function DonationRecordRow({ record }: { record: any }) {
     const campaignAddr = record.campaign_address;
     const { info } = useCampaign(campaignAddr as `0x${string}`);
-    const date = record.created_at ? new Date(record.created_at).toLocaleString() : 'Unknown time';
+    const date = record.created_at ? new Date(record.created_at).toLocaleString() : 'Unknown chain time';
     const amountEth = Number(record.amount_eth || 0);
     const points = amountEth;
 
@@ -49,7 +49,7 @@ function RefundRecordRow({ record }: { record: any }) {
                     Refunded <strong>{amount.toFixed(4)} ETH</strong> from <strong>{record.campaign_title}</strong>
                 </p>
                 <p className="history-item-meta">
-                    {record.created_at ? new Date(record.created_at).toLocaleString() : 'Unknown time'}
+                    {record.created_at ? new Date(record.created_at).toLocaleString() : 'Unknown chain time'}
                 </p>
             </div>
             <div className="history-points negative">
@@ -188,7 +188,7 @@ export function ProfileView() {
                     <div>
                         <div className="auth-kicker">Rewards</div>
                         <h3>{displayRewards} CFR available</h3>
-                        <p>Reward balance comes from the contract. Each donation record below also shows the points earned in that transaction.</p>
+                        <p>Reward balance comes from the contract. Donation and refund history below prefer on-chain time over database insert time.</p>
                     </div>
                     <button
                         onClick={handleClaim}
@@ -204,6 +204,7 @@ export function ProfileView() {
                         <div>
                             <div className="auth-kicker">Donation history</div>
                             <h3>Transaction records</h3>
+                            <p>Times shown here prefer the on-chain donation event timestamp.</p>
                         </div>
                     </div>
 
@@ -227,6 +228,7 @@ export function ProfileView() {
                         <div>
                             <div className="auth-kicker">Refund history</div>
                             <h3>Refund transaction records</h3>
+                            <p>Refund times prefer the block time of the `RefundIssued` event.</p>
                         </div>
                     </div>
 

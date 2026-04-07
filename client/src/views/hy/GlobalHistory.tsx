@@ -54,7 +54,7 @@ export function GlobalHistoryView() {
         <div className="fade-in">
             <div style={{ marginBottom: '2rem' }}>
                 <h1 style={{ fontSize: '1.8rem', marginBottom: '0.25rem' }}>Live Registrations</h1>
-                <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Registration time is derived from the on-chain UserRegistered event timestamp.</p>
+                <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Registration time below is the on-chain `UserRegistered` event timestamp.</p>
             </div>
 
             {isLoading ? (
@@ -78,7 +78,7 @@ export function GlobalHistoryView() {
                                 <p style={{ fontSize: '0.75rem', fontFamily: 'monospace', color: 'var(--text-muted)', margin: '0.2rem 0 0' }}>{user.wallet_address}</p>
                             </div>
                             <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', textAlign: 'right', flexShrink: 0 }}>
-                                {user.registered_at_chain ? new Date(user.registered_at_chain).toLocaleString() : 'Unknown time'}
+                                {user.registered_at_chain ? new Date(user.registered_at_chain).toLocaleString() : 'Unknown chain time'}
                             </div>
                         </div>
                     ))}

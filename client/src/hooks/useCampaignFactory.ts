@@ -4,6 +4,7 @@ import { useAccount } from 'wagmi';
 import { parseEther, decodeEventLog } from 'viem';
 import { supabase } from '../lib/supabase';
 import { CAMPAIGN_FACTORY_ADDRESS } from '../lib/contracts';
+import { fetchCampaignCreatedAtMap } from '../lib/chainActivity';
 import { getCampaignImagePath, getCampaignImageUrl, uploadMediaFile } from '../lib/media';
 
 const FACTORY_ABI = [
@@ -107,6 +108,13 @@ export function useCampaignFactory() {
 
             if (error) throw error;
 
+            let createdAtMap = new Map<string, string | null>();
+            try {
+                createdAtMap = await fetchCampaignCreatedAtMap(publicClient, [...chainCampaigns]);
+            } catch (timestampError) {
+                console.warn('Failed to load on-chain campaign creation timestamps, falling back to database created_at.', timestampError);
+            }
+
             const rowByAddress = new Map(
                 (data ?? []).map((row: any) => [
                     String(row.address).toLowerCase(),
@@ -117,7 +125,7 @@ export function useCampaignFactory() {
                         description: row.description,
                         target_eth: row.target_eth,
                         duration_days: row.duration_days,
-                        created_at: row.created_at,
+                        created_at: createdAtMap.get(String(row.address).toLowerCase()) ?? row.created_at,
                         imageUrl: row.image_url ?? row.campaign_image_url ?? row.cover_image_url ?? getCampaignImageUrl(row.address),
                     } satisfies CampaignRecord,
                 ])

@@ -15,7 +15,7 @@ function CampaignHistoryRow({ campaign, creatorName }: { campaign: any; creatorN
                     <strong>{userName}</strong> created <strong>{campaign.title}</strong> targeting <strong>{target} ETH</strong>
                 </p>
                 <p className="history-item-meta" style={{ marginTop: '0.25rem' }}>
-                    on {campaign.created_at ? new Date(campaign.created_at).toLocaleString() : 'Unknown date'}
+                    block time: {campaign.created_at ? new Date(campaign.created_at).toLocaleString() : 'Unknown chain time'}
                 </p>
             </div>
         </div>
@@ -67,7 +67,7 @@ export function CampaignHistoryView() {
             <div className="text-center" style={{ marginBottom: '1.5rem' }}>
                 <div style={{ fontSize: '2.5rem', marginBottom: '0.5rem' }}>📜</div>
                 <h2>Campaign History</h2>
-                <p style={{ marginTop: '0.25rem' }}>View all campaigns created on the platform</p>
+                <p style={{ marginTop: '0.25rem' }}>Campaign creation time below is derived from the block that emitted `CampaignCreated`.</p>
             </div>
 
             <div className="history-list" style={{ maxWidth: '800px', margin: '0 auto', background: 'var(--bg-secondary)', borderRadius: '12px', padding: '1rem' }}>

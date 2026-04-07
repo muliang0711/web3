@@ -6,6 +6,7 @@ import { useAccount } from 'wagmi';
 import { supabase } from '../lib/supabase';
 import { USER_REGISTRY_ADDRESS } from '../lib/contracts';
 import { getProfileImagePath, getProfileImageUrl, uploadMediaFile } from '../lib/media';
+import { enrichDonationRowsWithChainTimestamps } from '../lib/chainActivity';
 import { fetchRegistrationTimestampForAddress } from '../lib/userRegistration';
 
 const CONTRACT_ABI = [
@@ -181,7 +182,20 @@ export function useUserRegistry() {
 
     const donationsQuery = useQuery({
         queryKey: ['userRegistryDonations', address],
-        queryFn: () => fetchDonationsByAddress(address!),
+        queryFn: async () => {
+            const donationRows = await fetchDonationsByAddress(address!);
+
+            if (!publicClient) {
+                return donationRows;
+            }
+
+            try {
+                return await enrichDonationRowsWithChainTimestamps(publicClient, donationRows);
+            } catch (error) {
+                console.warn('Failed to load on-chain donation timestamps, falling back to database created_at.', error);
+                return donationRows;
+            }
+        },
         enabled: Boolean(address),
         staleTime: 1000 * 30,
         retry: 1,

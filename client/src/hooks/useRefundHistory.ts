@@ -1,4 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
+import { usePublicClient } from 'wagmi';
+import { enrichRefundRowsWithChainTimestamps } from '../lib/chainActivity';
 import { supabase } from '../lib/supabase';
 
 function getRefundUserAddress(refund: any) {
@@ -6,6 +8,7 @@ function getRefundUserAddress(refund: any) {
 }
 
 export function useRefundHistory(address?: string) {
+  const publicClient = usePublicClient();
   const query = useQuery({
     queryKey: ['refundHistory', address],
     enabled: Boolean(address),
@@ -51,7 +54,7 @@ export function useRefundHistory(address?: string) {
 
       const titleByAddress = new Map((campaigns ?? []).map((campaign: any) => [campaign.address, campaign.title]));
 
-      return refunds.map((refund: any) => {
+      const refundsWithTitles = refunds.map((refund: any) => {
         const campaignAddress = refund.campaign_address || refund.campaign;
         const amount = Number(refund.amount_eth ?? refund.amount ?? 0);
 
@@ -62,6 +65,17 @@ export function useRefundHistory(address?: string) {
           points: amount,
         };
       });
+
+      if (!publicClient) {
+        return refundsWithTitles;
+      }
+
+      try {
+        return await enrichRefundRowsWithChainTimestamps(publicClient, refundsWithTitles);
+      } catch (timestampError) {
+        console.warn('Failed to load on-chain refund timestamps, falling back to database created_at.', timestampError);
+        return refundsWithTitles;
+      }
     },
   });
 

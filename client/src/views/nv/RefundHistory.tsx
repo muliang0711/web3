@@ -1,9 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { usePublicClient } from 'wagmi';
+import { enrichRefundRowsWithChainTimestamps } from '../../lib/chainActivity';
 import { supabase } from '../../lib/supabase';
 
 export function RefundHistoryView() {
     const navigate = useNavigate();
+    const publicClient = usePublicClient();
     const [refunds, setRefunds] = useState<any[]>([]);
     const [campaignTitles, setCampaignTitles] = useState<Record<string, string>>({});
     const [isLoading, setIsLoading] = useState(true);
@@ -18,7 +21,21 @@ export function RefundHistoryView() {
                     .order('created_at', { ascending: false });
 
                 if (error) throw error;
-                setRefunds(data ?? []);
+
+                const refundRows = data ?? [];
+
+                if (!publicClient) {
+                    setRefunds(refundRows);
+                    return;
+                }
+
+                try {
+                    const enrichedRefunds = await enrichRefundRowsWithChainTimestamps(publicClient, refundRows);
+                    setRefunds(enrichedRefunds);
+                } catch (timestampError) {
+                    console.warn('Failed to load on-chain refund timestamps for refund history.', timestampError);
+                    setRefunds(refundRows);
+                }
             } catch (e: any) {
                 console.error(e);
                 setRefunds([]);
@@ -29,7 +46,7 @@ export function RefundHistoryView() {
         };
 
         fetchRefunds();
-    }, []);
+    }, [publicClient]);
 
     const campaignAddresses = useMemo(
         () => Array.from(new Set(refunds.map(refund => refund.campaign_address || refund.campaign).filter(Boolean))),
@@ -67,7 +84,7 @@ export function RefundHistoryView() {
             <div className="text-center" style={{ marginBottom: '1.5rem' }}>
                 <div style={{ fontSize: '2.5rem', marginBottom: '0.5rem' }}>🔄</div>
                 <h2>Refund History</h2>
-                <p style={{ marginTop: '0.25rem' }}>Refund records loaded from the database</p>
+                <p style={{ marginTop: '0.25rem' }}>Refund times below prefer block time from on-chain `RefundIssued` events.</p>
             </div>
 
             <div style={{ maxWidth: '800px', margin: '0 auto', background: 'var(--bg-secondary)', borderRadius: '12px', padding: '1rem' }}>
@@ -91,7 +108,7 @@ export function RefundHistoryView() {
                                         Refunded <strong>{amount} ETH</strong> from <strong>{title}</strong>
                                     </p>
                                     <p className="history-item-meta" style={{ marginTop: '0.25rem' }}>
-                                        {refund.created_at ? new Date(refund.created_at).toLocaleString() : 'Unknown time'}
+                                        {refund.created_at ? new Date(refund.created_at).toLocaleString() : 'Unknown chain time'}
                                     </p>
                                 </div>
                             </div>

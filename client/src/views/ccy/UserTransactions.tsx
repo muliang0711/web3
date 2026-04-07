@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { usePublicClient } from 'wagmi';
 import { useCampaignFactory } from '../../hooks/useCampaignFactory';
+import { enrichDonationRowsWithChainTimestamps } from '../../lib/chainActivity';
 import { supabase } from '../../lib/supabase';
 
 type FilterMode = 'all' | 'user' | 'campaign';
@@ -12,6 +14,7 @@ function formatAddress(value?: string) {
 
 export function UserTransactionsView() {
     const navigate = useNavigate();
+    const publicClient = usePublicClient();
     const { campaigns } = useCampaignFactory();
     const [donations, setDonations] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -31,7 +34,21 @@ export function UserTransactionsView() {
                     .order('created_at', { ascending: false });
 
                 if (error) throw error;
-                setDonations(data ?? []);
+
+                const donationRows = data ?? [];
+
+                if (!publicClient) {
+                    setDonations(donationRows);
+                    return;
+                }
+
+                try {
+                    const enrichedDonations = await enrichDonationRowsWithChainTimestamps(publicClient, donationRows);
+                    setDonations(enrichedDonations);
+                } catch (timestampError) {
+                    console.warn('Failed to load on-chain donation timestamps for transaction explorer.', timestampError);
+                    setDonations(donationRows);
+                }
             } catch (e) {
                 console.error(e);
                 setDonations([]);
@@ -41,7 +58,7 @@ export function UserTransactionsView() {
         };
 
         fetchDonations();
-    }, []);
+    }, [publicClient]);
 
     useEffect(() => {
         const fetchUsers = async () => {
@@ -118,7 +135,7 @@ export function UserTransactionsView() {
             <div style={{ marginBottom: '2rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
                 <div>
                     <h1 style={{ fontSize: '2.2rem', margin: '0 0 0.2rem 0', letterSpacing: '-0.5px' }}>Transaction Explorer</h1>
-                    <p style={{ color: 'var(--text-secondary)', margin: 0, fontSize: '0.95rem' }}>Database-backed ledger of platform donations.</p>
+                    <p style={{ color: 'var(--text-secondary)', margin: 0, fontSize: '0.95rem' }}>Donation times below prefer on-chain event timestamps instead of database insert time.</p>
                 </div>
             </div>
 
@@ -186,7 +203,7 @@ export function UserTransactionsView() {
                     <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', whiteSpace: 'nowrap' }}>
                         <thead style={{ background: 'rgba(0,0,0,0.2)', borderBottom: '1px solid var(--border)' }}>
                             <tr>
-                                <th style={{ padding: '1rem', fontWeight: '600', fontSize: '0.75rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '1px' }}>Created</th>
+                                <th style={{ padding: '1rem', fontWeight: '600', fontSize: '0.75rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '1px' }}>On-chain time</th>
                                 <th style={{ padding: '1rem', fontWeight: '600', fontSize: '0.75rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '1px' }}>Sender (Donor)</th>
                                 <th style={{ padding: '1rem', fontWeight: '600', fontSize: '0.75rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '1px' }}>Campaign</th>
                                 <th style={{ padding: '1rem', fontWeight: '600', fontSize: '0.75rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '1px', textAlign: 'right' }}>Value</th>
@@ -225,7 +242,7 @@ export function UserTransactionsView() {
                                     return (
                                     <tr key={donation.id || i} style={{ borderBottom: '1px solid var(--border)' }}>
                                         <td style={{ padding: '1.25rem 1rem', color: 'var(--text-secondary)' }}>
-                                            {donation.created_at ? new Date(donation.created_at).toLocaleString() : 'Unknown'}
+                                            {donation.created_at ? new Date(donation.created_at).toLocaleString() : 'Unknown chain time'}
                                         </td>
                                         <td style={{ padding: '1.25rem 1rem', fontWeight: '500', color: 'var(--text)' }}>
                                             <button
@@ -267,7 +284,7 @@ export function UserTransactionsView() {
                         Showing <strong style={{ color: 'var(--text)' }}>{filtered.length}</strong> transaction(s)
                     </span>
                     <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                        Synced with database
+                        Values are synced from Supabase, time comes from chain logs when available
                     </span>
                 </div>
             </div>
