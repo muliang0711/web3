@@ -40,6 +40,7 @@ export function CampaignReportView() {
     const [userNames, setUserNames] = useState<Record<string, string>>({});
     const [isLoadingReport, setIsLoadingReport] = useState(false);
     const [reportError, setReportError] = useState<string | null>(null);
+    const [pendingRefundSuccessCount, setPendingRefundSuccessCount] = useState<string | null>(null);
     const syncedReportTxHashRef = useRef<string | null>(null);
 
     const {
@@ -153,9 +154,17 @@ export function CampaignReportView() {
 
         syncedReportTxHashRef.current = status.txHash;
 
+        if (pendingRefundSuccessCount && campaignAddress) {
+            navigate(
+                `/campaigns/${campaignAddress}/refund-success?count=${encodeURIComponent(pendingRefundSuccessCount)}&tx=${status.txHash}`,
+                { replace: true }
+            );
+            return;
+        }
+
         void refetchInfo();
         void fetchReport();
-    }, [fetchReport, refetchInfo, status.isConfirmed, status.txHash]);
+    }, [campaignAddress, fetchReport, navigate, pendingRefundSuccessCount, refetchInfo, status.isConfirmed, status.txHash]);
 
     const donationVolume = useMemo(
         () => donations.reduce((sum, row) => sum + Number(row.amount_eth || 0), 0),
@@ -171,6 +180,11 @@ export function CampaignReportView() {
     const canRefundAll = Boolean(isOwner && info && !info.goalReached && !info.fundsWithdrawn && outstandingRefundCount > 0n);
     const canWithdraw = Boolean(isOwner && info && isExpired && info.goalReached && !info.fundsWithdrawn);
     const progress = info && info.fundingTarget > 0n ? Number((info.totalFunded * 100n) / info.fundingTarget) : 0;
+
+    const handleRefundAll = () => {
+        setPendingRefundSuccessCount(outstandingRefundCount.toString());
+        refundAll();
+    };
 
     if (status.isLoadingInfo) {
         return (
@@ -327,7 +341,7 @@ export function CampaignReportView() {
                         <button
                             type="button"
                             className="btn-primary"
-                            onClick={refundAll}
+                            onClick={handleRefundAll}
                             disabled={status.isRefunding || status.isConfirming}
                         >
                             {status.isRefunding || status.isConfirming ? 'Refunding...' : isExpired ? 'Refund all contributors' : 'Refund all now'}

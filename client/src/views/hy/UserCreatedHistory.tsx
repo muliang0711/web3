@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { formatEther } from 'viem';
 import { useCampaignFactory } from '../../hooks/useCampaignFactory';
@@ -8,6 +8,18 @@ function CreatedCampaignCard({ campaign }: { campaign: { address: `0x${string}`;
     const { info, contributors, outstandingRefundCount, refundAll, withdrawFunds, status } = useCampaign(campaign.address);
     const navigate = useNavigate();
     const [imageFailed, setImageFailed] = useState(false);
+    const [pendingRefundSuccessCount, setPendingRefundSuccessCount] = useState<string | null>(null);
+
+    useEffect(() => {
+        if (!status.isConfirmed || !status.txHash || !pendingRefundSuccessCount) {
+            return;
+        }
+
+        navigate(
+            `/campaigns/${campaign.address}/refund-success?count=${encodeURIComponent(pendingRefundSuccessCount)}&tx=${status.txHash}`,
+            { replace: true }
+        );
+    }, [campaign.address, navigate, pendingRefundSuccessCount, status.isConfirmed, status.txHash]);
 
     if (!info) {
         return null;
@@ -31,6 +43,11 @@ function CreatedCampaignCard({ campaign }: { campaign: { address: `0x${string}`;
             : isExpired
                 ? 'Refund window'
                 : 'In progress';
+
+    const handleRefundAll = () => {
+        setPendingRefundSuccessCount(outstandingRefundCount.toString());
+        refundAll();
+    };
 
     return (
         <article className={`created-campaign-card ${info.isCancelled ? 'created-campaign-card-cancelled' : ''}`}>
@@ -112,7 +129,7 @@ function CreatedCampaignCard({ campaign }: { campaign: { address: `0x${string}`;
                     <button
                         type="button"
                         className="btn-primary"
-                        onClick={refundAll}
+                        onClick={handleRefundAll}
                         disabled={status.isRefunding || status.isConfirming}
                     >
                         {status.isRefunding || status.isConfirming ? 'Refunding...' : isExpired ? 'Refund all contributors' : 'Refund all now'}
