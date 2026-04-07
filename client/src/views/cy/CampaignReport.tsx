@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { formatEther } from 'viem';
 import { useAccount } from 'wagmi';
@@ -38,6 +38,7 @@ export function CampaignReportView() {
     const [userNames, setUserNames] = useState<Record<string, string>>({});
     const [isLoadingReport, setIsLoadingReport] = useState(false);
     const [reportError, setReportError] = useState<string | null>(null);
+    const syncedReportTxHashRef = useRef<string | null>(null);
 
     const {
         info,
@@ -52,7 +53,7 @@ export function CampaignReportView() {
     const imageUrl = campaignAddress ? getCampaignImageUrl(campaignAddress) : null;
     const isOwner = Boolean(address && info && address.toLowerCase() === info.creator.toLowerCase());
 
-    const fetchReport = async () => {
+    const fetchReport = useCallback(async () => {
         if (!campaignAddress) {
             setDonations([]);
             setRefunds([]);
@@ -117,20 +118,31 @@ export function CampaignReportView() {
         } finally {
             setIsLoadingReport(false);
         }
-    };
-
-    useEffect(() => {
-        void fetchReport();
     }, [campaignAddress]);
 
     useEffect(() => {
-        if (!status.isConfirmed) {
+        void fetchReport();
+    }, [fetchReport]);
+
+    useEffect(() => {
+        if (!status.txHash) {
+            syncedReportTxHashRef.current = null;
+        }
+    }, [status.txHash]);
+
+    useEffect(() => {
+        if (!status.isConfirmed || !status.txHash) {
+            return;
+        }
+        if (syncedReportTxHashRef.current === status.txHash) {
             return;
         }
 
+        syncedReportTxHashRef.current = status.txHash;
+
         void refetchInfo();
         void fetchReport();
-    }, [refetchInfo, status.isConfirmed]);
+    }, [fetchReport, refetchInfo, status.isConfirmed, status.txHash]);
 
     const donationVolume = useMemo(
         () => donations.reduce((sum, row) => sum + Number(row.amount_eth || 0), 0),

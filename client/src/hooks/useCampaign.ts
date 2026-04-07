@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useWriteContract, useWaitForTransactionReceipt, usePublicClient } from 'wagmi';
 import { useAccount } from 'wagmi';
 import { parseEther, decodeEventLog } from 'viem';
@@ -112,8 +112,9 @@ export function useCampaign(campaignAddress?: `0x${string}`) {
     const [contributors, setContributors] = useState<string[]>([]);
     const [outstandingRefundCount, setOutstandingRefundCount] = useState<bigint>(0n);
     const [isLoadingInfo, setIsLoadingInfo] = useState(false);
+    const syncedReceiptHashRef = useRef<`0x${string}` | null>(null);
 
-    const fetchCampaignData = async () => {
+    const fetchCampaignData = useCallback(async () => {
         if (!campaignAddress || !publicClient) {
             setInfo(null);
             setContribution(0n);
@@ -189,17 +190,26 @@ export function useCampaign(campaignAddress?: `0x${string}`) {
         } finally {
             setIsLoadingInfo(false);
         }
-    };
+    }, [address, campaignAddress, publicClient]);
 
     useEffect(() => {
         void fetchCampaignData();
-    }, [address, campaignAddress, publicClient]);
+    }, [fetchCampaignData]);
 
     const { data: receipt, isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransactionReceipt({ hash });
 
     useEffect(() => {
+        if (!hash) {
+            syncedReceiptHashRef.current = null;
+        }
+    }, [hash]);
+
+    useEffect(() => {
         const syncToSupabase = async () => {
-            if (!isConfirmed || !pendingAction || !campaignAddress) return;
+            if (!isConfirmed || !pendingAction || !campaignAddress || !receipt?.transactionHash) return;
+            if (syncedReceiptHashRef.current === receipt.transactionHash) return;
+
+            syncedReceiptHashRef.current = receipt.transactionHash;
 
             try {
                 if (pendingAction.type === 'contribute' && pendingAction.amountEth && address) {
@@ -258,7 +268,7 @@ export function useCampaign(campaignAddress?: `0x${string}`) {
         };
 
         void syncToSupabase();
-    }, [address, campaignAddress, isConfirmed, pendingAction, receipt, publicClient]);
+    }, [address, campaignAddress, fetchCampaignData, isConfirmed, pendingAction, receipt]);
 
     const contribute = (amountEth: string) => {
         if (!campaignAddress) return;

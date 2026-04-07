@@ -12,9 +12,11 @@ export function useRefundHistory(address?: string) {
     staleTime: 1000 * 30,
     retry: 1,
     queryFn: async () => {
+      const normalizedAddress = address!.toLowerCase();
       const { data, error } = await supabase
         .from('refunds')
         .select('*')
+        .ilike('user_address', address!)
         .order('created_at', { ascending: false });
 
       if (error) {
@@ -23,7 +25,7 @@ export function useRefundHistory(address?: string) {
 
       const refunds = (data ?? []).filter((refund: any) => {
         const refundUserAddress = getRefundUserAddress(refund);
-        return refundUserAddress && refundUserAddress.toLowerCase() === address!.toLowerCase();
+        return refundUserAddress && refundUserAddress.toLowerCase() === normalizedAddress;
       });
 
       const campaignAddresses = Array.from(
