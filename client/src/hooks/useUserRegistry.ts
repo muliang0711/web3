@@ -6,6 +6,7 @@ import { useAccount } from 'wagmi';
 import { supabase } from '../lib/supabase';
 import { USER_REGISTRY_ADDRESS } from '../lib/contracts';
 import { getProfileImagePath, getProfileImageUrl, uploadMediaFile } from '../lib/media';
+import { fetchRegistrationTimestampForAddress } from '../lib/userRegistration';
 
 const CONTRACT_ABI = [
     {
@@ -97,7 +98,7 @@ async function fetchUserByAddress(publicClient: NonNullable<ReturnType<typeof us
         console.warn('Failed to load user row from Supabase, falling back to chain data only.', error);
     }
 
-    const [chainUser, claimableRewards] = await Promise.all([
+    const [chainUser, claimableRewards, registeredAt] = await Promise.all([
         publicClient.readContract({
             address: USER_REGISTRY_ADDRESS,
             abi: CONTRACT_ABI,
@@ -110,6 +111,10 @@ async function fetchUserByAddress(publicClient: NonNullable<ReturnType<typeof us
             functionName: 'getClaimableRewards',
             args: [address as `0x${string}`],
         }) as Promise<bigint>,
+        fetchRegistrationTimestampForAddress(publicClient, address).catch((error) => {
+            console.warn('Failed to load on-chain registration timestamp, falling back to database created_at.', error);
+            return row?.created_at ?? null;
+        }),
     ]);
 
     if (!row && !chainUser.isRegistered) {
@@ -120,7 +125,7 @@ async function fetchUserByAddress(publicClient: NonNullable<ReturnType<typeof us
         name: chainUser.isRegistered ? chainUser.name : row?.name ?? '',
         isRegistered: chainUser.isRegistered || Boolean(row),
         walletAddress: row?.wallet_address ?? address,
-        createdAt: row?.created_at ?? null,
+        createdAt: registeredAt ?? row?.created_at ?? null,
         claimableRewards: formatEther(claimableRewards),
         profileImageUrl: row?.profile_image_url ?? row?.avatar_url ?? row?.image_url ?? getProfileImageUrl(address),
     };
@@ -191,6 +196,10 @@ export function useUserRegistry() {
             if (!isConfirmed || !pendingName || !address) return;
 
             try {
+                const registeredAt = publicClient
+                    ? await fetchRegistrationTimestampForAddress(publicClient, address).catch(() => null)
+                    : null;
+
                 await supabase.from('users').insert({
                     wallet_address: address,
                     name: pendingName,
@@ -200,7 +209,7 @@ export function useUserRegistry() {
                     name: pendingName,
                     isRegistered: true,
                     walletAddress: address,
-                    createdAt: new Date().toISOString(),
+                    createdAt: registeredAt,
                     claimableRewards: '0',
                     profileImageUrl: getProfileImageUrl(address),
                 } satisfies AppUser);
@@ -214,7 +223,7 @@ export function useUserRegistry() {
         };
 
         syncToSupabase();
-    }, [address, isConfirmed, pendingName, queryClient, receipt]);
+    }, [address, isConfirmed, pendingName, publicClient, queryClient, receipt]);
 
     const register = (name: string) => {
         if (userQuery.data?.isRegistered) {
