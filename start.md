@@ -28,6 +28,12 @@ Current runtime behavior:
 3. `UserRegistry` increases `claimableRewards` 1:1 with the donated amount.
 4. `RewardManager.claimRewards()` reads the user reward amount, resets it in `UserRegistry`, and mints CFR through `RewardToken`.
 
+Refund behavior now implemented:
+
+1. When a donation is refunded, the campaign reverses the linked reward amount in `UserRegistry`.
+2. If the reward is still unclaimed, `claimableRewards` is reduced directly.
+3. If the reward was already claimed, `RewardManager` burns the matching CFR amount from the user's token balance.
+
 Security note:
 
 - `UserRegistry.recordDonation(...)` now only accepts calls from authorized campaign contracts created by `CampaignFactory`.

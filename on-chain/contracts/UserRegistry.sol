@@ -1,6 +1,10 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.28;
 
+interface IRewardManager {
+    function revokeRewards(address _user, uint256 _amount) external;
+}
+
 // HY : able to explain how it work
 contract UserRegistry {
     // 1. struct :
@@ -31,6 +35,7 @@ contract UserRegistry {
     // 3. events :
     event UserRegistered(address indexed userAddress, string username, uint256 timestamp);
     event DonationRecorded(address indexed user, address indexed campaign, uint256 amount, uint256 timestamp);
+    event DonationReversed(address indexed user, address indexed campaign, uint256 amount, uint256 timestamp);
 
     // constructor(JJ)
     constructor() {
@@ -78,6 +83,33 @@ contract UserRegistry {
         userDonations[_user].push(DonationRecord(msg.sender, _amount, block.timestamp));
         claimableRewards[_user] += _amount;
         emit DonationRecorded(_user, msg.sender, _amount, block.timestamp);
+    }
+
+    function reverseDonation(address _user, uint256 _amount) external {
+        require(authorizedCampaigns[msg.sender], "Only authorized campaigns can reverse donations");
+        if (_user == address(0)) {
+            revert("Invalid user address");
+        }
+        if (_amount == 0) {
+            revert("Refund amount must be greater than 0");
+        }
+
+        uint256 availableClaimable = claimableRewards[_user];
+
+        if (availableClaimable >= _amount) {
+            claimableRewards[_user] = availableClaimable - _amount;
+        } else {
+            claimableRewards[_user] = 0;
+
+            uint256 amountToRevoke = _amount - availableClaimable;
+            if (rewardManager == address(0)) {
+                revert("Reward manager not configured");
+            }
+
+            IRewardManager(rewardManager).revokeRewards(_user, amountToRevoke);
+        }
+
+        emit DonationReversed(_user, msg.sender, _amount, block.timestamp);
     }
 
     function getUserDonations(address _userAddress) public view returns (DonationRecord[] memory) {

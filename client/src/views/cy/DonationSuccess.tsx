@@ -79,7 +79,7 @@ export function DonationSuccessView() {
 
                         <div className="donation-success-details">
                             <div className="auth-kicker">Supported campaign</div>
-                            <h2>{info?.title || 'Example Campaign for Pet Survey'}</h2>
+                            <h2>{info?.title || 'Example Campaign for Pet Treatment'}</h2>
                             <p>{info?.description || 'Your donation was completed successfully.'}</p>
                         </div>
                     </section>

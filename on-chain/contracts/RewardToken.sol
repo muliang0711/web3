@@ -38,4 +38,19 @@ contract RewardToken is ERC20, Ownable {
         _mint(_to, _amount);
         return true;
     }
+
+    /// @notice Burn reward tokens from a contributor when refunded donations reverse rewards
+    /// @param _from Address of the contributor
+    /// @param _amount Amount of reward tokens to burn
+    function revokeReward(address _from, uint256 _amount) external onlyOwner returns (bool) {
+        if (_from == address(0)) {
+            revert("Invalid recipient address");
+        }
+        if (_amount == 0) {
+            revert("Burn amount must be greater than 0");
+        }
+
+        _burn(_from, _amount);
+        return true;
+    }
 }

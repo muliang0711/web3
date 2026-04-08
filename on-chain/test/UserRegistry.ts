@@ -84,4 +84,20 @@ describe("UserRegistry", async function () {
             }
         );
     });
+
+    it("Should reject donation reversal from unauthorized callers", async function () {
+        const userRegistry = await viem.deployContract("UserRegistry");
+        const [, donor] = await viem.getWalletClients();
+
+        console.log(`\n    [Test: Reject Unauthorized Donation Reversal]`);
+
+        await assert.rejects(
+            () => userRegistry.write.reverseDonation([donor.account.address, 1n]),
+            (err: any) => {
+                const reason = getRevertReason(err);
+                console.log(`    Expected Revert Reason found: "${reason}"`);
+                return /Only authorized campaigns can reverse donations/.test(reason) || /Only authorized campaigns can reverse donations/.test(err.message);
+            }
+        );
+    });
 });

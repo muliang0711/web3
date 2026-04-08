@@ -66,8 +66,8 @@ export function CreateCampaignView() {
 
                         <div className="create-campaign-preview-content">
                             <span className="campaign-card-badge badge-active">Draft</span>
-                            <h3>{title || 'Example Campaign for Pet Survey'}</h3>
-                            <p>{description || 'Use a calm, descriptive summary so participants understand the goal immediately.'}</p>
+                            <h3>{title || 'Example Campaign for Pet Treatment'}</h3>
+                            <p>{description || 'Use a calm, descriptive summary so supporters understand the treatment goal immediately.'}</p>
                             <div className="campaign-card-stats">
                                 <span><strong>{target || '0.00'}</strong> ETH target</span>
                                 <span>{duration || '0'} days</span>

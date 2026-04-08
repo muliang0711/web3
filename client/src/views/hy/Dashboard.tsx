@@ -48,8 +48,8 @@ export function DashboardView() {
             <div className="dashboard-hero">
                 <div>
                     <div className="auth-kicker">Campaign overview</div>
-                    <h1 style={{ fontSize: '2.25rem', marginBottom: '0.5rem' }}>Welcome back, {user?.name || 'Participant'}</h1>
-                    <p>Track your campaign activity, review survey-related contributions, and move quickly into the next action.</p>
+                    <h1 style={{ fontSize: '2.25rem', marginBottom: '0.5rem' }}>Welcome back, {user?.name || 'Member'}</h1>
+                    <p>Track your campaign activity, review treatment-related contributions, and move quickly into the next action.</p>
                 </div>
                 <div className="dashboard-hero-note">
                     Reward balance updates are tied to recorded donations and can be claimed later from your profile.

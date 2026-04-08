@@ -33,15 +33,15 @@ export function MainLayout({ children }: { children: ReactNode }) {
         <div className="app-wrapper fade-in">
             <aside className="sidebar">
                 <button type="button" className="sidebar-logo" onClick={() => navigate('/dashboard')}>
-                    <span className="sidebar-logo-mark">PS</span>
+                    <span className="sidebar-logo-mark">PT</span>
                     <span>
-                        <strong>Pet Survey</strong>
+                        <strong>Pet Treatment</strong>
                         <small>Campaign workspace</small>
                     </span>
                 </button>
 
                 <div className="sidebar-nav-group">
-                    <div className="sidebar-nav-header">Participant</div>
+                    <div className="sidebar-nav-header">Member</div>
                     <NavLink to="/profile" className={({ isActive }) => `sidebar-nav-link ${isActive ? 'active' : ''}`}>
                         Profile
                     </NavLink>
@@ -86,13 +86,13 @@ export function MainLayout({ children }: { children: ReactNode }) {
 
             <main className="main-content">
                 <header className="top-bar">
-                    <div className="top-bar-badge">Pet-owner insight workspace</div>
+                    <div className="top-bar-badge">Pet treatment support workspace</div>
                     <div className="user-profile-widget">
                         <span className="wallet-pill">
                             {address ? `${address.slice(0, 6)}...${address.slice(-4)}` : ''}
                         </span>
                         <button type="button" className="user-avatar" onClick={() => navigate('/profile')} title="Open profile">
-                            {address?.slice(2, 4)?.toUpperCase() || 'PS'}
+                            {address?.slice(2, 4)?.toUpperCase() || 'PT'}
                         </button>
                     </div>
                 </header>

@@ -34,8 +34,8 @@ export function LoginView() {
 
     return (
         <div className="fade-in text-center">
-            <div className="auth-kicker">Participant access</div>
-            <h1>Open the pet survey campaign portal</h1>
+            <div className="auth-kicker">Member access</div>
+            <h1>Open the pet treatment campaign portal</h1>
             <p style={{ margin: '0.75rem 0 2rem' }}>
                 Connect your wallet to review the campaign, participate, and manage reward claims in one calm workspace.
             </p>

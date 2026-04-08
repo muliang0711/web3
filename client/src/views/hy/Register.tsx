@@ -33,9 +33,9 @@ export function RegisterView() {
     return (
         <div className="fade-in text-center">
             <div className="auth-kicker">Registration</div>
-            <h2>Create your participant profile</h2>
+            <h2>Create your member profile</h2>
             <p style={{ margin: '0.5rem 0 1.75rem' }}>
-                Register this wallet to join the pet survey campaign and unlock the reward-aware participant dashboard.
+                Register this wallet to join the pet treatment campaign and unlock the reward-aware campaign dashboard.
             </p>
 
             <div style={{ marginBottom: '1.25rem', padding: '1rem', borderRadius: '12px', background: 'var(--bg-input)', border: '1px solid var(--border)' }}>

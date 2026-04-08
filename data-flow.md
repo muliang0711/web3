@@ -56,6 +56,11 @@ Every time a campaign is created, a *new* copy of this contract is deployed to t
   * **Saved Where:** The boolean flags `fundsWithdrawn` or `contributions[msg.sender]` drop to 0. 
   * **What:** The Ethereum blockchain securely transfers the physical ETH balances back to the wallets.
 
+* **Action:** User executes `refund()` or the creator executes `refundAll()`
+  * **Saved Where 1:** The `mapping(address => uint256) public claimableRewards` in `UserRegistry`.
+  * **Saved Where 2:** The CFR token balance in `RewardToken`, when already-claimed rewards must be reversed.
+  * **What:** Refunds now reverse the reward value linked to the refunded donation. If the reward was not claimed yet, the user's claimable reward balance is reduced. If it was already claimed, the matching CFR amount is burned.
+
 ---
 
 ## 3. How does the Frontend read the data?

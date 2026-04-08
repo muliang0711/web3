@@ -3,6 +3,7 @@ pragma solidity ^0.8.28;
 
 interface IUserRegistry {
     function recordDonation(address _user, uint256 _amount) external;
+    function reverseDonation(address _user, uint256 _amount) external;
 }
 
 contract Campaign {
@@ -131,6 +132,7 @@ contract Campaign {
         uint256 amount = contributions[msg.sender];
         contributions[msg.sender] = 0;
         totalFunded -= amount;
+        userRegistry.reverseDonation(msg.sender, amount);
 
         (bool success, ) = payable(msg.sender).call{value: amount}("");
         require(success, "Refund transfer failed");
@@ -159,6 +161,7 @@ contract Campaign {
             contributions[contributor] = 0;
             refundedCount += 1;
             refundedAmount += amount;
+            userRegistry.reverseDonation(contributor, amount);
 
             (bool success, ) = payable(contributor).call{value: amount}("");
             require(success, "Refund transfer failed");

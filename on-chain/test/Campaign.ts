@@ -316,7 +316,7 @@ describe("Campaign Module", async function () {
     // ══════════════════════════════════════════════════════════
 
     it("Should refund contributors if target not met", async function () {
-        const factory = await deployCampaignFactory();
+        const { userRegistry, factory } = await deployRewardStack();
         const [, contributor] = await viem.getWalletClients();
         const publicClient = await viem.getPublicClient();
 
@@ -328,6 +328,8 @@ describe("Campaign Module", async function () {
         const contributionAmount = parseEther("3");
         const contributorCampaign = await getCampaignContract(campaigns[0], 1);
         await contributorCampaign.write.contribute([], { value: contributionAmount });
+        const claimableBeforeRefund = await userRegistry.read.getClaimableRewards([contributor.account.address]);
+        assert.equal(claimableBeforeRefund, contributionAmount);
 
         // Advance past deadline
         await advanceTime(2);
@@ -335,14 +337,17 @@ describe("Campaign Module", async function () {
         const balanceBefore = await publicClient.getBalance({ address: contributor.account.address });
         await contributorCampaign.write.refund();
         const balanceAfter = await publicClient.getBalance({ address: contributor.account.address });
+        const claimableAfterRefund = await userRegistry.read.getClaimableRewards([contributor.account.address]);
 
         console.log(`    Contributor balance increased: ${balanceAfter > balanceBefore}`);
+        console.log(`    Claimable rewards after refund: ${formatEther(claimableAfterRefund)} CFR`);
 
         // After refund, contribution should be 0
         const remaining = await contributorCampaign.read.getContribution([contributor.account.address]);
         console.log(`    Remaining contribution: ${formatEther(remaining)} ETH`);
 
         assert.equal(remaining, 0n);
+        assert.equal(claimableAfterRefund, 0n);
         assert.ok(balanceAfter > balanceBefore, "Contributor balance should increase after refund");
     });
 
@@ -486,6 +491,37 @@ describe("Campaign Module", async function () {
 
         assert.equal(claimableRewardsAfter, 0n);
         assert.equal(tokenBalance, donationAmount);
+    });
+
+    it("Should burn claimed CFR rewards when a refunded donation is reversed", async function () {
+        const { userRegistry, factory, rewardToken, rewardManager } = await deployRewardStack();
+        const [, contributor] = await viem.getWalletClients();
+
+        console.log(`\n    [Test: Burn Claimed Rewards On Refund]`);
+
+        const donationAmount = parseEther("3");
+        await factory.write.createCampaign(["Refund Burn", "Description", parseEther("10"), 1n]);
+
+        const campaigns = await factory.read.getCampaigns();
+        const contributorCampaign = await getCampaignContract(campaigns[0], 1);
+        await contributorCampaign.write.contribute([], { value: donationAmount });
+
+        await rewardManager.write.claimRewards([], { account: contributor.account });
+
+        const tokenBalanceBeforeRefund = await rewardToken.read.balanceOf([contributor.account.address]);
+        assert.equal(tokenBalanceBeforeRefund, donationAmount);
+
+        await advanceTime(2);
+        await contributorCampaign.write.refund();
+
+        const tokenBalanceAfterRefund = await rewardToken.read.balanceOf([contributor.account.address]);
+        const claimableAfterRefund = await userRegistry.read.getClaimableRewards([contributor.account.address]);
+
+        console.log(`    Token balance after refund: ${formatEther(tokenBalanceAfterRefund)} CFR`);
+        console.log(`    Claimable rewards after refund: ${formatEther(claimableAfterRefund)} CFR`);
+
+        assert.equal(tokenBalanceAfterRefund, 0n);
+        assert.equal(claimableAfterRefund, 0n);
     });
 
     it("Should deploy RewardToken and mint to contributors", async function () {

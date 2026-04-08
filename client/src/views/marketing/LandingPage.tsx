@@ -57,26 +57,26 @@ function IconShield(props: IconProps) {
 
 const storyCards = [
     {
-        title: 'Daily care patterns',
-        body: 'Capture feeding, play, rest, and routine habits so campaign owners understand what life with a pet actually looks like.',
+        title: 'Treatment support needs',
+        body: 'Show the medical, recovery, and day-to-day support needs that make each treatment campaign urgent and understandable.',
         icon: IconPaw,
     },
     {
-        title: 'Health and comfort signals',
-        body: 'Surface practical feedback around nutrition, checkups, anxiety, and home conditions without turning the experience into a cold form.',
+        title: 'Care and recovery updates',
+        body: 'Highlight wellbeing, medication, follow-up care, and recovery progress in a format that feels human instead of clinical.',
         icon: IconHeart,
     },
     {
-        title: 'Adoption and rescue insight',
-        body: 'Highlight the support, trust cues, and community resources that make rescue journeys smoother for both pets and owners.',
+        title: 'Funding with transparency',
+        body: 'Combine wallet-based donations, visible campaign progress, and reward claiming so supporters can trust how the campaign is managed.',
         icon: IconClipboard,
     },
 ];
 
 const signalTracks = [
-    'Routine and lifestyle',
-    'Wellbeing and nutrition',
-    'Rescue and adoption support',
+    'Treatment and medication',
+    'Recovery and monitoring',
+    'Emergency support needs',
     'Trust, rewards, and transparency',
 ];
 
@@ -86,8 +86,8 @@ const journeySteps = [
         body: 'Enter the campaign through the participant portal and let the app recognize whether the wallet is already registered.',
     },
     {
-        title: 'Join the survey flow',
-        body: 'Move through focused questions designed for pet owners, with a shorter and friendlier reading rhythm than a standard form.',
+        title: 'Support a treatment campaign',
+        body: 'Review a treatment-focused campaign, understand the funding goal, and contribute directly through the on-chain donation flow.',
     },
     {
         title: 'Track and claim rewards',
@@ -96,8 +96,8 @@ const journeySteps = [
 ];
 
 const trustNotes = [
-    'Short, readable question tracks',
-    'Campaign-first storytelling instead of generic donation UI',
+    'Clear treatment-focused storytelling',
+    'Campaign-first presentation instead of generic donation UI',
     'Wallet-based participation with reward visibility',
 ];
 
@@ -116,14 +116,14 @@ export function LandingPage() {
                         <IconPaw className="landing-icon" />
                     </span>
                     <span>
-                        <strong>Pet Survey Campaign</strong>
+                        <strong>Pet Treatment Campaign</strong>
                         <small>Community insight portal</small>
                     </span>
                 </button>
 
                 <nav className="landing-nav-links" aria-label="Landing sections">
                     <a href="#mission">Mission</a>
-                    <a href="#tracks">Survey tracks</a>
+                    <a href="#tracks">Treatment focus</a>
                     <a href="#journey">Journey</a>
                 </nav>
 
@@ -142,12 +142,12 @@ export function LandingPage() {
                     <div className="landing-hero-copy">
                         <div className="landing-eyebrow">
                             <IconSpark className="landing-inline-icon" />
-                            Fresh campaign experience for pet-owner feedback
+                            Focused support for pet treatment funding
                         </div>
 
-                        <h1>Pet Survey Campaign</h1>
+                        <h1>Pet Treatment Campaign</h1>
                         <p className="landing-hero-text">
-                            A bold, friendly front page for collecting meaningful pet-owner insight around care, wellbeing, and adoption support. The interface now reads like a real campaign,
+                            A clearer campaign front page for raising support around treatment, recovery, and urgent pet care. The interface reads like a real funding campaign,
                             not a generic web3 dashboard.
                         </p>
 
@@ -156,18 +156,18 @@ export function LandingPage() {
                                 {primaryLabel}
                             </button>
                             <button type="button" className="landing-secondary-link" onClick={() => navigate('/register')}>
-                                Register participant
+                                Register member
                             </button>
                         </div>
 
                         <div className="landing-metrics" aria-label="Campaign metrics">
                             <div className="landing-metric">
-                                <span>05</span>
-                                <small>minute survey target</small>
+                                <span>24/7</span>
+                                <small>support-ready campaign access</small>
                             </div>
                             <div className="landing-metric">
                                 <span>04</span>
-                                <small>clear response tracks</small>
+                                <small>clear treatment focus areas</small>
                             </div>
                             <div className="landing-metric">
                                 <span>CFR</span>
@@ -179,7 +179,7 @@ export function LandingPage() {
                     <div className="landing-hero-visual" aria-hidden="true">
                         <article className="hero-board hero-board-primary">
                             <div className="hero-board-topline">Campaign board</div>
-                            <h2>What this survey is mapping</h2>
+                            <h2>What this treatment campaign supports</h2>
                             <div className="hero-topic-grid">
                                 {signalTracks.map((item) => (
                                     <span key={item} className="hero-topic-chip">
@@ -194,13 +194,13 @@ export function LandingPage() {
                                 <span className="hero-badge">Live flow</span>
                                 <span className="hero-badge subtle">Wallet gated</span>
                             </div>
-                            <strong>Survey story first, web3 second</strong>
-                            <p>The landing page leads with the campaign purpose, then routes users into the existing wallet and reward flow.</p>
+                            <strong>Treatment story first, web3 second</strong>
+                            <p>The landing page leads with the treatment purpose, then routes users into the existing wallet and reward flow.</p>
                         </article>
 
                         <article className="hero-board hero-board-note">
                             <IconShield className="landing-inline-icon" />
-                            <span>Reward visibility stays tied to the current on-chain manager and participant profile.</span>
+                            <span>Reward visibility stays tied to the current on-chain manager and member profile.</span>
                         </article>
                     </div>
                 </section>
@@ -210,7 +210,7 @@ export function LandingPage() {
                         <span className="landing-section-label">Campaign direction</span>
                         <h2>Designed to feel like a living pet community campaign</h2>
                         <p>
-                            The new frontend uses warmer editorial styling, clearer hierarchy, and more specific campaign language so the product matches the title instead of feeling like a reused template.
+                            The frontend uses warmer editorial styling, clearer hierarchy, and more specific treatment-oriented language so the product matches the title instead of feeling like a reused template.
                         </p>
                     </div>
 
@@ -229,10 +229,10 @@ export function LandingPage() {
 
                 <section id="tracks" className="landing-section landing-section-grid">
                     <article className="landing-bento-main">
-                        <span className="landing-section-label">Survey tracks</span>
-                        <h2>Focused questions, clearer campaign framing</h2>
+                        <span className="landing-section-label">Treatment focus</span>
+                        <h2>Focused support areas, clearer campaign framing</h2>
                         <p>
-                            Instead of a flat promotional block, the page now explains what participants are helping discover and why each topic matters to the campaign owner.
+                            Instead of a flat promotional block, the page now explains what supporters are helping fund and why each treatment area matters to the campaign owner.
                         </p>
                     </article>
 
@@ -257,7 +257,7 @@ export function LandingPage() {
 
                 <section id="journey" className="landing-section">
                     <div className="landing-section-heading">
-                        <span className="landing-section-label">Participant journey</span>
+                        <span className="landing-section-label">Supporter journey</span>
                         <h2>The same product flow, presented with a stronger story</h2>
                     </div>
 

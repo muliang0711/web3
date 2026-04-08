@@ -79,7 +79,7 @@ export function RefundSuccessView() {
 
                         <div className="donation-success-details">
                             <div className="auth-kicker">Refunded campaign</div>
-                            <h2>{info?.title || 'Pet Survey Campaign'}</h2>
+                            <h2>{info?.title || 'Pet Treatment Campaign'}</h2>
                             <p>{info?.description || 'The refund action was completed successfully for this campaign.'}</p>
                         </div>
                     </section>
