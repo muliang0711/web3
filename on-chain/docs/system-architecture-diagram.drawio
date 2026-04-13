@@ -1,0 +1,67 @@
+<mxfile host="app.diagrams.net" modified="2026-04-08T00:00:00.000Z" agent="Codex" version="24.7.17">
+  <diagram id="system-architecture-diagram" name="System Architecture Diagram">
+    <mxGraphModel dx="1600" dy="1000" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="1000" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="user" value="User&#xa;&#xa;- connect wallet&#xa;- register&#xa;- create campaign&#xa;- donate / refund&#xa;- claim rewards" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=14;fontStyle=1;spacing=8;" vertex="1" parent="1">
+          <mxGeometry x="40" y="280" width="220" height="180" as="geometry" />
+        </mxCell>
+        <mxCell id="frontend-group" value="Frontend Layer" style="swimlane;html=1;rounded=1;horizontal=0;startSize=32;fillColor=#f5f5f5;strokeColor=#666666;fontStyle=1;fontSize=15;" vertex="1" parent="1">
+          <mxGeometry x="320" y="90" width="430" height="560" as="geometry" />
+        </mxCell>
+        <mxCell id="frontend" value="React + TypeScript + Vite Client&#xa;&#xa;- landing page&#xa;- login / register&#xa;- dashboard / profile&#xa;- campaigns / reports&#xa;- donation / refund / reward claim UI" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=13;spacing=8;" vertex="1" parent="frontend-group">
+          <mxGeometry x="25" y="60" width="380" height="220" as="geometry" />
+        </mxCell>
+        <mxCell id="web3lib" value="Wagmi + Viem&#xa;&#xa;- wallet connection&#xa;- contract read / write&#xa;- transaction receipt handling" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=13;spacing=8;" vertex="1" parent="frontend-group">
+          <mxGeometry x="25" y="320" width="180" height="150" as="geometry" />
+        </mxCell>
+        <mxCell id="supabase-client" value="Supabase Client&#xa;&#xa;- users&#xa;- campaigns&#xa;- donations&#xa;- refunds&#xa;- app-media storage" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=13;spacing=8;" vertex="1" parent="frontend-group">
+          <mxGeometry x="225" y="320" width="180" height="150" as="geometry" />
+        </mxCell>
+        <mxCell id="wallet" value="Wallet Layer&#xa;&#xa;MetaMask / EVM Wallet&#xa;- signs transactions&#xa;- manages accounts&#xa;- pays gas fees" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=14;fontStyle=1;spacing=8;" vertex="1" parent="1">
+          <mxGeometry x="840" y="90" width="260" height="180" as="geometry" />
+        </mxCell>
+        <mxCell id="blockchain-group" value="Blockchain Layer" style="swimlane;html=1;rounded=1;horizontal=0;startSize=32;fillColor=#f5f5f5;strokeColor=#666666;fontStyle=1;fontSize=15;" vertex="1" parent="1">
+          <mxGeometry x="840" y="320" width="520" height="360" as="geometry" />
+        </mxCell>
+        <mxCell id="node" value="Hardhat Local Node / EVM RPC&#xa;&#xa;- chain id 31337&#xa;- executes contract calls&#xa;- returns receipts and logs" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=13;spacing=8;" vertex="1" parent="blockchain-group">
+          <mxGeometry x="25" y="60" width="210" height="180" as="geometry" />
+        </mxCell>
+        <mxCell id="contracts" value="Smart Contracts&#xa;&#xa;CampaignFactory&#xa;Campaign&#xa;UserRegistry&#xa;RewardManager&#xa;RewardToken" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=13;spacing=8;" vertex="1" parent="blockchain-group">
+          <mxGeometry x="275" y="60" width="210" height="220" as="geometry" />
+        </mxCell>
+        <mxCell id="supabase" value="Supabase Backend&#xa;&#xa;Database tables&#xa;- users&#xa;- campaigns&#xa;- donations&#xa;- refunds&#xa;&#xa;Storage bucket&#xa;- app-media" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=14;fontStyle=1;spacing=8;" vertex="1" parent="1">
+          <mxGeometry x="840" y="730" width="300" height="220" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-user-frontend" value="uses web app" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;strokeWidth=2;" edge="1" parent="1" source="user" target="frontend">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-frontend-wallet" value="connect / request signature" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;strokeWidth=2;" edge="1" parent="1" source="frontend" target="wallet">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-frontend-web3" value="contract calls" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;strokeWidth=2;" edge="1" parent="1" source="frontend" target="web3lib">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-frontend-supabase-client" value="db / storage access" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;strokeWidth=2;" edge="1" parent="1" source="frontend" target="supabase-client">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-web3-wallet" value="account + signing" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;strokeWidth=2;" edge="1" parent="1" source="web3lib" target="wallet">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-web3-node" value="RPC read / write" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;strokeWidth=2;" edge="1" parent="1" source="web3lib" target="node">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-wallet-node" value="signed transactions" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;dashed=1;strokeWidth=2;" edge="1" parent="1" source="wallet" target="node">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-node-contracts" value="deploy / execute / emit events" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;strokeWidth=2;" edge="1" parent="1" source="node" target="contracts">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-supabase-client-backend" value="REST / storage API" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;strokeWidth=2;" edge="1" parent="1" source="supabase-client" target="supabase">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

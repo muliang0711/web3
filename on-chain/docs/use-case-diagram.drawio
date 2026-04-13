@@ -1,0 +1,94 @@
+<mxfile host="app.diagrams.net" modified="2026-04-08T00:00:00.000Z" agent="Codex" version="24.7.17">
+  <diagram id="use-case-diagram" name="Use Case Diagram">
+    <mxGraphModel dx="1600" dy="1000" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="1000" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="boundary" value="Pet Treatment Campaign System" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=2;fillColor=#ffffff;strokeColor=#000000;fontSize=16;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="300" y="60" width="980" height="760" as="geometry" />
+        </mxCell>
+        <mxCell id="actor-user" value="User" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="70" y="210" width="60" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="actor-creator" value="Campaign Creator" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="70" y="420" width="60" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="actor-donor" value="Donor" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="70" y="620" width="60" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="uc-connect" value="Connect Wallet" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="390" y="120" width="190" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="uc-register" value="Register Profile" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="390" y="220" width="190" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="uc-browse" value="Browse Campaigns" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="390" y="320" width="190" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="uc-profile" value="View Profile and History" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="390" y="420" width="190" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="uc-claim" value="Claim Reward Tokens" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="390" y="520" width="190" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="uc-create" value="Create Campaign" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="760" y="160" width="190" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="uc-report" value="View Campaign Report" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="760" y="280" width="190" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="uc-withdraw" value="Withdraw Campaign Funds" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="760" y="400" width="190" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="uc-refundall" value="Process Refund for All" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="760" y="520" width="190" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="uc-donate" value="Donate to Campaign" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="1040" y="220" width="190" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="uc-refund" value="Request Refund" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="1040" y="360" width="190" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-u1" value="" style="endArrow=none;html=1;strokeWidth=2;" edge="1" parent="1" source="actor-user" target="uc-connect">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-u2" value="" style="endArrow=none;html=1;strokeWidth=2;" edge="1" parent="1" source="actor-user" target="uc-register">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-u3" value="" style="endArrow=none;html=1;strokeWidth=2;" edge="1" parent="1" source="actor-user" target="uc-browse">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-u4" value="" style="endArrow=none;html=1;strokeWidth=2;" edge="1" parent="1" source="actor-user" target="uc-profile">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-u5" value="" style="endArrow=none;html=1;strokeWidth=2;" edge="1" parent="1" source="actor-user" target="uc-claim">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-c1" value="" style="endArrow=none;html=1;strokeWidth=2;" edge="1" parent="1" source="actor-creator" target="uc-create">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-c2" value="" style="endArrow=none;html=1;strokeWidth=2;" edge="1" parent="1" source="actor-creator" target="uc-report">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-c3" value="" style="endArrow=none;html=1;strokeWidth=2;" edge="1" parent="1" source="actor-creator" target="uc-withdraw">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-c4" value="" style="endArrow=none;html=1;strokeWidth=2;" edge="1" parent="1" source="actor-creator" target="uc-refundall">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-d1" value="" style="endArrow=none;html=1;strokeWidth=2;" edge="1" parent="1" source="actor-donor" target="uc-donate">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-d2" value="" style="endArrow=none;html=1;strokeWidth=2;" edge="1" parent="1" source="actor-donor" target="uc-refund">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="gen-user-creator" value="" style="endArrow=block;endFill=0;html=1;strokeWidth=2;" edge="1" parent="1" source="actor-creator" target="actor-user">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="gen-user-donor" value="" style="endArrow=block;endFill=0;html=1;strokeWidth=2;" edge="1" parent="1" source="actor-donor" target="actor-user">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
