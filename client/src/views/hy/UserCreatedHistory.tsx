@@ -1,10 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { formatEther } from 'viem';
 import { useCampaignFactory } from '../../hooks/useCampaignFactory';
 import { useCampaign } from '../../hooks/useCampaign';
 
-function CreatedCampaignCard({ campaign }: { campaign: { address: `0x${string}`; imageUrl?: string | null } }) {
+function CreatedCampaignCard({ campaign }: { campaign: { address: `0x${string}`; imageUrl?: string | null; title?: string | null; description?: string | null; target_eth?: string | number | null; duration_days?: number | null; created_at?: string | null; isLive?: boolean } }) {
     const { info, contributors, outstandingRefundCount, refundAll, withdrawFunds, status } = useCampaign(campaign.address);
     const navigate = useNavigate();
     const [imageFailed, setImageFailed] = useState(false);
@@ -22,6 +21,66 @@ function CreatedCampaignCard({ campaign }: { campaign: { address: `0x${string}`;
     }, [campaign.address, navigate, pendingRefundSuccessCount, status.isConfirmed, status.txHash]);
 
     if (!info) {
+        if (campaign.title) {
+            return (
+                <article className="created-campaign-card created-campaign-card-archived">
+                    <div className="created-campaign-card-body">
+                        <div className="created-campaign-media">
+                            {campaign.imageUrl && !imageFailed ? (
+                                <img
+                                    src={campaign.imageUrl}
+                                    alt={campaign.title}
+                                    className="media-cover-image"
+                                    onError={() => setImageFailed(true)}
+                                />
+                            ) : (
+                                <div className="media-cover-placeholder">
+                                    <span>{campaign.title.slice(0, 1)}</span>
+                                    <small>Archived owner card</small>
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="created-campaign-content">
+                            <div className="created-campaign-header">
+                                <div>
+                                    <h3>{campaign.title}</h3>
+                                    <p>{campaign.description || 'This campaign record is preserved in Supabase, but it is not deployed on the current chain session.'}</p>
+                                </div>
+                                <span className="campaign-card-badge badge-danger">
+                                    Archived
+                                </span>
+                            </div>
+
+                            <div className="created-campaign-stats">
+                                <div>
+                                    <strong>{Number(campaign.target_eth || 0).toFixed(4)} ETH</strong>
+                                    <small>target</small>
+                                </div>
+                                <div>
+                                    <strong>{campaign.duration_days ?? '—'}</strong>
+                                    <small>days</small>
+                                </div>
+                                <div>
+                                    <strong>{campaign.created_at ? new Date(campaign.created_at).toLocaleDateString() : 'Stored'}</strong>
+                                    <small>recorded</small>
+                                </div>
+                                <div>
+                                    <strong>Offline</strong>
+                                    <small>current chain state</small>
+                                </div>
+                            </div>
+
+                            <div className="created-campaign-meta">
+                                <span>This campaign is loaded from Supabase. Chain-only actions will work again after redeploying the contracts.</span>
+                                <span>{campaign.address.slice(0, 6)}...{campaign.address.slice(-4)}</span>
+                            </div>
+                        </div>
+                    </div>
+                </article>
+            );
+        }
+
         return null;
     }
 
@@ -71,8 +130,8 @@ function CreatedCampaignCard({ campaign }: { campaign: { address: `0x${string}`;
                 <div className="created-campaign-content">
                     <div className="created-campaign-header">
                         <div>
-                            <h3>{info.title}</h3>
-                            <p>{info.description}</p>
+                            <h3>{campaign.title || info.title}</h3>
+                            <p>{campaign.description || info.description}</p>
                         </div>
                         <span className={`campaign-card-badge ${badgeClass}`}>
                             {badgeLabel}
@@ -81,12 +140,12 @@ function CreatedCampaignCard({ campaign }: { campaign: { address: `0x${string}`;
 
                     <div className="created-campaign-stats">
                         <div>
-                            <strong>{formatEther(info.totalFunded)} ETH</strong>
-                            <small>raised</small>
+                            <strong>{Number(campaign.target_eth || 0).toFixed(4)} ETH</strong>
+                            <small>target</small>
                         </div>
                         <div>
-                            <strong>{formatEther(info.fundingTarget)} ETH</strong>
-                            <small>target</small>
+                            <strong>{campaign.duration_days ?? '—'}</strong>
+                            <small>days</small>
                         </div>
                         <div>
                             <strong>{contributors.length}</strong>
@@ -99,7 +158,7 @@ function CreatedCampaignCard({ campaign }: { campaign: { address: `0x${string}`;
                     </div>
 
                     <div className="created-campaign-meta">
-                        <span>Deadline: {deadlineDate.toLocaleDateString()}</span>
+                        <span>Created: {campaign.created_at ? new Date(campaign.created_at).toLocaleDateString() : 'Stored record'}</span>
                         <span>{campaign.address.slice(0, 6)}...{campaign.address.slice(-4)}</span>
                     </div>
                 </div>

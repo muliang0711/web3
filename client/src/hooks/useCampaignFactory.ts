@@ -1,10 +1,9 @@
 import { useEffect, useState } from 'react';
-import { useWriteContract, useWaitForTransactionReceipt, usePublicClient } from 'wagmi';
+import { useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
 import { useAccount } from 'wagmi';
 import { parseEther, decodeEventLog } from 'viem';
 import { supabase } from '../lib/supabase';
 import { CAMPAIGN_FACTORY_ADDRESS } from '../lib/contracts';
-import { fetchCampaignCreatedAtMap } from '../lib/chainActivity';
 import { getCampaignImagePath, getCampaignImageUrl, uploadMediaFile } from '../lib/media';
 
 const FACTORY_ABI = [
@@ -56,11 +55,11 @@ type CampaignRecord = {
     duration_days?: number | null;
     created_at?: string | null;
     imageUrl?: string | null;
+    isLive?: boolean;
 };
 
 export function useCampaignFactory() {
     const { address } = useAccount();
-    const publicClient = usePublicClient();
     const { writeContract, data: hash, isPending: isCreating, error: createError } = useWriteContract();
 
     const [campaigns, setCampaigns] = useState<CampaignRecord[]>([]);
@@ -70,78 +69,48 @@ export function useCampaignFactory() {
 
     const { data: receipt, isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransactionReceipt({ hash });
 
-    const fetchCampaigns = async () => {
-        if (!publicClient) {
-            setCampaigns([]);
-            setUserCampaigns([]);
-            return;
-        }
+    const mapCampaignRow = (row: any, overrides?: Partial<CampaignRecord>): CampaignRecord => ({
+        address: row.address as `0x${string}`,
+        creator: row.creator_address ?? null,
+        title: row.title ?? null,
+        description: row.description ?? null,
+        target_eth: row.target_eth ?? null,
+        duration_days: row.duration_days ?? null,
+        created_at: row.created_at ?? null,
+        imageUrl: row.image_url ?? row.campaign_image_url ?? row.cover_image_url ?? getCampaignImageUrl(row.address),
+        isLive: false,
+        ...overrides,
+    });
 
+    const sortCampaignRecords = (items: CampaignRecord[]) =>
+        [...items].sort((a, b) => {
+            const aTime = a.created_at ? new Date(a.created_at).getTime() : 0;
+            const bTime = b.created_at ? new Date(b.created_at).getTime() : 0;
+            return bTime - aTime;
+        });
+
+    const fetchCampaigns = async () => {
         setIsLoadingCampaigns(true);
         try {
-            const [chainCampaigns, chainUserCampaigns] = await Promise.all([
-                publicClient.readContract({
-                    address: CAMPAIGN_FACTORY_ADDRESS,
-                    abi: FACTORY_ABI,
-                    functionName: 'getCampaigns',
-                }) as Promise<readonly `0x${string}`[]>,
+            const [allCampaignsResult, ownCampaignsResult] = await Promise.all([
+                supabase
+                    .from('campaigns')
+                    .select('*')
+                    .order('created_at', { ascending: false }),
                 address
-                    ? publicClient.readContract({
-                        address: CAMPAIGN_FACTORY_ADDRESS,
-                        abi: FACTORY_ABI,
-                        functionName: 'getUserCampaigns',
-                        args: [address],
-                    }) as Promise<readonly `0x${string}`[]>
-                    : Promise.resolve([] as const),
+                    ? supabase
+                        .from('campaigns')
+                        .select('*')
+                        .ilike('creator_address', address)
+                        .order('created_at', { ascending: false })
+                    : Promise.resolve({ data: [], error: null }),
             ]);
 
-            if (chainCampaigns.length === 0) {
-                setCampaigns([]);
-                setUserCampaigns([]);
-                return;
-            }
+            if (allCampaignsResult.error) throw allCampaignsResult.error;
+            if (ownCampaignsResult.error) throw ownCampaignsResult.error;
 
-            const { data, error } = await supabase
-                .from('campaigns')
-                .select('*')
-                .in('address', [...chainCampaigns]);
-
-            if (error) throw error;
-
-            let createdAtMap = new Map<string, string | null>();
-            try {
-                createdAtMap = await fetchCampaignCreatedAtMap(publicClient, [...chainCampaigns]);
-            } catch (timestampError) {
-                console.warn('Failed to load on-chain campaign creation timestamps, falling back to database created_at.', timestampError);
-            }
-
-            const rowByAddress = new Map(
-                (data ?? []).map((row: any) => [
-                    String(row.address).toLowerCase(),
-                    {
-                        address: row.address as `0x${string}`,
-                        creator: row.creator_address,
-                        title: row.title,
-                        description: row.description,
-                        target_eth: row.target_eth,
-                        duration_days: row.duration_days,
-                        created_at: createdAtMap.get(String(row.address).toLowerCase()) ?? row.created_at,
-                        imageUrl: row.image_url ?? row.campaign_image_url ?? row.cover_image_url ?? getCampaignImageUrl(row.address),
-                    } satisfies CampaignRecord,
-                ])
-            );
-
-            const toRecord = (campaignAddress: `0x${string}`): CampaignRecord => (
-                rowByAddress.get(campaignAddress.toLowerCase()) ?? {
-                    address: campaignAddress,
-                    creator: null,
-                    title: null,
-                    imageUrl: getCampaignImageUrl(campaignAddress),
-                }
-            );
-
-            setCampaigns([...chainCampaigns].map(toRecord));
-            setUserCampaigns([...chainUserCampaigns].map(toRecord));
+            setCampaigns(sortCampaignRecords((allCampaignsResult.data ?? []).map((row: any) => mapCampaignRow(row))));
+            setUserCampaigns(sortCampaignRecords((ownCampaignsResult.data ?? []).map((row: any) => mapCampaignRow(row))));
         } catch (err) {
             console.error('Failed to fetch campaigns', err);
             setCampaigns([]);
@@ -153,7 +122,7 @@ export function useCampaignFactory() {
 
     useEffect(() => {
         void fetchCampaigns();
-    }, [address, publicClient]);
+    }, [address]);
 
     useEffect(() => {
         const syncToSupabase = async () => {
@@ -217,7 +186,7 @@ export function useCampaignFactory() {
         };
 
         void syncToSupabase();
-    }, [address, isConfirmed, pendingCampaign, receipt, publicClient]);
+    }, [address, isConfirmed, pendingCampaign, receipt]);
 
     const createCampaign = (title: string, description: string, targetEth: string, durationDays: number, imageFile?: File | null) => {
         setPendingCampaign({ title, description, targetEth, durationDays, imageFile: imageFile ?? null });

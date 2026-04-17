@@ -1,104 +1,65 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { formatEther } from 'viem';
 import { useCampaignFactory } from '../../hooks/useCampaignFactory';
-import { useCampaign } from '../../hooks/useCampaign';
 
-function CampaignCard({ campaign }: { campaign: { address: `0x${string}`; imageUrl?: string | null } }) {
-    const { info, status } = useCampaign(campaign.address);
+function CampaignCard({ campaign }: { campaign: { address: `0x${string}`; imageUrl?: string | null; title?: string | null; description?: string | null; target_eth?: string | number | null; duration_days?: number | null; created_at?: string | null } }) {
     const navigate = useNavigate();
     const [imageFailed, setImageFailed] = useState(false);
-
-    if (!info) {
-        if (status.isLoadingInfo) {
-            return (
-                <div className="campaign-showcase-card skeleton-card">
-                    <div className="spinner" style={{ width: 24, height: 24, borderWidth: 2 }} />
-                </div>
-            );
-        }
-        return null;
-    }
-
-    const progress = info.fundingTarget > 0n
-        ? Number((info.totalFunded * 100n) / info.fundingTarget)
-        : 0;
-
-    const deadlineDate = new Date(Number(info.deadline) * 1000);
-    const isExpired = deadlineDate < new Date();
-    const imageUrl = campaign.imageUrl || null;
-    const badgeClass = info.isCancelled
-        ? 'badge-cancelled'
-        : info.goalReached
-            ? 'badge-success'
-            : isExpired
-                ? 'badge-danger'
-                : 'badge-active';
-    const badgeLabel = info.isCancelled
-        ? 'Cancelled'
-        : info.goalReached
-            ? 'Funded'
-            : isExpired
-                ? 'Ended'
-                : 'Active';
+    if (!campaign.title) return null;
+    const createdAtLabel = campaign.created_at ? new Date(campaign.created_at).toLocaleDateString() : 'Stored record';
+    const durationLabel = campaign.duration_days ? `${campaign.duration_days} day${campaign.duration_days === 1 ? '' : 's'}` : 'No duration';
 
     return (
         <button
-            className={`campaign-showcase-card ${info.isCancelled ? 'campaign-showcase-card-cancelled' : ''}`}
+            className="campaign-showcase-card"
             onClick={() => navigate(`/campaigns/${campaign.address}`)}
         >
             <div className="campaign-showcase-media">
-                {imageUrl && !imageFailed ? (
+                {campaign.imageUrl && !imageFailed ? (
                     <img
-                        src={imageUrl}
-                        alt={info.title}
+                        src={campaign.imageUrl}
+                        alt={campaign.title}
                         className="media-cover-image"
                         onError={() => setImageFailed(true)}
                     />
                 ) : (
                     <div className="media-cover-placeholder">
-                        <span>{info.title.slice(0, 1)}</span>
+                        <span>{campaign.title.slice(0, 1)}</span>
                         <small>Campaign visual</small>
                     </div>
                 )}
 
-                <span className={`campaign-card-badge ${badgeClass}`}>
-                    {badgeLabel}
+                <span className="campaign-card-badge badge-active">
+                    Stored
                 </span>
             </div>
 
             <div className="campaign-showcase-content">
                 <div className="campaign-showcase-header">
-                    <h3 className="campaign-card-title">{info.title}</h3>
-                    <span className="campaign-showcase-progress">{progress}%</span>
+                    <h3 className="campaign-card-title">{campaign.title}</h3>
+                    <span className="campaign-showcase-progress">{Number(campaign.target_eth || 0).toFixed(2)} ETH</span>
                 </div>
 
-                <p className="campaign-card-desc">{info.description}</p>
+                <p className="campaign-card-desc">
+                    {campaign.description || 'Campaign details were saved successfully and are loaded from Supabase.'}
+                </p>
 
                 <div className="progress-bar">
-                    <div className="progress-fill" style={{ width: `${Math.min(progress, 100)}%` }} />
+                    <div className="progress-fill" style={{ width: '100%' }} />
                 </div>
 
                 <div className="campaign-card-stats">
-                    <span><strong>{formatEther(info.totalFunded)}</strong> ETH raised</span>
-                    <span>{contributorsLabel(info.title, deadlineDate)}</span>
+                    <span><strong>{Number(campaign.target_eth || 0).toFixed(4)}</strong> ETH target</span>
+                    <span>{durationLabel}</span>
                 </div>
 
                 <div className="campaign-showcase-footer">
-                    <span>Goal: {formatEther(info.fundingTarget)} ETH</span>
-                    <span>{deadlineDate.toLocaleDateString()}</span>
+                    <span>{createdAtLabel}</span>
+                    <span>{campaign.address.slice(0, 6)}...{campaign.address.slice(-4)}</span>
                 </div>
             </div>
         </button>
     );
-}
-
-function contributorsLabel(_title: string, deadlineDate: Date) {
-    const daysLeft = Math.ceil((deadlineDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
-    if (daysLeft <= 0) {
-        return 'Closed';
-    }
-    return `${daysLeft} day${daysLeft === 1 ? '' : 's'} left`;
 }
 
 export function CampaignsView() {
@@ -134,7 +95,7 @@ export function CampaignsView() {
                 </div>
             ) : (
                 <div className="campaigns-grid">
-                    {[...campaigns].reverse().map((campaign) => (
+                    {campaigns.map((campaign) => (
                         <CampaignCard key={campaign.address} campaign={campaign} />
                     ))}
                 </div>
