@@ -46,7 +46,6 @@ function CampaignCard({ campaign }: { campaign: { address: `0x${string}`; imageU
     const publicClient = usePublicClient();
     const [imageFailed, setImageFailed] = useState(false);
     const [liveInfo, setLiveInfo] = useState<LiveCampaignInfo | null>(null);
-    if (!campaign.title) return null;
 
     useEffect(() => {
         let ignore = false;
@@ -76,6 +75,8 @@ function CampaignCard({ campaign }: { campaign: { address: `0x${string}`; imageU
             ignore = true;
         };
     }, [campaign.address, publicClient]);
+
+    if (!campaign.title) return null;
 
     const createdAtLabel = campaign.created_at ? new Date(campaign.created_at).toLocaleDateString() : 'Stored record';
     const durationLabel = campaign.duration_days ? `${campaign.duration_days} day${campaign.duration_days === 1 ? '' : 's'}` : 'No duration';
@@ -107,36 +108,70 @@ function CampaignCard({ campaign }: { campaign: { address: `0x${string}`; imageU
         ? (liveInfo.goalReached ? 'success' : (liveInfo.isCancelled || isExpired ? 'failed' : 'funding'))
         : (storedDeadline ? (isExpired ? 'failed' : 'funding') : 'stored');
 
+    const progressDisplay = status === 'success' ? 100 : Math.max(status === 'funding' ? 8 : 0, progressPercent);
+
     const statusConfig = {
         success: {
             badgeClass: 'badge-success',
-            badgeLabel: 'Success funded',
-            panelEyebrow: 'Completed funding',
-            panelValue: `${fundedEth.toFixed(4)} ETH secured`,
+            badgeLabel: 'Funded',
+            overlayTitle: 'Successfully funded',
+            overlaySummary: 'Target reached. This campaign is ready to move into treatment delivery.',
+            panelEyebrow: 'Status summary',
+            panelValue: liveInfo?.fundsWithdrawn ? 'Funds already moved' : 'Goal reached and ready',
             panelText: liveInfo?.fundsWithdrawn
-                ? 'Funding goal was reached and the collected amount has already moved into the next step.'
-                : 'Funding goal was reached and this campaign is ready for the next treatment step.',
+                ? 'The campaign has completed funding and the raised amount has already been withdrawn.'
+                : 'The campaign has completed funding and is waiting for the next treatment step.',
+            metrics: [
+                { label: 'Raised', value: `${fundedEth.toFixed(4)} ETH` },
+                { label: 'Target', value: `${targetEth.toFixed(4)} ETH` },
+                { label: 'Progress', value: '100%' },
+                { label: 'Stage', value: liveInfo?.fundsWithdrawn ? 'Completed' : 'Ready' },
+            ],
         },
         failed: {
             badgeClass: 'badge-danger',
-            badgeLabel: 'Failed to fund',
-            panelEyebrow: 'Funding closed',
-            panelValue: liveInfo ? `${fundedEth.toFixed(4)} ETH raised` : 'Deadline reached',
-            panelText: 'The campaign period ended without reaching the target amount.',
+            badgeLabel: 'Not funded',
+            overlayTitle: 'Funding target missed',
+            overlaySummary: 'The deadline passed before the campaign could reach its target amount.',
+            panelEyebrow: 'Status summary',
+            panelValue: liveInfo ? `${fundedEth.toFixed(4)} ETH raised before closing` : 'Campaign closed without success',
+            panelText: 'This campaign has ended and is no longer collecting support.',
+            metrics: [
+                { label: 'Raised', value: `${fundedEth.toFixed(4)} ETH` },
+                { label: 'Target', value: `${targetEth.toFixed(4)} ETH` },
+                { label: 'Final progress', value: `${progressPercent.toFixed(0)}%` },
+                { label: 'State', value: 'Closed' },
+            ],
         },
         funding: {
             badgeClass: 'badge-active',
-            badgeLabel: 'Funding now',
-            panelEyebrow: 'Live progress',
-            panelValue: liveInfo ? `${progressPercent.toFixed(0)}% of target` : 'Stored live layout',
-            panelText: liveInfo ? `${fundedEth.toFixed(4)} ETH already contributed by supporters.` : 'Open the campaign page to see the full live contract state.',
+            badgeLabel: 'Funding',
+            overlayTitle: 'Funding in progress',
+            overlaySummary: 'The campaign is still open for support and continues to collect donations.',
+            panelEyebrow: 'Status summary',
+            panelValue: liveInfo ? `${progressPercent.toFixed(0)}% of the target already reached` : 'Stored as active campaign',
+            panelText: liveInfo ? `${fundedEth.toFixed(4)} ETH has already been contributed.` : 'Open the campaign page to see the full live contract state.',
+            metrics: [
+                { label: 'Raised', value: `${fundedEth.toFixed(4)} ETH` },
+                { label: 'Target', value: `${targetEth.toFixed(4)} ETH` },
+                { label: 'Time left', value: daysLeftLabel },
+                { label: 'Progress', value: `${progressPercent.toFixed(0)}%` },
+            ],
         },
         stored: {
             badgeClass: 'badge-active',
             badgeLabel: 'Stored',
-            panelEyebrow: 'Saved record',
-            panelValue: `${targetEth.toFixed(4)} ETH target`,
-            panelText: 'This card is loaded from Supabase and is waiting for a readable chain state.',
+            overlayTitle: 'Stored campaign record',
+            overlaySummary: 'This campaign is available from Supabase and is waiting for readable chain status.',
+            panelEyebrow: 'Status summary',
+            panelValue: `${targetEth.toFixed(4)} ETH target saved`,
+            panelText: 'Primary details are available, but live funding status is not readable on the current chain.',
+            metrics: [
+                { label: 'Target', value: `${targetEth.toFixed(4)} ETH` },
+                { label: 'Planned length', value: durationLabel },
+                { label: 'Saved on', value: createdAtLabel },
+                { label: 'State', value: 'Archived' },
+            ],
         },
     }[status];
 
@@ -171,10 +206,6 @@ function CampaignCard({ campaign }: { campaign: { address: `0x${string}`; imageU
                         <h3 className="campaign-card-title">{campaign.title}</h3>
                         <span className="campaign-showcase-progress">{targetEth.toFixed(2)} ETH</span>
                     </div>
-
-                    <p className="campaign-card-desc campaign-showcase-description">
-                        {campaign.description || 'Campaign details were saved successfully and are loaded from Supabase.'}
-                    </p>
                 </div>
 
                 <div className={`campaign-showcase-status-panel campaign-showcase-status-panel-${status}`}>
@@ -187,13 +218,23 @@ function CampaignCard({ campaign }: { campaign: { address: `0x${string}`; imageU
                     <div className={`progress-bar campaign-progress-${status}`}>
                         <div
                             className="progress-fill"
-                            style={{ width: `${status === 'success' ? 100 : Math.max(8, progressPercent)}%` }}
+                            style={{ width: `${progressDisplay}%` }}
                         />
                     </div>
 
-                    <div className="campaign-card-stats">
-                        <span><strong>{targetEth.toFixed(4)}</strong> ETH target</span>
-                        <span>{daysLeftLabel}</span>
+                    <div className={`campaign-showcase-metrics campaign-showcase-metrics-${status}`}>
+                        {statusConfig.metrics.map((metric) => (
+                            <div key={metric.label} className="campaign-showcase-metric">
+                                <span>{metric.label}</span>
+                                <strong>{metric.value}</strong>
+                            </div>
+                        ))}
+                    </div>
+
+                    <div className="campaign-showcase-supporting">
+                        <p className="campaign-card-desc campaign-showcase-description">
+                            {campaign.description || 'Campaign details were saved successfully and are loaded from Supabase.'}
+                        </p>
                     </div>
 
                     <div className="campaign-showcase-footer">

@@ -859,6 +859,24 @@
   transform: translateY(-2px);
 }
 
+.campaign-showcase-card-success {
+  background: linear-gradient(180deg, rgba(245, 251, 247, 0.98), rgba(255, 255, 255, 0.98));
+  border-color: rgba(47, 127, 97, 0.18);
+}
+
+.campaign-showcase-card-funding {
+  background: linear-gradient(180deg, rgba(255, 250, 244, 0.98), rgba(255, 255, 255, 0.98));
+}
+
+.campaign-showcase-card-failed {
+  background: linear-gradient(180deg, rgba(255, 247, 246, 0.98), rgba(255, 255, 255, 0.98));
+  border-color: rgba(181, 83, 83, 0.18);
+}
+
+.campaign-showcase-card-stored {
+  background: linear-gradient(180deg, rgba(248, 247, 245, 0.98), rgba(255, 255, 255, 0.98));
+}
+
 .campaign-showcase-card-cancelled,
 .created-campaign-card-cancelled {
   background: rgba(255, 245, 243, 0.96);
@@ -945,7 +963,7 @@
 }
 
 .campaign-showcase-bottom {
-  gap: 0.85rem;
+  gap: 0.95rem;
 }
 
 .campaign-showcase-header,
@@ -975,13 +993,127 @@
   overflow: hidden;
 }
 
+.campaign-showcase-status-panel {
+  padding: 0.95rem 1rem;
+  border-radius: 22px;
+  border: 1px solid rgba(44, 50, 56, 0.08);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45);
+}
+
+.campaign-showcase-status-panel-success {
+  background: linear-gradient(145deg, rgba(237, 248, 241, 0.98), rgba(250, 255, 252, 0.96));
+  border-color: rgba(47, 127, 97, 0.16);
+}
+
+.campaign-showcase-status-panel-funding {
+  background: linear-gradient(145deg, rgba(255, 247, 236, 0.98), rgba(255, 252, 248, 0.96));
+  border-color: rgba(222, 122, 54, 0.14);
+}
+
+.campaign-showcase-status-panel-failed {
+  background: linear-gradient(145deg, rgba(255, 241, 239, 0.98), rgba(255, 249, 248, 0.96));
+  border-color: rgba(181, 83, 83, 0.14);
+}
+
+.campaign-showcase-status-panel-stored {
+  background: linear-gradient(145deg, rgba(248, 246, 243, 0.98), rgba(255, 255, 255, 0.96));
+}
+
+.campaign-showcase-panel-label {
+  display: block;
+  margin-bottom: 0.35rem;
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.campaign-showcase-status-panel strong {
+  display: block;
+  font-size: 1.05rem;
+  line-height: 1.25;
+}
+
+.campaign-showcase-status-panel p {
+  margin-top: 0.45rem;
+  color: var(--text-secondary);
+  line-height: 1.55;
+  font-size: 0.88rem;
+}
+
 .campaign-showcase-description {
-  min-height: 3.25rem;
+  min-height: 2.8rem;
   line-height: 1.65;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.campaign-showcase-metrics {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.campaign-showcase-metric {
+  padding: 0.85rem 0.9rem;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.82);
+  border: 1px solid rgba(44, 50, 56, 0.08);
+}
+
+.campaign-showcase-metric span {
+  display: block;
+  margin-bottom: 0.3rem;
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.campaign-showcase-metric strong {
+  display: block;
+  color: var(--text);
+  line-height: 1.25;
+}
+
+.campaign-showcase-metrics-success .campaign-showcase-metric {
+  background: rgba(255, 255, 255, 0.84);
+  border-color: rgba(47, 127, 97, 0.1);
+}
+
+.campaign-showcase-metrics-funding .campaign-showcase-metric {
+  background: rgba(255, 252, 248, 0.88);
+}
+
+.campaign-showcase-metrics-failed .campaign-showcase-metric {
+  background: rgba(255, 250, 249, 0.88);
+  border-color: rgba(181, 83, 83, 0.1);
+}
+
+.campaign-showcase-supporting {
+  padding-top: 0.1rem;
+}
+
+.campaign-progress-success .progress-fill {
+  background: linear-gradient(90deg, rgba(47, 127, 97, 0.94), rgba(116, 177, 145, 0.82));
+}
+
+.campaign-progress-funding .progress-fill {
+  background: linear-gradient(90deg, var(--accent), var(--highlight));
+}
+
+.campaign-progress-failed .progress-fill {
+  background: linear-gradient(90deg, rgba(181, 83, 83, 0.92), rgba(222, 148, 148, 0.78));
+}
+
+.campaign-progress-stored .progress-fill {
+  background: linear-gradient(90deg, rgba(142, 131, 116, 0.92), rgba(198, 188, 175, 0.82));
 }
 
 .campaign-showcase-footer,
@@ -991,7 +1123,9 @@
   gap: 1rem;
   flex-wrap: wrap;
   color: var(--text-muted);
-  font-size: 0.84rem;
+  font-size: 0.8rem;
+  padding-top: 0.15rem;
+  border-top: 1px solid rgba(44, 50, 56, 0.08);
 }
 
 .campaign-showcase-footer span:last-child {
