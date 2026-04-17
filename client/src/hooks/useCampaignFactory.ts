@@ -58,6 +58,42 @@ type CampaignRecord = {
     isLive?: boolean;
 };
 
+function toError(value: unknown, fallbackMessage: string) {
+    if (value instanceof Error) {
+        return value;
+    }
+
+    if (typeof value === 'object' && value !== null && 'message' in value && typeof (value as any).message === 'string') {
+        return new Error((value as any).message);
+    }
+
+    return new Error(fallbackMessage);
+}
+
+async function persistCampaignImageUrl(campaignAddress: string, publicUrl: string) {
+    const candidateColumns = ['image_url', 'campaign_image_url', 'cover_image_url'];
+
+    for (const columnName of candidateColumns) {
+        const { error } = await supabase
+            .from('campaigns')
+            .update({ [columnName]: publicUrl })
+            .eq('address', campaignAddress);
+
+        if (!error) {
+            return true;
+        }
+
+        const message = typeof error.message === 'string' ? error.message : '';
+        const missingColumn = message.includes(`'${columnName}'`) && message.includes('schema cache');
+
+        if (!missingColumn) {
+            throw error;
+        }
+    }
+
+    return false;
+}
+
 export function useCampaignFactory() {
     const { address } = useAccount();
     const { writeContract, data: hash, isPending: isCreating, error: createError } = useWriteContract();
@@ -66,6 +102,9 @@ export function useCampaignFactory() {
     const [userCampaigns, setUserCampaigns] = useState<CampaignRecord[]>([]);
     const [isLoadingCampaigns, setIsLoadingCampaigns] = useState(false);
     const [pendingCampaign, setPendingCampaign] = useState<any>(null);
+    const [isSyncingCampaign, setIsSyncingCampaign] = useState(false);
+    const [lastCreatedCampaignAddress, setLastCreatedCampaignAddress] = useState<string | null>(null);
+    const [campaignSyncError, setCampaignSyncError] = useState<Error | null>(null);
 
     const { data: receipt, isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransactionReceipt({ hash });
 
@@ -144,6 +183,8 @@ export function useCampaignFactory() {
         const syncToSupabase = async () => {
             if (!isConfirmed || !receipt || !pendingCampaign) return;
 
+            setIsSyncingCampaign(true);
+            setCampaignSyncError(null);
             try {
                 let newCampaignAddress = 'UNKNOWN';
 
@@ -163,7 +204,11 @@ export function useCampaignFactory() {
                     }
                 }
 
-                const { error: campaignSyncError } = await supabase.from('campaigns').upsert({
+                if (newCampaignAddress === 'UNKNOWN') {
+                    throw new Error('Campaign creation was confirmed on-chain, but the new campaign address was not found in the receipt logs.');
+                }
+
+                const campaignPayload = {
                     address: newCampaignAddress,
                     creator_address: address,
                     title: pendingCampaign.title,
@@ -171,11 +216,35 @@ export function useCampaignFactory() {
                     target_eth: pendingCampaign.targetEth,
                     duration_days: pendingCampaign.durationDays,
                     created_at: new Date().toISOString(),
-                    image_url: null,
-                }, { onConflict: 'address' });
+                };
 
-                if (campaignSyncError) {
-                    throw campaignSyncError;
+                const { data: existingCampaign, error: existingCampaignError } = await supabase
+                    .from('campaigns')
+                    .select('address')
+                    .eq('address', newCampaignAddress)
+                    .maybeSingle();
+
+                if (existingCampaignError) {
+                    throw existingCampaignError;
+                }
+
+                if (existingCampaign) {
+                    const { error: updateCampaignError } = await supabase
+                        .from('campaigns')
+                        .update(campaignPayload)
+                        .eq('address', newCampaignAddress);
+
+                    if (updateCampaignError) {
+                        throw updateCampaignError;
+                    }
+                } else {
+                    const { error: insertCampaignError } = await supabase
+                        .from('campaigns')
+                        .insert(campaignPayload);
+
+                    if (insertCampaignError) {
+                        throw insertCampaignError;
+                    }
                 }
 
                 if (!pendingCampaign.imageFile) {
@@ -198,22 +267,22 @@ export function useCampaignFactory() {
                     rememberCampaignImageVersion(newCampaignAddress, imageVersion);
 
                     try {
-                        const { error: imageColumnError } = await supabase
-                            .from('campaigns')
-                            .update({ image_url: versionedImageUrl })
-                            .eq('address', newCampaignAddress);
-
-                        if (imageColumnError) {
-                            throw imageColumnError;
+                        const didPersist = await persistCampaignImageUrl(newCampaignAddress, versionedImageUrl);
+                        if (!didPersist) {
+                            console.warn('Campaign image uploaded, but no compatible image column exists in the campaigns table.');
                         }
                     } catch (imageSyncError) {
-                        console.warn('Campaign image uploaded, but failed to persist image_url column.', imageSyncError);
+                        console.warn('Campaign image uploaded, but failed to persist a campaign image column.', imageSyncError);
                     }
                 }
+
+                setLastCreatedCampaignAddress(newCampaignAddress);
             } catch (err) {
                 console.error('Failed to sync campaign to Supabase', err);
+                setCampaignSyncError(toError(err, 'Failed to sync campaign to Supabase.'));
             } finally {
                 setPendingCampaign(null);
+                setIsSyncingCampaign(false);
                 void fetchCampaigns();
             }
         };
@@ -222,6 +291,8 @@ export function useCampaignFactory() {
     }, [address, isConfirmed, pendingCampaign, receipt]);
 
     const createCampaign = (title: string, description: string, targetEth: string, durationDays: number, imageFile?: File | null) => {
+        setLastCreatedCampaignAddress(null);
+        setCampaignSyncError(null);
         setPendingCampaign({ title, description, targetEth, durationDays, imageFile: imageFile ?? null });
         writeContract({
             address: CAMPAIGN_FACTORY_ADDRESS,
@@ -241,7 +312,9 @@ export function useCampaignFactory() {
             isCreating,
             isConfirming,
             isConfirmed,
-            error: createError,
+            isSyncingCampaign,
+            createdCampaignAddress: lastCreatedCampaignAddress,
+            error: createError ?? campaignSyncError,
             txHash: hash,
         },
     };

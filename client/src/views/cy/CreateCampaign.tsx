@@ -31,12 +31,12 @@ export function CreateCampaignView() {
     };
 
     useEffect(() => {
-        if (status.isConfirmed) {
+        if (status.createdCampaignAddress) {
             navigate('/campaigns');
         }
-    }, [status.isConfirmed, navigate]);
+    }, [navigate, status.createdCampaignAddress]);
 
-    const isProcessing = status.isCreating || status.isConfirming;
+    const isProcessing = status.isCreating || status.isConfirming || status.isSyncingCampaign;
 
     return (
         <div className="fade-in">
@@ -151,7 +151,11 @@ export function CreateCampaignView() {
 
                     <div className="create-campaign-actions">
                         <button className="btn-success" type="submit" disabled={isProcessing}>
-                            {isProcessing ? 'Creating campaign...' : 'Create campaign'}
+                            {status.isCreating || status.isConfirming
+                                ? 'Creating campaign...'
+                                : status.isSyncingCampaign
+                                    ? 'Saving campaign...'
+                                    : 'Create campaign'}
                         </button>
                         <button type="button" className="btn-ghost" onClick={() => navigate('/campaigns')} disabled={isProcessing}>
                             Cancel
