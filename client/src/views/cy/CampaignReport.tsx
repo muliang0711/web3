@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { formatEther } from 'viem';
 import { useAccount, usePublicClient } from 'wagmi';
 import { useCampaign } from '../../hooks/useCampaign';
-import { enrichDonationRowsWithChainTimestamps, enrichRefundRowsWithChainTimestamps, fetchCampaignCreatedAtMap } from '../../lib/chainActivity';
+import { enrichDonationRowsWithChainTimestamps, enrichRefundRowsWithChainTimestamps, fetchCampaignCreatedAtMap, fetchRefundRowsFromChainForCampaign } from '../../lib/chainActivity';
 import { getCampaignImageUrl } from '../../lib/media';
 import { supabase } from '../../lib/supabase';
 
@@ -113,6 +113,15 @@ export function CampaignReportView() {
                     }
                 } catch (campaignCreatedAtError) {
                     console.warn('Failed to scope owner report to current campaign lifecycle.', campaignCreatedAtError);
+                }
+
+                try {
+                    const onChainRefundRows = await fetchRefundRowsFromChainForCampaign(publicClient, campaignAddress as `0x${string}`);
+                    if (onChainRefundRows.length > 0) {
+                        safeRefunds = onChainRefundRows;
+                    }
+                } catch (chainRefundError) {
+                    console.warn('Failed to load current refund events directly from chain.', chainRefundError);
                 }
             }
 

@@ -256,6 +256,38 @@ export async function fetchCampaignCreatedAtMap(publicClient: PublicClient, camp
   return createdAtMap;
 }
 
+export async function fetchRefundRowsFromChainForCampaign(publicClient: PublicClient, campaignAddress: `0x${string}`) {
+  const logs = await publicClient.getLogs({
+    address: campaignAddress,
+    event: CAMPAIGN_EVENTS[0],
+    fromBlock: 0n,
+    toBlock: 'latest',
+  });
+
+  if (logs.length === 0) {
+    return [];
+  }
+
+  const blockTimestampMap = await getBlockTimestampMap(
+    publicClient,
+    logs.map((log) => log.blockNumber),
+  );
+
+  return logs
+    .map((log) => ({
+      campaign_address: campaignAddress,
+      user_address: log.args.contributor,
+      amount_eth: formatEther(log.args.amount ?? 0n),
+      tx_hash: log.transactionHash,
+      created_at: blockTimestampMap.get(log.blockNumber.toString()) ?? null,
+    }))
+    .sort((a, b) => {
+      const aTime = a.created_at ? new Date(a.created_at).getTime() : 0;
+      const bTime = b.created_at ? new Date(b.created_at).getTime() : 0;
+      return bTime - aTime;
+    });
+}
+
 export function formatWeiToEthString(value: bigint) {
   return formatEther(value);
 }
