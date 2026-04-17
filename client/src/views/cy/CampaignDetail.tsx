@@ -4,7 +4,6 @@ import { formatEther } from 'viem';
 import { useAccount } from 'wagmi';
 import { useCampaign } from '../../hooks/useCampaign';
 import { supabase } from '../../lib/supabase';
-import { getCampaignImageUrl } from '../../lib/media';
 
 type StoredCampaignRecord = {
     address: `0x${string}`;
@@ -137,7 +136,7 @@ export function CampaignDetailView() {
     }
 
     if (!info && storedCampaign) {
-        const storedImageUrl = storedCampaign.image_url || storedCampaign.campaign_image_url || storedCampaign.cover_image_url || getCampaignImageUrl(campaignAddress);
+        const storedImageUrl = storedCampaign.image_url || storedCampaign.campaign_image_url || storedCampaign.cover_image_url || null;
         const storedDeadline = storedCampaign.created_at && storedCampaign.duration_days
             ? new Date(new Date(storedCampaign.created_at).getTime() + storedCampaign.duration_days * 24 * 60 * 60 * 1000)
             : null;
@@ -152,7 +151,7 @@ export function CampaignDetailView() {
                     <div className="campaign-info-section">
                         <div className="campaign-detail-hero-card">
                             <div className="campaign-detail-media">
-                                {!imageFailed ? (
+                                {storedImageUrl && !imageFailed ? (
                                     <img
                                         src={storedImageUrl}
                                         alt={storedCampaign.title || 'Stored campaign'}
@@ -259,7 +258,7 @@ export function CampaignDetailView() {
     const canDonate = !isExpired && !info.goalReached && !info.isCancelled;
     const isCreator = userAddress?.toLowerCase() === info.creator.toLowerCase();
     const canWithdraw = isExpired && info.goalReached && isCreator && !info.fundsWithdrawn;
-    const imageUrl = getCampaignImageUrl(campaignAddress);
+    const imageUrl = storedCampaign?.image_url || storedCampaign?.campaign_image_url || storedCampaign?.cover_image_url || null;
     const badgeClass = info.isCancelled
         ? 'badge-cancelled'
         : info.goalReached
@@ -285,7 +284,7 @@ export function CampaignDetailView() {
                 <div className="campaign-info-section">
                     <div className="campaign-detail-hero-card">
                         <div className="campaign-detail-media">
-                            {!imageFailed ? (
+                            {imageUrl && !imageFailed ? (
                                 <img
                                     src={imageUrl}
                                     alt={info.title}

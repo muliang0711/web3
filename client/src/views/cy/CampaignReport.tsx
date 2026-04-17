@@ -4,7 +4,6 @@ import { formatEther } from 'viem';
 import { useAccount, usePublicClient } from 'wagmi';
 import { useCampaign } from '../../hooks/useCampaign';
 import { enrichDonationRowsWithChainTimestamps, enrichRefundRowsWithChainTimestamps, fetchCampaignCreatedAtMap, fetchRefundRowsFromChainForCampaign } from '../../lib/chainActivity';
-import { getCampaignImageUrl } from '../../lib/media';
 import { supabase } from '../../lib/supabase';
 
 function formatAddress(value?: string | null) {
@@ -41,6 +40,7 @@ export function CampaignReportView() {
     const [isLoadingReport, setIsLoadingReport] = useState(false);
     const [reportError, setReportError] = useState<string | null>(null);
     const [pendingRefundSuccessCount, setPendingRefundSuccessCount] = useState<string | null>(null);
+    const [storedImageUrl, setStoredImageUrl] = useState<string | null>(null);
     const syncedReportTxHashRef = useRef<string | null>(null);
 
     const {
@@ -53,8 +53,46 @@ export function CampaignReportView() {
         status,
     } = useCampaign(campaignAddress as `0x${string}` | undefined);
 
-    const imageUrl = campaignAddress ? getCampaignImageUrl(campaignAddress) : null;
+    const imageUrl = storedImageUrl;
     const isOwner = Boolean(address && info && address.toLowerCase() === info.creator.toLowerCase());
+
+    useEffect(() => {
+        let ignore = false;
+
+        if (!campaignAddress) {
+            setStoredImageUrl(null);
+            return;
+        }
+
+        const fetchStoredImageUrl = async () => {
+            try {
+                const { data, error } = await supabase
+                    .from('campaigns')
+                    .select('image_url, campaign_image_url, cover_image_url')
+                    .eq('address', campaignAddress)
+                    .maybeSingle();
+
+                if (error) {
+                    throw error;
+                }
+
+                if (!ignore) {
+                    setStoredImageUrl(data?.image_url ?? data?.campaign_image_url ?? data?.cover_image_url ?? null);
+                }
+            } catch (error) {
+                console.warn('Failed to load stored campaign image for owner report.', error);
+                if (!ignore) {
+                    setStoredImageUrl(null);
+                }
+            }
+        };
+
+        void fetchStoredImageUrl();
+
+        return () => {
+            ignore = true;
+        };
+    }, [campaignAddress]);
 
     const fetchReport = useCallback(async () => {
         if (!campaignAddress) {

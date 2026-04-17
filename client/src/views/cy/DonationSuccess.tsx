@@ -1,8 +1,8 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { formatEther } from 'viem';
 import { useCampaign } from '../../hooks/useCampaign';
-import { getCampaignImageUrl } from '../../lib/media';
+import { supabase } from '../../lib/supabase';
 
 function formatAmount(value: string | null) {
     const numeric = Number(value ?? 0);
@@ -19,11 +19,50 @@ export function DonationSuccessView() {
     const { address: campaignAddress } = useParams<{ address: string }>();
     const [searchParams] = useSearchParams();
     const [imageFailed, setImageFailed] = useState(false);
+    const [storedImageUrl, setStoredImageUrl] = useState<string | null>(null);
     const { info, contributors, status } = useCampaign(campaignAddress as `0x${string}` | undefined);
 
     const donationAmount = formatAmount(searchParams.get('amount'));
     const txHash = searchParams.get('tx');
-    const imageUrl = campaignAddress ? getCampaignImageUrl(campaignAddress) : null;
+    const imageUrl = storedImageUrl;
+
+    useEffect(() => {
+        let ignore = false;
+
+        if (!campaignAddress) {
+            setStoredImageUrl(null);
+            return;
+        }
+
+        const fetchStoredImageUrl = async () => {
+            try {
+                const { data, error } = await supabase
+                    .from('campaigns')
+                    .select('image_url, campaign_image_url, cover_image_url')
+                    .eq('address', campaignAddress)
+                    .maybeSingle();
+
+                if (error) {
+                    throw error;
+                }
+
+                if (!ignore) {
+                    setStoredImageUrl(data?.image_url ?? data?.campaign_image_url ?? data?.cover_image_url ?? null);
+                }
+            } catch (error) {
+                console.warn('Failed to load stored campaign image for donation confirmation.', error);
+                if (!ignore) {
+                    setStoredImageUrl(null);
+                }
+            }
+        };
+
+        void fetchStoredImageUrl();
+
+        return () => {
+            ignore = true;
+        };
+    }, [campaignAddress]);
 
     const progress = useMemo(() => {
         if (!info || info.fundingTarget === 0n) {

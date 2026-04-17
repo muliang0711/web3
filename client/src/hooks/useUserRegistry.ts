@@ -248,6 +248,34 @@ export function useUserRegistry() {
         syncToSupabase();
     }, [address, isConfirmed, pendingName, publicClient, queryClient, receipt]);
 
+    useEffect(() => {
+        const ensureRegisteredUserRow = async () => {
+            if (!address || !userQuery.data?.isRegistered || !userQuery.data.name) {
+                return;
+            }
+
+            try {
+                const { error } = await supabase
+                    .from('users')
+                    .upsert(
+                        {
+                            wallet_address: address,
+                            name: userQuery.data.name,
+                        },
+                        { onConflict: 'wallet_address' },
+                    );
+
+                if (error) {
+                    throw error;
+                }
+            } catch (error) {
+                console.warn('Failed to ensure registered user row exists in Supabase.', error);
+            }
+        };
+
+        void ensureRegisteredUserRow();
+    }, [address, userQuery.data?.isRegistered, userQuery.data?.name]);
+
     const register = (name: string) => {
         if (userQuery.data?.isRegistered) {
             alert(`You are already registered with this wallet address: ${address}!`);

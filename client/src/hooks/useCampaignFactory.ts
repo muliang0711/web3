@@ -4,7 +4,7 @@ import { useAccount } from 'wagmi';
 import { parseEther, decodeEventLog } from 'viem';
 import { supabase } from '../lib/supabase';
 import { CAMPAIGN_FACTORY_ADDRESS } from '../lib/contracts';
-import { getCampaignImagePath, getCampaignImageUrl, rememberCampaignImageVersion, uploadMediaFile } from '../lib/media';
+import { clearCampaignImageVersion, getCampaignImagePath, rememberCampaignImageVersion, removeMediaFile, uploadMediaFile } from '../lib/media';
 
 const FACTORY_ABI = [
     {
@@ -92,7 +92,7 @@ export function useCampaignFactory() {
             target_eth: row.target_eth ?? null,
             duration_days: row.duration_days ?? null,
             created_at: row.created_at ?? null,
-            imageUrl: storedImageUrl ?? getCampaignImageUrl(row.address, row.created_at ?? null),
+            imageUrl: storedImageUrl ?? null,
             isLive: false,
             ...overrides,
         };
@@ -171,10 +171,21 @@ export function useCampaignFactory() {
                     target_eth: pendingCampaign.targetEth,
                     duration_days: pendingCampaign.durationDays,
                     created_at: new Date().toISOString(),
+                    image_url: null,
                 }, { onConflict: 'address' });
 
                 if (campaignSyncError) {
                     throw campaignSyncError;
+                }
+
+                if (!pendingCampaign.imageFile) {
+                    try {
+                        await removeMediaFile(getCampaignImagePath(newCampaignAddress));
+                    } catch (staleImageResetError) {
+                        console.warn('Failed to clear stale campaign image during campaign sync.', staleImageResetError);
+                    }
+
+                    clearCampaignImageVersion(newCampaignAddress);
                 }
 
                 if (pendingCampaign.imageFile) {

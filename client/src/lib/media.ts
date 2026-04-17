@@ -41,6 +41,14 @@ export function rememberCampaignImageVersion(campaignAddress: string, version: s
   window.localStorage.setItem(`${CAMPAIGN_IMAGE_VERSION_PREFIX}${normalizePathPart(campaignAddress)}`, String(version));
 }
 
+export function clearCampaignImageVersion(campaignAddress: string) {
+  if (typeof window === 'undefined') {
+    return;
+  }
+
+  window.localStorage.removeItem(`${CAMPAIGN_IMAGE_VERSION_PREFIX}${normalizePathPart(campaignAddress)}`);
+}
+
 export function rememberProfileImageVersion(walletAddress: string, version: string | number) {
   if (typeof window === 'undefined') {
     return;
