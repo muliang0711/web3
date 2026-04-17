@@ -1,9 +1,35 @@
 import { supabase } from './supabase';
 
 export const SUPABASE_MEDIA_BUCKET = import.meta.env.VITE_SUPABASE_MEDIA_BUCKET || 'app-media';
+const CAMPAIGN_IMAGE_VERSION_PREFIX = 'campaignImageVersion:';
 
 function normalizePathPart(value: string) {
   return value.trim().toLowerCase();
+}
+
+function appendVersionToUrl(url: string, version?: string | number | null) {
+  if (!version) {
+    return url;
+  }
+
+  const separator = url.includes('?') ? '&' : '?';
+  return `${url}${separator}v=${encodeURIComponent(String(version))}`;
+}
+
+function getStoredCampaignImageVersion(campaignAddress: string) {
+  if (typeof window === 'undefined') {
+    return null;
+  }
+
+  return window.localStorage.getItem(`${CAMPAIGN_IMAGE_VERSION_PREFIX}${normalizePathPart(campaignAddress)}`);
+}
+
+export function rememberCampaignImageVersion(campaignAddress: string, version: string | number) {
+  if (typeof window === 'undefined') {
+    return;
+  }
+
+  window.localStorage.setItem(`${CAMPAIGN_IMAGE_VERSION_PREFIX}${normalizePathPart(campaignAddress)}`, String(version));
 }
 
 export function getCampaignImagePath(campaignAddress: string) {
@@ -19,8 +45,9 @@ export function getPublicMediaUrl(path: string) {
   return data.publicUrl;
 }
 
-export function getCampaignImageUrl(campaignAddress: string) {
-  return getPublicMediaUrl(getCampaignImagePath(campaignAddress));
+export function getCampaignImageUrl(campaignAddress: string, version?: string | number | null) {
+  const publicUrl = getPublicMediaUrl(getCampaignImagePath(campaignAddress));
+  return appendVersionToUrl(publicUrl, version ?? getStoredCampaignImageVersion(campaignAddress));
 }
 
 export function getProfileImageUrl(walletAddress: string) {

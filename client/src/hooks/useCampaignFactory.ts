@@ -4,7 +4,7 @@ import { useAccount } from 'wagmi';
 import { parseEther, decodeEventLog } from 'viem';
 import { supabase } from '../lib/supabase';
 import { CAMPAIGN_FACTORY_ADDRESS } from '../lib/contracts';
-import { getCampaignImagePath, getCampaignImageUrl, uploadMediaFile } from '../lib/media';
+import { getCampaignImagePath, getCampaignImageUrl, rememberCampaignImageVersion, uploadMediaFile } from '../lib/media';
 
 const FACTORY_ABI = [
     {
@@ -69,18 +69,34 @@ export function useCampaignFactory() {
 
     const { data: receipt, isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransactionReceipt({ hash });
 
-    const mapCampaignRow = (row: any, overrides?: Partial<CampaignRecord>): CampaignRecord => ({
-        address: row.address as `0x${string}`,
-        creator: row.creator_address ?? null,
-        title: row.title ?? null,
-        description: row.description ?? null,
-        target_eth: row.target_eth ?? null,
-        duration_days: row.duration_days ?? null,
-        created_at: row.created_at ?? null,
-        imageUrl: row.image_url ?? row.campaign_image_url ?? row.cover_image_url ?? getCampaignImageUrl(row.address),
-        isLive: false,
-        ...overrides,
-    });
+    const mapCampaignRow = (row: any, overrides?: Partial<CampaignRecord>): CampaignRecord => {
+        const storedImageUrl = row.image_url ?? row.campaign_image_url ?? row.cover_image_url ?? null;
+
+        if (storedImageUrl) {
+            try {
+                const parsedUrl = new URL(storedImageUrl);
+                const versionParam = parsedUrl.searchParams.get('v');
+                if (versionParam) {
+                    rememberCampaignImageVersion(row.address, versionParam);
+                }
+            } catch {
+                // Ignore malformed stored URLs and fall back to the stored string.
+            }
+        }
+
+        return {
+            address: row.address as `0x${string}`,
+            creator: row.creator_address ?? null,
+            title: row.title ?? null,
+            description: row.description ?? null,
+            target_eth: row.target_eth ?? null,
+            duration_days: row.duration_days ?? null,
+            created_at: row.created_at ?? null,
+            imageUrl: storedImageUrl ?? getCampaignImageUrl(row.address, row.created_at ?? null),
+            isLive: false,
+            ...overrides,
+        };
+    };
 
     const sortCampaignRecords = (items: CampaignRecord[]) =>
         [...items].sort((a, b) => {
@@ -164,11 +180,16 @@ export function useCampaignFactory() {
                 if (pendingCampaign.imageFile) {
                     const imagePath = getCampaignImagePath(newCampaignAddress);
                     const imageUrl = await uploadMediaFile(pendingCampaign.imageFile, imagePath);
+                    const imageVersion = Date.now().toString();
+                    const versionedImageUrl = imageUrl.includes('?')
+                        ? `${imageUrl}&v=${encodeURIComponent(imageVersion)}`
+                        : `${imageUrl}?v=${encodeURIComponent(imageVersion)}`;
+                    rememberCampaignImageVersion(newCampaignAddress, imageVersion);
 
                     try {
                         const { error: imageColumnError } = await supabase
                             .from('campaigns')
-                            .update({ image_url: imageUrl })
+                            .update({ image_url: versionedImageUrl })
                             .eq('address', newCampaignAddress);
 
                         if (imageColumnError) {
