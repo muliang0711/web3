@@ -1,6 +1,7 @@
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useAccount } from 'wagmi';
 import { useUserRegistry } from '../../hooks/useUserRegistry';
+import { getRegistrationSuccessState } from '../../lib/registrationSuccess';
 
 function GateLoader({ message }: { message: string }) {
     return (
@@ -16,6 +17,7 @@ export function Web3Gate() {
     const { user, status } = useUserRegistry();
     const location = useLocation();
     const isAuthRoute = location.pathname === '/login' || location.pathname === '/register';
+    const hasPendingRegistrationSuccess = Boolean(getRegistrationSuccessState());
     const isHydratingWallet = accountStatus === 'connecting' || accountStatus === 'reconnecting';
     const isHydratingUser = isConnected && !status.hasResolvedUser;
 
@@ -25,6 +27,9 @@ export function Web3Gate() {
         }
 
         if (isConnected && user?.isRegistered) {
+            if (hasPendingRegistrationSuccess) {
+                return <Navigate to="/register/success" replace />;
+            }
             return <Navigate to="/profile" replace />;
         }
 

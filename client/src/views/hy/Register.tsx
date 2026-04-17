@@ -1,9 +1,12 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAccount, useDisconnect } from 'wagmi';
 import { useUserRegistry } from '../../hooks/useUserRegistry';
+import { setRegistrationSuccessState } from '../../lib/registrationSuccess';
 import { clearWalletSession } from '../../lib/walletSession';
 
 export function RegisterView() {
+    const navigate = useNavigate();
     const [name, setName] = useState('');
     const { address, status: accountStatus } = useAccount();
     const { disconnect } = useDisconnect();
@@ -32,6 +35,18 @@ export function RegisterView() {
         accountStatus === 'connecting' ||
         accountStatus === 'reconnecting' ||
         !status.hasResolvedUser;
+
+    useEffect(() => {
+        if (!status.hasResolvedUser || !user?.isRegistered || !address) {
+            return;
+        }
+
+        setRegistrationSuccessState({
+            name: user.name || name.trim() || undefined,
+            walletAddress: address,
+        });
+        navigate('/register/success', { replace: true });
+    }, [address, name, navigate, status.hasResolvedUser, user?.isRegistered, user?.name]);
 
     return (
         <div className="fade-in text-center">

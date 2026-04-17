@@ -7,6 +7,7 @@ import { LandingPage } from './views/marketing/LandingPage';
 // hy - User module
 import { LoginView } from './views/hy/Login';
 import { RegisterView } from './views/hy/Register';
+import { RegisterSuccessView } from './views/hy/RegisterSuccess';
 import { ProfileView } from './views/hy/Profile';
 import { UserCreatedHistoryView } from './views/hy/UserCreatedHistory';
 import { GlobalHistoryView } from './views/hy/GlobalHistory';
@@ -40,6 +41,7 @@ function App() {
               {/* hy - User module */}
               <Route path="/login" element={<LoginView />} />
               <Route path="/register" element={<RegisterView />} />
+              <Route path="/register/success" element={<RegisterSuccessView />} />
               <Route path="/dashboard" element={<Navigate to="/profile" replace />} />
               <Route path="/profile" element={<ProfileView />} />
               <Route path="/user/created-history" element={<UserCreatedHistoryView />} />
