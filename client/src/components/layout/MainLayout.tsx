@@ -58,7 +58,7 @@ export function MainLayout({ children }: { children: ReactNode }) {
                         Profile
                     </NavLink>
                     <NavLink to="/user/created-history" className={({ isActive }) => `sidebar-nav-link ${isActive ? 'active' : ''}`}>
-                        Created campaigns
+                        My campaign
                     </NavLink>
                     <NavLink to="/global-history" className={({ isActive }) => `sidebar-nav-link ${isActive ? 'active' : ''}`}>
                         Registry log

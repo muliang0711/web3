@@ -216,7 +216,7 @@ export function UserCreatedHistoryView() {
             <div className="profile-section-heading">
                 <div>
                     <div className="auth-kicker">Owner workspace</div>
-                    <h2>My created campaigns</h2>
+                    <h2>My campaign</h2>
                     <p>Review performance, withdraw funded campaigns, or process contributor refunds once a campaign ends unsuccessfully.</p>
                 </div>
             </div>

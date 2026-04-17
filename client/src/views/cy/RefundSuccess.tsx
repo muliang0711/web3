@@ -142,7 +142,7 @@ export function RefundSuccessView() {
                         className="btn-ghost"
                         onClick={() => navigate('/user/created-history')}
                     >
-                        View created campaigns
+                        View my campaign
                     </button>
                     <button
                         type="button"

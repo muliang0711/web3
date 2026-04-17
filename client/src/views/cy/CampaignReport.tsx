@@ -200,7 +200,7 @@ export function CampaignReportView() {
             <div className="fade-in text-center" style={{ padding: '3rem 0' }}>
                 <p>Campaign report not available.</p>
                 <button className="btn-ghost" onClick={() => navigate('/user/created-history')} style={{ marginTop: '1rem' }}>
-                    Back to created campaigns
+                    Back to my campaign
                 </button>
             </div>
         );

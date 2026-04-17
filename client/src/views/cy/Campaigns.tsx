@@ -35,27 +35,31 @@ function CampaignCard({ campaign }: { campaign: { address: `0x${string}`; imageU
             </div>
 
             <div className="campaign-showcase-content">
-                <div className="campaign-showcase-header">
-                    <h3 className="campaign-card-title">{campaign.title}</h3>
-                    <span className="campaign-showcase-progress">{Number(campaign.target_eth || 0).toFixed(2)} ETH</span>
+                <div className="campaign-showcase-main">
+                    <div className="campaign-showcase-header">
+                        <h3 className="campaign-card-title">{campaign.title}</h3>
+                        <span className="campaign-showcase-progress">{Number(campaign.target_eth || 0).toFixed(2)} ETH</span>
+                    </div>
+
+                    <p className="campaign-card-desc campaign-showcase-description">
+                        {campaign.description || 'Campaign details were saved successfully and are loaded from Supabase.'}
+                    </p>
                 </div>
 
-                <p className="campaign-card-desc">
-                    {campaign.description || 'Campaign details were saved successfully and are loaded from Supabase.'}
-                </p>
+                <div className="campaign-showcase-bottom">
+                    <div className="progress-bar">
+                        <div className="progress-fill" style={{ width: '100%' }} />
+                    </div>
 
-                <div className="progress-bar">
-                    <div className="progress-fill" style={{ width: '100%' }} />
-                </div>
+                    <div className="campaign-card-stats">
+                        <span><strong>{Number(campaign.target_eth || 0).toFixed(4)}</strong> ETH target</span>
+                        <span>{durationLabel}</span>
+                    </div>
 
-                <div className="campaign-card-stats">
-                    <span><strong>{Number(campaign.target_eth || 0).toFixed(4)}</strong> ETH target</span>
-                    <span>{durationLabel}</span>
-                </div>
-
-                <div className="campaign-showcase-footer">
-                    <span>{createdAtLabel}</span>
-                    <span>{campaign.address.slice(0, 6)}...{campaign.address.slice(-4)}</span>
+                    <div className="campaign-showcase-footer">
+                        <span>{createdAtLabel}</span>
+                        <span>{campaign.address.slice(0, 6)}...{campaign.address.slice(-4)}</span>
+                    </div>
                 </div>
             </div>
         </button>

@@ -1,14 +1,19 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useAccount, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
+import { formatEther } from 'viem';
+import { useAccount, useReadContract, useWaitForTransactionReceipt, useWriteContract } from 'wagmi';
 import { useNavigate } from 'react-router-dom';
 import { useUserRegistry } from '../../hooks/useUserRegistry';
 import { useCampaignFactory } from '../../hooks/useCampaignFactory';
 import { useCampaign } from '../../hooks/useCampaign';
 import { useRefundHistory } from '../../hooks/useRefundHistory';
-import { REWARD_MANAGER_ADDRESS } from '../../lib/contracts';
+import { REWARD_MANAGER_ADDRESS, REWARD_TOKEN_ADDRESS } from '../../lib/contracts';
 
 const REWARD_MANAGER_ABI = [
     { type: 'function', name: 'claimRewards', inputs: [], outputs: [], stateMutability: 'nonpayable' }
+] as const;
+
+const REWARD_TOKEN_ABI = [
+    { type: 'function', name: 'balanceOf', inputs: [{ name: 'account', type: 'address' }], outputs: [{ type: 'uint256' }], stateMutability: 'view' }
 ] as const;
 
 function DonationRecordRow({ record }: { record: any }) {
@@ -69,9 +74,19 @@ export function ProfileView() {
         refetchUser,
         status: userStatus,
     } = useUserRegistry();
-    const { campaigns, userCampaigns } = useCampaignFactory();
+    const { userCampaigns } = useCampaignFactory();
     const { refunds, status: refundStatus } = useRefundHistory(address);
     const navigate = useNavigate();
+
+    const { data: rewardTokenBalance } = useReadContract({
+        address: REWARD_TOKEN_ADDRESS,
+        abi: REWARD_TOKEN_ABI,
+        functionName: 'balanceOf',
+        args: address ? [address] : undefined,
+        query: {
+            enabled: Boolean(address),
+        },
+    });
 
     const { data: hash, writeContract, isPending } = useWriteContract();
     const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash });
@@ -79,6 +94,7 @@ export function ProfileView() {
     const [profileImageFailed, setProfileImageFailed] = useState(false);
     const [uploadError, setUploadError] = useState<string | null>(null);
 
+    const displayTokenBalance = Number(formatEther(rewardTokenBalance ?? 0n)).toFixed(4);
     const displayRewards = Number(user?.claimableRewards ?? 0).toFixed(4);
     const hasRewards = Number(user?.claimableRewards ?? 0) > 0;
     const totalDonated = useMemo(
@@ -167,8 +183,8 @@ export function ProfileView() {
 
                 <div className="profile-stat-grid">
                     <div className="quick-stat-card">
-                        <span className="quick-stat-label">Campaigns available</span>
-                        <span className="quick-stat-value">{campaigns.length}</span>
+                        <span className="quick-stat-label">Token you have</span>
+                        <span className="quick-stat-value" style={{ color: 'var(--accent-dark)' }}>{displayTokenBalance} CFR</span>
                     </div>
                     <div className="quick-stat-card">
                         <span className="quick-stat-label">Created by you</span>
@@ -187,15 +203,19 @@ export function ProfileView() {
                 <div className="profile-reward-panel">
                     <div>
                         <div className="auth-kicker">Rewards</div>
-                        <h3>{displayRewards} CFR available</h3>
-                        <p>Reward balance comes from the contract. Donation and refund history below prefer on-chain time over database insert time.</p>
+                        <h3>{displayRewards} CFR claimable now</h3>
+                        <p>
+                            {hasRewards
+                                ? 'Claimable rewards come from the current reward contract. Donation and refund history below prefer on-chain time over database insert time.'
+                                : 'Claim is disabled because the current reward contract reports 0 unclaimed CFR for this wallet. Stored donation history does not make tokens claimable by itself.'}
+                        </p>
                     </div>
                     <button
                         onClick={handleClaim}
                         disabled={!hasRewards || isPending || isConfirming}
                         className="btn-primary profile-claim-button"
                     >
-                        {isPending ? 'Confirming...' : isConfirming ? 'Claiming...' : isSuccess ? 'Claimed' : 'Claim tokens'}
+                        {isPending ? 'Confirming...' : isConfirming ? 'Claiming...' : isSuccess ? 'Claimed' : hasRewards ? 'Claim tokens' : 'No rewards to claim'}
                     </button>
                 </div>
 
