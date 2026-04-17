@@ -8,6 +8,8 @@ import { clearWalletSession } from '../../lib/walletSession';
 export function RegisterView() {
     const navigate = useNavigate();
     const [name, setName] = useState('');
+    const [pendingSuccessName, setPendingSuccessName] = useState('');
+    const [hasSubmittedRegistration, setHasSubmittedRegistration] = useState(false);
     const { address, status: accountStatus } = useAccount();
     const { disconnect } = useDisconnect();
     const { user, register, status } = useUserRegistry();
@@ -15,6 +17,8 @@ export function RegisterView() {
     const handleRegister = (e: React.FormEvent) => {
         e.preventDefault();
         if (name.trim()) {
+            setPendingSuccessName(name.trim());
+            setHasSubmittedRegistration(true);
             register(name);
         }
     };
@@ -37,16 +41,16 @@ export function RegisterView() {
         !status.hasResolvedUser;
 
     useEffect(() => {
-        if (!status.hasResolvedUser || !user?.isRegistered || !address) {
+        if (!hasSubmittedRegistration || !status.hasResolvedUser || !user?.isRegistered || !address) {
             return;
         }
 
         setRegistrationSuccessState({
-            name: user.name || name.trim() || undefined,
+            name: user.name || pendingSuccessName || undefined,
             walletAddress: address,
         });
         navigate('/register/success', { replace: true });
-    }, [address, name, navigate, status.hasResolvedUser, user?.isRegistered, user?.name]);
+    }, [address, hasSubmittedRegistration, navigate, pendingSuccessName, status.hasResolvedUser, user?.isRegistered, user?.name]);
 
     return (
         <div className="fade-in text-center">

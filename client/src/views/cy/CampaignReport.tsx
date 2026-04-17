@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { formatEther } from 'viem';
 import { useAccount, usePublicClient } from 'wagmi';
 import { useCampaign } from '../../hooks/useCampaign';
-import { enrichDonationRowsWithChainTimestamps, enrichRefundRowsWithChainTimestamps } from '../../lib/chainActivity';
+import { enrichDonationRowsWithChainTimestamps, enrichRefundRowsWithChainTimestamps, fetchCampaignCreatedAtMap } from '../../lib/chainActivity';
 import { getCampaignImageUrl } from '../../lib/media';
 import { supabase } from '../../lib/supabase';
 
@@ -95,6 +95,24 @@ export function CampaignReportView() {
                     ]);
                 } catch (timestampError) {
                     console.warn('Failed to load on-chain timestamps for owner campaign report.', timestampError);
+                }
+
+                try {
+                    const createdAtMap = await fetchCampaignCreatedAtMap(publicClient, [campaignAddress]);
+                    const campaignCreatedAt = createdAtMap.get(campaignAddress.toLowerCase());
+
+                    if (campaignCreatedAt) {
+                        const campaignCreatedAtMs = new Date(campaignCreatedAt).getTime();
+                        const isCurrentSessionRow = (row: { created_at?: string | null }) => {
+                            const rowTime = row.created_at ? new Date(row.created_at).getTime() : 0;
+                            return rowTime >= campaignCreatedAtMs;
+                        };
+
+                        safeDonations = safeDonations.filter(isCurrentSessionRow);
+                        safeRefunds = safeRefunds.filter(isCurrentSessionRow);
+                    }
+                } catch (campaignCreatedAtError) {
+                    console.warn('Failed to scope owner report to current campaign lifecycle.', campaignCreatedAtError);
                 }
             }
 

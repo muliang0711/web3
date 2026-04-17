@@ -16,7 +16,8 @@ export function Web3Gate() {
     const { isConnected, status: accountStatus } = useAccount();
     const { user, status } = useUserRegistry();
     const location = useLocation();
-    const isAuthRoute = location.pathname === '/login' || location.pathname === '/register';
+    const isRegisterSuccessRoute = location.pathname === '/register/success';
+    const isAuthRoute = location.pathname === '/login' || location.pathname === '/register' || isRegisterSuccessRoute;
     const hasPendingRegistrationSuccess = Boolean(getRegistrationSuccessState());
     const isHydratingWallet = accountStatus === 'connecting' || accountStatus === 'reconnecting';
     const isHydratingUser = isConnected && !status.hasResolvedUser;
@@ -28,7 +29,7 @@ export function Web3Gate() {
 
         if (isConnected && user?.isRegistered) {
             if (hasPendingRegistrationSuccess) {
-                return <Navigate to="/register/success" replace />;
+                return isRegisterSuccessRoute ? <Outlet /> : <Navigate to="/register/success" replace />;
             }
             return <Navigate to="/profile" replace />;
         }

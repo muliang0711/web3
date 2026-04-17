@@ -154,6 +154,7 @@ export function useCampaignFactory() {
                     description: pendingCampaign.description,
                     target_eth: pendingCampaign.targetEth,
                     duration_days: pendingCampaign.durationDays,
+                    created_at: new Date().toISOString(),
                 }, { onConflict: 'address' });
 
                 if (campaignSyncError) {

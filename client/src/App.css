@@ -1454,26 +1454,26 @@
 .owner-report-page {
   display: flex;
   flex-direction: column;
-  gap: 1.25rem;
+  gap: 1rem;
 }
 
 .owner-report-hero {
   display: grid;
-  grid-template-columns: 320px minmax(0, 1fr);
-  gap: 1rem;
-  padding: 1rem;
-  border-radius: 30px;
+  grid-template-columns: 260px minmax(0, 1fr);
+  gap: 0.9rem;
+  padding: 0.9rem;
+  border-radius: 28px;
 }
 
 .owner-report-hero-media {
-  min-height: 280px;
+  min-height: 220px;
 }
 
 .owner-report-hero-copy {
   display: flex;
   flex-direction: column;
-  gap: 0.95rem;
-  padding: 0.35rem 0.35rem 0.15rem;
+  gap: 0.7rem;
+  padding: 0.25rem 0.2rem 0.1rem;
 }
 
 .owner-report-title-row {
@@ -1483,17 +1483,32 @@
   gap: 1rem;
 }
 
+.owner-report-title-row h2 {
+  font-size: clamp(1.7rem, 3vw, 2.35rem);
+  line-height: 1.05;
+}
+
+.owner-report-hero-copy > p {
+  color: var(--text-secondary);
+  line-height: 1.6;
+  font-size: 0.92rem;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
 .owner-report-meta {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.75rem 1.25rem;
+  gap: 0.45rem 1rem;
   color: var(--text-muted);
-  font-size: 0.88rem;
+  font-size: 0.8rem;
 }
 
 .owner-report-progress {
-  padding: 1rem 1.1rem;
-  border-radius: 24px;
+  padding: 0.85rem 0.95rem;
+  border-radius: 20px;
   background: var(--bg-elevated);
   border: 1.5px solid var(--border);
 }
@@ -1501,7 +1516,16 @@
 .owner-report-stat-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 1rem;
+  gap: 0.8rem;
+}
+
+.owner-report-stat-grid .quick-stat-card {
+  padding: 1rem 1.05rem 1.1rem;
+  border-radius: 22px;
+}
+
+.owner-report-stat-grid .quick-stat-value {
+  font-size: 1.5rem;
 }
 
 .owner-report-action-panel {
@@ -1509,8 +1533,8 @@
   grid-template-columns: minmax(0, 1fr) auto;
   gap: 1rem;
   align-items: center;
-  padding: 1.35rem;
-  border-radius: 28px;
+  padding: 1rem 1.1rem;
+  border-radius: 24px;
 }
 
 .owner-report-actions {
@@ -1522,26 +1546,26 @@
 .owner-report-section-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 1rem;
+  gap: 0.9rem;
 }
 
 .owner-report-panel {
-  padding: 1.2rem;
-  border-radius: 28px;
+  padding: 1rem 1.05rem;
+  border-radius: 24px;
 }
 
 .owner-report-list {
   display: flex;
   flex-direction: column;
-  gap: 0.85rem;
+  gap: 0.75rem;
 }
 
 .owner-report-row {
   display: flex;
   gap: 1rem;
   align-items: center;
-  padding: 1rem;
-  border-radius: 22px;
+  padding: 0.85rem 0.95rem;
+  border-radius: 18px;
   background: rgba(255, 255, 255, 0.94);
   border: 1.5px solid var(--border);
 }
@@ -1587,9 +1611,9 @@
   width: min(100%, 980px);
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
-  padding: 2rem;
-  border-radius: 36px;
+  gap: 1.1rem;
+  padding: 1.4rem;
+  border-radius: 28px;
   position: relative;
   overflow: hidden;
 }
@@ -1611,54 +1635,41 @@
 
 .donation-success-badge {
   align-self: center;
-  padding: 0.55rem 0.95rem;
+  padding: 0.45rem 0.8rem;
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.88);
   border: 1.5px solid var(--border);
   color: var(--success);
-  font-size: 0.82rem;
+  font-size: 0.76rem;
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.08em;
 }
 
-.donation-success-mark {
-  width: 98px;
-  height: 98px;
-  margin: 0 auto;
-  border-radius: 32px;
-  display: grid;
-  place-items: center;
-  background: linear-gradient(145deg, var(--accent), #f0a25b);
-  box-shadow: var(--shadow-md);
-}
-
-.donation-success-mark span {
-  width: 32px;
-  height: 18px;
-  border-left: 5px solid rgba(255, 255, 255, 0.98);
-  border-bottom: 5px solid rgba(255, 255, 255, 0.98);
-  transform: rotate(-45deg) translateY(-3px);
-  display: block;
-}
-
 .donation-success-copy {
   display: flex;
   flex-direction: column;
-  gap: 0.8rem;
+  gap: 0.55rem;
   text-align: center;
-  max-width: 700px;
+  max-width: 760px;
   margin: 0 auto;
 }
 
 .donation-success-copy h1 {
-  font-size: clamp(2.25rem, 4vw, 3.4rem);
+  font-size: clamp(1.8rem, 3vw, 2.7rem);
+  line-height: 1.05;
+}
+
+.donation-success-copy p {
+  font-size: 0.95rem;
+  line-height: 1.65;
+  color: var(--text-secondary);
 }
 
 .donation-success-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
-  gap: 1rem;
+  grid-template-columns: minmax(0, 1.1fr) minmax(320px, 0.9fr);
+  gap: 0.9rem;
 }
 
 .donation-success-summary,
@@ -1673,69 +1684,62 @@
 
 .donation-success-summary {
   display: grid;
-  grid-template-columns: 240px minmax(0, 1fr);
-  gap: 1rem;
-  padding: 1rem;
+  grid-template-columns: 210px minmax(0, 1fr);
+  gap: 0.9rem;
+  padding: 0.85rem;
 }
 
 .donation-success-media {
-  min-height: 220px;
+  min-height: 200px;
 }
 
 .donation-success-details {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  gap: 0.75rem;
-  padding: 0.5rem 0.25rem;
+  gap: 0.55rem;
+  padding: 0.25rem 0.15rem;
+}
+
+.donation-success-details h2 {
+  font-size: clamp(1.45rem, 2.4vw, 2.1rem);
+  line-height: 1.05;
+}
+
+.donation-success-details p {
+  color: var(--text-secondary);
+  font-size: 0.92rem;
+  line-height: 1.65;
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .donation-success-stats {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.9rem;
-  padding: 1rem;
+  gap: 0.75rem;
+  padding: 0.85rem;
 }
 
 .success-stat-card {
-  padding: 1rem;
-  border-radius: 22px;
+  padding: 0.9rem;
+  border-radius: 18px;
   background: var(--bg-chip);
   border: 1px solid rgba(44, 50, 56, 0.08);
 }
 
 .success-stat-card strong {
   display: block;
-  margin-top: 0.35rem;
-}
-
-.donation-success-progress {
-  padding: 1.2rem 1.25rem;
-}
-
-.donation-success-tx {
-  padding: 1rem 1.25rem;
-}
-
-.donation-success-tx span {
-  display: block;
-  margin-bottom: 0.45rem;
-  color: var(--text-muted);
-  font-size: 0.82rem;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-}
-
-.donation-success-tx strong {
-  display: block;
-  font-size: 0.9rem;
-  line-height: 1.5;
-  word-break: break-all;
+  margin-top: 0.25rem;
+  font-size: 1.55rem;
+  line-height: 1.05;
 }
 
 .donation-success-actions {
   display: flex;
-  gap: 0.9rem;
+  gap: 0.75rem;
 }
 
 @media (max-width: 1100px) {

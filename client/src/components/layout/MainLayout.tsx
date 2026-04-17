@@ -12,7 +12,7 @@ export function MainLayout({ children }: { children: ReactNode }) {
     const [avatarRefreshKey, setAvatarRefreshKey] = useState(Date.now());
     const [avatarImageFailed, setAvatarImageFailed] = useState(false);
 
-    const isAuthRoute = location.pathname === '/login' || location.pathname === '/register';
+    const isAuthRoute = location.pathname === '/login' || location.pathname === '/register' || location.pathname === '/register/success';
     const isPublicRoute = location.pathname === '/';
     const avatarSrc = user?.profileImageUrl ? `${user.profileImageUrl}?v=${avatarRefreshKey}` : null;
 

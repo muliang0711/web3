@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { useAccount } from 'wagmi';
 import { clearRegistrationSuccessState, getRegistrationSuccessState } from '../../lib/registrationSuccess';
@@ -7,6 +7,7 @@ export function RegisterSuccessView() {
     const navigate = useNavigate();
     const { address } = useAccount();
     const successState = useMemo(() => getRegistrationSuccessState(), []);
+    const [secondsLeft, setSecondsLeft] = useState(2);
 
     if (!successState) {
         return <Navigate to="/profile" replace />;
@@ -14,6 +15,22 @@ export function RegisterSuccessView() {
 
     const displayName = successState.name || 'Member';
     const walletAddress = successState.walletAddress || address || 'Wallet connected';
+
+    useEffect(() => {
+        const countdownTimer = window.setInterval(() => {
+            setSecondsLeft((current) => (current > 1 ? current - 1 : current));
+        }, 1000);
+
+        const redirectTimer = window.setTimeout(() => {
+            clearRegistrationSuccessState();
+            navigate('/profile', { replace: true });
+        }, 1800);
+
+        return () => {
+            window.clearInterval(countdownTimer);
+            window.clearTimeout(redirectTimer);
+        };
+    }, [navigate]);
 
     return (
         <div className="fade-in text-center">
@@ -30,7 +47,7 @@ export function RegisterSuccessView() {
 
             <div style={{ marginBottom: '1.5rem', padding: '1rem', borderRadius: '16px', background: 'rgba(47, 127, 97, 0.08)', border: '1px solid rgba(47, 127, 97, 0.18)' }}>
                 <p style={{ margin: 0, color: 'var(--success)', fontWeight: 700 }}>
-                    You can continue to your profile and start using the campaign workspace.
+                    Welcome to the workspace. Redirecting to your profile in about {secondsLeft} second{secondsLeft === 1 ? '' : 's'}.
                 </p>
             </div>
 
@@ -47,4 +64,3 @@ export function RegisterSuccessView() {
         </div>
     );
 }
-

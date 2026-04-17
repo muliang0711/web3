@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { formatEther } from 'viem';
 import { useCampaign } from '../../hooks/useCampaign';
@@ -25,14 +25,6 @@ export function RefundSuccessView() {
     const txHash = searchParams.get('tx');
     const imageUrl = campaignAddress ? getCampaignImageUrl(campaignAddress) : null;
 
-    const progress = useMemo(() => {
-        if (!info || info.fundingTarget === 0n) {
-            return 0;
-        }
-
-        return Number((info.totalFunded * 100n) / info.fundingTarget);
-    }, [info]);
-
     if (status.isLoadingInfo) {
         return (
             <div className="fade-in text-center" style={{ padding: '3rem 0' }}>
@@ -47,15 +39,10 @@ export function RefundSuccessView() {
             <div className="donation-success-shell card">
                 <div className="donation-success-badge">Refund action confirmed</div>
 
-                <div className="donation-success-mark" aria-hidden="true">
-                    <span />
-                </div>
-
                 <div className="donation-success-copy">
-                    <h1>Refunds were executed successfully.</h1>
+                    <h1>Refund completed</h1>
                     <p>
-                        The owner refund action has been confirmed on-chain.
-                        Contributors in this failed campaign can now verify the returned funds in their wallet and history views.
+                        The owner refund transaction is confirmed on-chain. Contributors can now verify the returned funds in their wallet and refund history.
                     </p>
                 </div>
 
@@ -80,7 +67,7 @@ export function RefundSuccessView() {
                         <div className="donation-success-details">
                             <div className="auth-kicker">Refunded campaign</div>
                             <h2>{info?.title || 'Pet Treatment Campaign'}</h2>
-                            <p>{info?.description || 'The refund action was completed successfully for this campaign.'}</p>
+                            <p>{info?.description || 'This campaign has completed the refund flow for the affected contributors.'}</p>
                         </div>
                     </section>
 
@@ -107,27 +94,6 @@ export function RefundSuccessView() {
                         </div>
                     </section>
                 </div>
-
-                <div className="donation-success-progress">
-                    <div className="funding-progress-header">
-                        <span className="amount-raised">
-                            <strong>{info ? formatEther(info.totalFunded) : '0.0000'} ETH</strong>
-                        </span>
-                        <span className="amount-target">
-                            remaining against {info ? formatEther(info.fundingTarget) : '0.0000'} ETH target
-                        </span>
-                    </div>
-                    <div className="progress-bar" style={{ marginTop: '0.85rem' }}>
-                        <div className="progress-fill" style={{ width: `${Math.min(progress, 100)}%` }} />
-                    </div>
-                </div>
-
-                {txHash && (
-                    <div className="donation-success-tx">
-                        <span>Transaction hash</span>
-                        <strong>{txHash}</strong>
-                    </div>
-                )}
 
                 <div className="donation-success-actions">
                     <button
