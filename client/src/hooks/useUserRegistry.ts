@@ -5,7 +5,7 @@ import { useWriteContract, useWaitForTransactionReceipt, usePublicClient } from 
 import { useAccount } from 'wagmi';
 import { supabase } from '../lib/supabase';
 import { USER_REGISTRY_ADDRESS } from '../lib/contracts';
-import { getProfileImagePath, getProfileImageUrl, uploadMediaFile } from '../lib/media';
+import { clearProfileImageVersion, getProfileImagePath, getProfileImageUrl, rememberProfileImageVersion, removeMediaFile, uploadMediaFile } from '../lib/media';
 import { enrichDonationRowsWithChainTimestamps } from '../lib/chainActivity';
 import { fetchRegistrationTimestampForAddress } from '../lib/userRegistration';
 
@@ -128,7 +128,7 @@ async function fetchUserByAddress(publicClient: NonNullable<ReturnType<typeof us
         walletAddress: row?.wallet_address ?? address,
         createdAt: registeredAt ?? row?.created_at ?? null,
         claimableRewards: formatEther(claimableRewards),
-        profileImageUrl: row?.profile_image_url ?? row?.avatar_url ?? row?.image_url ?? getProfileImageUrl(address),
+        profileImageUrl: row?.profile_image_url ?? row?.avatar_url ?? row?.image_url ?? null,
     };
 }
 
@@ -214,9 +214,18 @@ export function useUserRegistry() {
                     ? await fetchRegistrationTimestampForAddress(publicClient, address).catch(() => null)
                     : null;
 
+                try {
+                    await removeMediaFile(getProfileImagePath(address));
+                } catch (storageResetError) {
+                    console.warn('Failed to reset previous profile image during registration sync.', storageResetError);
+                }
+
+                clearProfileImageVersion(address);
+
                 await supabase.from('users').insert({
                     wallet_address: address,
                     name: pendingName,
+                    profile_image_url: null,
                 });
 
                 queryClient.setQueryData(['userRegistryUser', address, publicClient?.chain?.id] as const, {
@@ -225,7 +234,7 @@ export function useUserRegistry() {
                     walletAddress: address,
                     createdAt: registeredAt,
                     claimableRewards: '0',
-                    profileImageUrl: getProfileImageUrl(address),
+                    profileImageUrl: null,
                 } satisfies AppUser);
 
                 await queryClient.invalidateQueries({ queryKey: ['userRegistryUser', address] });
@@ -263,7 +272,10 @@ export function useUserRegistry() {
         setIsUploadingProfileImage(true);
         try {
             const path = getProfileImagePath(address);
-            const publicUrl = await uploadMediaFile(file, path);
+            const imageVersion = Date.now();
+            await uploadMediaFile(file, path);
+            rememberProfileImageVersion(address, imageVersion);
+            const publicUrl = getProfileImageUrl(address, imageVersion);
 
             try {
                 const { error } = await supabase

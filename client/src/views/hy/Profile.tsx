@@ -142,7 +142,9 @@ export function ProfileView() {
         }
     };
 
-    const profileImageSrc = user?.profileImageUrl ? `${user.profileImageUrl}?v=${profileImageRefreshKey}` : null;
+    const profileImageSrc = user?.profileImageUrl
+        ? `${user.profileImageUrl}${user.profileImageUrl.includes('?') ? '&' : '?'}r=${profileImageRefreshKey}`
+        : null;
 
     return (
         <div className="fade-in">

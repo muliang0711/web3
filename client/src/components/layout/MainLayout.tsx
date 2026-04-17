@@ -14,7 +14,9 @@ export function MainLayout({ children }: { children: ReactNode }) {
 
     const isAuthRoute = location.pathname === '/login' || location.pathname === '/register' || location.pathname === '/register/success';
     const isPublicRoute = location.pathname === '/';
-    const avatarSrc = user?.profileImageUrl ? `${user.profileImageUrl}?v=${avatarRefreshKey}` : null;
+    const avatarSrc = user?.profileImageUrl
+        ? `${user.profileImageUrl}${user.profileImageUrl.includes('?') ? '&' : '?'}r=${avatarRefreshKey}`
+        : null;
 
     useEffect(() => {
         if (!status.isUploadingProfileImage) {

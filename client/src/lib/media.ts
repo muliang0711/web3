@@ -2,6 +2,7 @@ import { supabase } from './supabase';
 
 export const SUPABASE_MEDIA_BUCKET = import.meta.env.VITE_SUPABASE_MEDIA_BUCKET || 'app-media';
 const CAMPAIGN_IMAGE_VERSION_PREFIX = 'campaignImageVersion:';
+const PROFILE_IMAGE_VERSION_PREFIX = 'profileImageVersion:';
 
 function normalizePathPart(value: string) {
   return value.trim().toLowerCase();
@@ -24,12 +25,36 @@ function getStoredCampaignImageVersion(campaignAddress: string) {
   return window.localStorage.getItem(`${CAMPAIGN_IMAGE_VERSION_PREFIX}${normalizePathPart(campaignAddress)}`);
 }
 
+function getStoredProfileImageVersion(walletAddress: string) {
+  if (typeof window === 'undefined') {
+    return null;
+  }
+
+  return window.localStorage.getItem(`${PROFILE_IMAGE_VERSION_PREFIX}${normalizePathPart(walletAddress)}`);
+}
+
 export function rememberCampaignImageVersion(campaignAddress: string, version: string | number) {
   if (typeof window === 'undefined') {
     return;
   }
 
   window.localStorage.setItem(`${CAMPAIGN_IMAGE_VERSION_PREFIX}${normalizePathPart(campaignAddress)}`, String(version));
+}
+
+export function rememberProfileImageVersion(walletAddress: string, version: string | number) {
+  if (typeof window === 'undefined') {
+    return;
+  }
+
+  window.localStorage.setItem(`${PROFILE_IMAGE_VERSION_PREFIX}${normalizePathPart(walletAddress)}`, String(version));
+}
+
+export function clearProfileImageVersion(walletAddress: string) {
+  if (typeof window === 'undefined') {
+    return;
+  }
+
+  window.localStorage.removeItem(`${PROFILE_IMAGE_VERSION_PREFIX}${normalizePathPart(walletAddress)}`);
 }
 
 export function getCampaignImagePath(campaignAddress: string) {
@@ -50,8 +75,9 @@ export function getCampaignImageUrl(campaignAddress: string, version?: string | 
   return appendVersionToUrl(publicUrl, version ?? getStoredCampaignImageVersion(campaignAddress));
 }
 
-export function getProfileImageUrl(walletAddress: string) {
-  return getPublicMediaUrl(getProfileImagePath(walletAddress));
+export function getProfileImageUrl(walletAddress: string, version?: string | number | null) {
+  const publicUrl = getPublicMediaUrl(getProfileImagePath(walletAddress));
+  return appendVersionToUrl(publicUrl, version ?? getStoredProfileImageVersion(walletAddress));
 }
 
 export async function uploadMediaFile(file: File, path: string) {
@@ -66,4 +92,12 @@ export async function uploadMediaFile(file: File, path: string) {
   }
 
   return getPublicMediaUrl(path);
+}
+
+export async function removeMediaFile(path: string) {
+  const { error } = await supabase.storage.from(SUPABASE_MEDIA_BUCKET).remove([path]);
+
+  if (error) {
+    throw error;
+  }
 }
