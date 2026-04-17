@@ -1,0 +1,196 @@
+<mxfile host="app.diagrams.net" agent="Codex">
+  <diagram id="user-module-transaction-history" name="User Module Transaction History">
+    <mxGraphModel dx="4428" dy="2804" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="1250" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="7r00uCz6QnBjzTI1KPT_-3" parent="1" style="rounded=0;whiteSpace=wrap;html=1;" value="" vertex="1">
+          <mxGeometry height="1380" width="1469" x="1" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="title" parent="1" style="text;html=1;fontStyle=1;fontSize=20;align=center;" value="Activity Diagram: User Module Transaction History&lt;br&gt;(Profile Donation &amp; Refund History)" vertex="1">
+          <mxGeometry height="50" width="760" x="420" y="-10" as="geometry" />
+        </mxCell>
+        <mxCell id="lane1" parent="1" style="text;html=1;fontStyle=1;fontSize=15;align=center;" value="User" vertex="1">
+          <mxGeometry height="30" width="180" x="10" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="lane2" parent="1" style="text;html=1;fontStyle=1;fontSize=15;align=center;" value="ProfileView" vertex="1">
+          <mxGeometry height="30" width="220" x="220" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="lane3" parent="1" style="text;html=1;fontStyle=1;fontSize=15;align=center;" value="useUserRegistry" vertex="1">
+          <mxGeometry height="30" width="220" x="470" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="lane4" parent="1" style="text;html=1;fontStyle=1;fontSize=15;align=center;" value="useRefundHistory" vertex="1">
+          <mxGeometry height="30" width="220" x="720" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="lane5" parent="1" style="text;html=1;fontStyle=1;fontSize=15;align=center;" value="Supabase &amp; RPC" vertex="1">
+          <mxGeometry height="30" width="320" x="980" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="line1" parent="1" style="shape=line;html=1;strokeWidth=2;direction=south;" value="" vertex="1">
+          <mxGeometry height="1370" width="10" x="190" y="70" as="geometry" />
+        </mxCell>
+        <mxCell id="line2" parent="1" style="shape=line;html=1;strokeWidth=2;direction=south;" value="" vertex="1">
+          <mxGeometry height="1370" width="10" x="450" y="70" as="geometry" />
+        </mxCell>
+        <mxCell id="line3" parent="1" style="shape=line;html=1;strokeWidth=2;direction=south;" value="" vertex="1">
+          <mxGeometry height="1370" width="10" x="700" y="70" as="geometry" />
+        </mxCell>
+        <mxCell id="line4" parent="1" style="shape=line;html=1;strokeWidth=2;direction=south;" value="" vertex="1">
+          <mxGeometry height="1370" width="10" x="950" y="70" as="geometry" />
+        </mxCell>
+        <mxCell id="start" parent="1" style="ellipse;html=1;aspect=fixed;fillColor=#000000;strokeColor=#000000;" value="" vertex="1">
+          <mxGeometry height="26" width="26" x="90" y="110" as="geometry" />
+        </mxCell>
+        <mxCell id="u1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;" value="Open profile page" vertex="1">
+          <mxGeometry height="56" width="140" x="35" y="160" as="geometry" />
+        </mxCell>
+        <mxCell id="p1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;" value="Request donation history&#xa;and refund history" vertex="1">
+          <mxGeometry height="64" width="150" x="260" y="160" as="geometry" />
+        </mxCell>
+        <mxCell id="bar1" parent="1" style="shape=line;html=1;strokeWidth=6;" value="" vertex="1">
+          <mxGeometry height="10" width="470" x="480" y="270" as="geometry" />
+        </mxCell>
+        <mxCell id="r1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;" value="Fetch donations by&#xa;connected wallet" vertex="1">
+          <mxGeometry height="64" width="150" x="500" y="310" as="geometry" />
+        </mxCell>
+        <mxCell id="rf1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;" value="Fetch refunds by&#xa;connected wallet" vertex="1">
+          <mxGeometry height="64" width="150" x="760" y="310" as="geometry" />
+        </mxCell>
+        <mxCell id="d1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" value="Query `donations` table&#xa;by donor_address" vertex="1">
+          <mxGeometry height="64" width="180" x="1080" y="380" as="geometry" />
+        </mxCell>
+        <mxCell id="d2" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" value="Query `refunds` table&#xa;by user_address" vertex="1">
+          <mxGeometry height="64" width="180" x="1280" y="500" as="geometry" />
+        </mxCell>
+        <mxCell id="d3" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" value="Query `campaigns` table&#xa;for titles" vertex="1">
+          <mxGeometry height="64" width="180" x="1070" y="500" as="geometry" />
+        </mxCell>
+        <mxCell id="q1" parent="1" style="rhombus;whiteSpace=wrap;html=1;" value="Public client available?" vertex="1">
+          <mxGeometry height="96" width="120" x="1110" y="600" as="geometry" />
+        </mxCell>
+        <mxCell id="d4" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="Enrich donation timestamps&#xa;from chain logs" vertex="1">
+          <mxGeometry height="64" width="150" x="960" y="700" as="geometry" />
+        </mxCell>
+        <mxCell id="d5" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="Enrich refund timestamps&#xa;from chain logs" vertex="1">
+          <mxGeometry height="64" width="150" x="1280" y="680" as="geometry" />
+        </mxCell>
+        <mxCell id="d6" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" value="Fallback to database&#xa;timestamps" vertex="1">
+          <mxGeometry height="64" width="120" x="1110" y="830" as="geometry" />
+        </mxCell>
+        <mxCell id="bar2" parent="1" style="shape=line;html=1;strokeWidth=6;" value="" vertex="1">
+          <mxGeometry height="10" width="470" x="480" y="930" as="geometry" />
+        </mxCell>
+        <mxCell id="p2" parent="1" style="rounded=1;whiteSpace=wrap;html=1;" value="Calculate totals&#xa;donated and refunded" vertex="1">
+          <mxGeometry height="64" width="150" x="260" y="970" as="geometry" />
+        </mxCell>
+        <mxCell id="q2" parent="1" style="rhombus;whiteSpace=wrap;html=1;" value="Any records found?" vertex="1">
+          <mxGeometry height="96" width="120" x="275" y="1070" as="geometry" />
+        </mxCell>
+        <mxCell id="p3" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" value="Render donation list&#xa;and refund list" vertex="1">
+          <mxGeometry height="64" width="150" x="260" y="1306" as="geometry" />
+        </mxCell>
+        <mxCell id="p4" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" value="Show empty state&#xa;for missing history" vertex="1">
+          <mxGeometry height="64" width="150" x="30" y="1210" as="geometry" />
+        </mxCell>
+        <mxCell id="u2" parent="1" style="rounded=1;whiteSpace=wrap;html=1;" value="View personal transaction history" vertex="1">
+          <mxGeometry height="56" width="150" x="35" y="1310" as="geometry" />
+        </mxCell>
+        <mxCell id="endOuter" parent="1" style="ellipse;html=1;aspect=fixed;fillColor=#ffffff;strokeColor=#000000;strokeWidth=3;" value="" vertex="1">
+          <mxGeometry height="34" width="34" x="87" y="1395" as="geometry" />
+        </mxCell>
+        <mxCell id="endInner" parent="1" style="ellipse;html=1;aspect=fixed;fillColor=#000000;strokeColor=#000000;" value="" vertex="1">
+          <mxGeometry height="16" width="16" x="96" y="1404" as="geometry" />
+        </mxCell>
+        <mxCell id="e1" edge="1" parent="1" source="start" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;" target="u1" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e2" edge="1" parent="1" source="u1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;" target="p1" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e3" edge="1" parent="1" source="p1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;" target="bar1" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e4" edge="1" parent="1" source="bar1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;" target="r1" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e5" edge="1" parent="1" source="bar1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;" target="rf1" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e6" edge="1" parent="1" source="r1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;" target="d1" value="">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="575" y="430" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e7" edge="1" parent="1" source="rf1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;" target="d2" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e8" edge="1" parent="1" source="d1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;" target="d3" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e9" edge="1" parent="1" source="d2" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;" target="d3" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e10" edge="1" parent="1" source="d3" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;" target="q1" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e11" edge="1" parent="1" source="q1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;" target="d4" value="Yes">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1035" y="648" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e12" edge="1" parent="1" source="q1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;" target="d5" value="Yes">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e13" edge="1" parent="1" source="q1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;" target="d6" value="No">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e14" edge="1" parent="1" source="d4" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;" target="bar2" value="">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1035" y="800" />
+              <mxPoint x="715" y="800" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e15" edge="1" parent="1" source="d5" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;" target="bar2" value="">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1355" y="800" />
+              <mxPoint x="715" y="800" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e16" edge="1" parent="1" source="d6" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;" target="bar2" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e17" edge="1" parent="1" source="bar2" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;" target="p2" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e18" edge="1" parent="1" source="p2" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;" target="q2" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e19" edge="1" parent="1" source="q2" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;" target="p3" value="Yes">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e20" edge="1" parent="1" source="q2" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;" target="p4" value="No">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e21" edge="1" parent="1" source="p3" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;" target="u2" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e22" edge="1" parent="1" source="p4" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;" target="u2" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e23" edge="1" parent="1" source="u2" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;" target="endOuter" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="7r00uCz6QnBjzTI1KPT_-2" parent="1" style="rounded=1;whiteSpace=wrap;html=1;" value="" vertex="1">
+          <mxGeometry height="60" width="120" x="-740" y="70" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

@@ -1,41 +1,9 @@
-<mxfile host="app.diagrams.net" modified="2026-04-08T00:00:00.000Z" agent="Codex" version="24.7.17">
+<mxfile host="app.diagrams.net" agent="Codex">
   <diagram id="activity-campaign-creation" name="Campaign Creation Activity">
-    <mxGraphModel dx="1500" dy="1200" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1500" pageHeight="1200" math="0" shadow="0">
+    <mxGraphModel dx="2020" dy="1061" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1500" pageHeight="1200" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
-        <mxCell id="s" value="" style="ellipse;html=1;aspect=fixed;fillColor=#000000;strokeColor=#000000;" vertex="1" parent="1"><mxGeometry x="120" y="40" width="36" height="36" as="geometry"/></mxCell>
-        <mxCell id="a1" value="Open create campaign page" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1"><mxGeometry x="70" y="100" width="150" height="56" as="geometry"/></mxCell>
-        <mxCell id="a2" value="Enter title, description, target, duration" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1"><mxGeometry x="70" y="200" width="150" height="70" as="geometry"/></mxCell>
-        <mxCell id="d1" value="Input valid?" style="rhombus;whiteSpace=wrap;html=1;" vertex="1" parent="1"><mxGeometry x="88" y="320" width="114" height="90" as="geometry"/></mxCell>
-        <mxCell id="a3" value="Optional: choose image file" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1"><mxGeometry x="70" y="460" width="150" height="56" as="geometry"/></mxCell>
-        <mxCell id="a4" value="Call CampaignFactory.createCampaign(...)" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1"><mxGeometry x="70" y="560" width="150" height="70" as="geometry"/></mxCell>
-        <mxCell id="d2" value="Transaction confirmed?" style="rhombus;whiteSpace=wrap;html=1;" vertex="1" parent="1"><mxGeometry x="88" y="680" width="114" height="90" as="geometry"/></mxCell>
-        <mxCell id="a5" value="Factory deploys Campaign contract" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1"><mxGeometry x="360" y="560" width="180" height="56" as="geometry"/></mxCell>
-        <mxCell id="a6" value="Factory stores campaign address" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1"><mxGeometry x="360" y="660" width="180" height="56" as="geometry"/></mxCell>
-        <mxCell id="a7" value="Factory authorizes campaign in UserRegistry" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1"><mxGeometry x="360" y="760" width="180" height="70" as="geometry"/></mxCell>
-        <mxCell id="d3" value="Image selected?" style="rhombus;whiteSpace=wrap;html=1;" vertex="1" parent="1"><mxGeometry x="650" y="760" width="120" height="90" as="geometry"/></mxCell>
-        <mxCell id="a8" value="Upload image to Supabase storage" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1"><mxGeometry x="850" y="700" width="180" height="56" as="geometry"/></mxCell>
-        <mxCell id="a9" value="Upsert campaign metadata in Supabase" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1"><mxGeometry x="850" y="800" width="180" height="70" as="geometry"/></mxCell>
-        <mxCell id="a10" value="Refresh campaign list and redirect" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1"><mxGeometry x="850" y="920" width="180" height="56" as="geometry"/></mxCell>
-        <mxCell id="e" value="" style="ellipse;html=1;aspect=fixed;fillColor=#ffffff;strokeColor=#000000;strokeWidth=3;" vertex="1" parent="1"><mxGeometry x="922" y="1020" width="36" height="36" as="geometry"/></mxCell>
-        <mxCell id="x1" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;" edge="1" parent="1" source="s" target="a1"><mxGeometry relative="1" as="geometry"/></mxCell>
-        <mxCell id="x2" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;" edge="1" parent="1" source="a1" target="a2"><mxGeometry relative="1" as="geometry"/></mxCell>
-        <mxCell id="x3" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;" edge="1" parent="1" source="a2" target="d1"><mxGeometry relative="1" as="geometry"/></mxCell>
-        <mxCell id="x4" value="No" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;" edge="1" parent="1" source="d1" target="a2"><mxGeometry relative="1" as="geometry"/></mxCell>
-        <mxCell id="x5" value="Yes" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;" edge="1" parent="1" source="d1" target="a3"><mxGeometry relative="1" as="geometry"/></mxCell>
-        <mxCell id="x6" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;" edge="1" parent="1" source="a3" target="a4"><mxGeometry relative="1" as="geometry"/></mxCell>
-        <mxCell id="x7" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;" edge="1" parent="1" source="a4" target="d2"><mxGeometry relative="1" as="geometry"/></mxCell>
-        <mxCell id="x8" value="No" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;" edge="1" parent="1" source="d2" target="a1"><mxGeometry relative="1" as="geometry"/></mxCell>
-        <mxCell id="x9" value="Yes" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;" edge="1" parent="1" source="d2" target="a5"><mxGeometry relative="1" as="geometry"/></mxCell>
-        <mxCell id="x10" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;" edge="1" parent="1" source="a5" target="a6"><mxGeometry relative="1" as="geometry"/></mxCell>
-        <mxCell id="x11" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;" edge="1" parent="1" source="a6" target="a7"><mxGeometry relative="1" as="geometry"/></mxCell>
-        <mxCell id="x12" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;" edge="1" parent="1" source="a7" target="d3"><mxGeometry relative="1" as="geometry"/></mxCell>
-        <mxCell id="x13" value="Yes" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;" edge="1" parent="1" source="d3" target="a8"><mxGeometry relative="1" as="geometry"/></mxCell>
-        <mxCell id="x14" value="No" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;" edge="1" parent="1" source="d3" target="a9"><mxGeometry relative="1" as="geometry"/></mxCell>
-        <mxCell id="x15" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;" edge="1" parent="1" source="a8" target="a9"><mxGeometry relative="1" as="geometry"/></mxCell>
-        <mxCell id="x16" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;" edge="1" parent="1" source="a9" target="a10"><mxGeometry relative="1" as="geometry"/></mxCell>
-        <mxCell id="x17" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;" edge="1" parent="1" source="a10" target="e"><mxGeometry relative="1" as="geometry"/></mxCell>
       </root>
     </mxGraphModel>
   </diagram>

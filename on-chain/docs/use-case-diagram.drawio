@@ -1,92 +1,148 @@
-<mxfile host="app.diagrams.net" modified="2026-04-08T00:00:00.000Z" agent="Codex" version="24.7.17">
+<mxfile host="app.diagrams.net" agent="Codex">
   <diagram id="use-case-diagram" name="Use Case Diagram">
-    <mxGraphModel dx="1600" dy="1000" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="1000" math="0" shadow="0">
+    <mxGraphModel dx="2175" dy="1143" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="1000" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
-        <mxCell id="boundary" value="Pet Treatment Campaign System" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=2;fillColor=#ffffff;strokeColor=#000000;fontSize=16;fontStyle=1;" vertex="1" parent="1">
-          <mxGeometry x="300" y="60" width="980" height="760" as="geometry" />
+        <mxCell id="boundary" parent="1" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=2;fillColor=#ffffff;strokeColor=#000000;fontSize=16;fontStyle=1;" value="" vertex="1">
+          <mxGeometry height="950" width="730" x="300" y="20" as="geometry" />
         </mxCell>
-        <mxCell id="actor-user" value="User" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fontSize=14;" vertex="1" parent="1">
-          <mxGeometry x="70" y="210" width="60" height="120" as="geometry" />
+        <mxCell id="actor-user" parent="1" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fontSize=14;" value="User" vertex="1">
+          <mxGeometry height="120" width="60" x="70" y="210" as="geometry" />
         </mxCell>
-        <mxCell id="actor-creator" value="Campaign Creator" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fontSize=14;" vertex="1" parent="1">
-          <mxGeometry x="70" y="420" width="60" height="120" as="geometry" />
+        <mxCell id="actor-creator" parent="1" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fontSize=14;" value="Campaign Creator" vertex="1">
+          <mxGeometry height="120" width="60" x="70" y="420" as="geometry" />
         </mxCell>
-        <mxCell id="actor-donor" value="Donor" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fontSize=14;" vertex="1" parent="1">
-          <mxGeometry x="70" y="620" width="60" height="120" as="geometry" />
+        <mxCell id="actor-donor" parent="1" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fontSize=14;" value="Donor" vertex="1">
+          <mxGeometry height="120" width="60" x="70" y="620" as="geometry" />
         </mxCell>
-        <mxCell id="uc-connect" value="Connect Wallet" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fontSize=13;" vertex="1" parent="1">
-          <mxGeometry x="390" y="120" width="190" height="70" as="geometry" />
+        <mxCell id="uc-connect" parent="1" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fontSize=13;" value="Connect Wallet" vertex="1">
+          <mxGeometry height="70" width="190" x="390" y="120" as="geometry" />
         </mxCell>
-        <mxCell id="uc-register" value="Register Profile" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fontSize=13;" vertex="1" parent="1">
-          <mxGeometry x="390" y="220" width="190" height="70" as="geometry" />
+        <mxCell id="uc-register" parent="1" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fontSize=13;" value="Register Profile" vertex="1">
+          <mxGeometry height="70" width="190" x="390" y="220" as="geometry" />
         </mxCell>
-        <mxCell id="uc-browse" value="Browse Campaigns" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fontSize=13;" vertex="1" parent="1">
-          <mxGeometry x="390" y="320" width="190" height="70" as="geometry" />
+        <mxCell id="uc-browse" parent="1" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fontSize=13;" value="Browse Campaigns" vertex="1">
+          <mxGeometry height="70" width="190" x="390" y="320" as="geometry" />
         </mxCell>
-        <mxCell id="uc-profile" value="View Profile and History" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fontSize=13;" vertex="1" parent="1">
-          <mxGeometry x="390" y="420" width="190" height="70" as="geometry" />
+        <mxCell id="uc-profile" parent="1" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fontSize=13;" value="View Profile and History" vertex="1">
+          <mxGeometry height="70" width="190" x="390" y="420" as="geometry" />
         </mxCell>
-        <mxCell id="uc-claim" value="Claim Reward Tokens" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fontSize=13;" vertex="1" parent="1">
-          <mxGeometry x="390" y="520" width="190" height="70" as="geometry" />
+        <mxCell id="uc-claim" parent="1" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fontSize=13;" value="Claim Reward Tokens" vertex="1">
+          <mxGeometry height="70" width="190" x="390" y="520" as="geometry" />
         </mxCell>
-        <mxCell id="uc-create" value="Create Campaign" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fontSize=13;" vertex="1" parent="1">
-          <mxGeometry x="760" y="160" width="190" height="70" as="geometry" />
+        <mxCell id="uc-create" parent="1" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fontSize=13;" value="Create Campaign" vertex="1">
+          <mxGeometry height="70" width="190" x="760" y="160" as="geometry" />
         </mxCell>
-        <mxCell id="uc-report" value="View Campaign Report" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fontSize=13;" vertex="1" parent="1">
-          <mxGeometry x="760" y="280" width="190" height="70" as="geometry" />
+        <mxCell id="uc-report" parent="1" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fontSize=13;" value="View Campaign Report" vertex="1">
+          <mxGeometry height="70" width="190" x="760" y="280" as="geometry" />
         </mxCell>
-        <mxCell id="uc-withdraw" value="Withdraw Campaign Funds" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fontSize=13;" vertex="1" parent="1">
-          <mxGeometry x="760" y="400" width="190" height="70" as="geometry" />
+        <mxCell id="uc-withdraw" parent="1" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fontSize=13;" value="Withdraw Campaign Funds" vertex="1">
+          <mxGeometry height="70" width="190" x="760" y="400" as="geometry" />
         </mxCell>
-        <mxCell id="uc-refundall" value="Process Refund for All" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fontSize=13;" vertex="1" parent="1">
-          <mxGeometry x="760" y="520" width="190" height="70" as="geometry" />
+        <mxCell id="uc-refundall" parent="1" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fontSize=13;" value="Process Refund for All" vertex="1">
+          <mxGeometry height="70" width="190" x="760" y="520" as="geometry" />
         </mxCell>
-        <mxCell id="uc-donate" value="Donate to Campaign" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fontSize=13;" vertex="1" parent="1">
-          <mxGeometry x="1040" y="220" width="190" height="70" as="geometry" />
+        <mxCell id="uc-donate" parent="1" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fontSize=13;" value="Donate to Campaign" vertex="1">
+          <mxGeometry height="70" width="190" x="390" y="630" as="geometry" />
         </mxCell>
-        <mxCell id="uc-refund" value="Request Refund" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fontSize=13;" vertex="1" parent="1">
-          <mxGeometry x="1040" y="360" width="190" height="70" as="geometry" />
+        <mxCell id="uc-refund" parent="1" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fontSize=13;" value="Request Refund" vertex="1">
+          <mxGeometry height="70" width="190" x="400" y="730" as="geometry" />
         </mxCell>
-        <mxCell id="edge-u1" value="" style="endArrow=none;html=1;strokeWidth=2;" edge="1" parent="1" source="actor-user" target="uc-connect">
+        <mxCell id="edge-u1" edge="1" parent="1" source="actor-user" style="endArrow=none;html=1;strokeWidth=2;" target="uc-connect" value="">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="edge-u2" value="" style="endArrow=none;html=1;strokeWidth=2;" edge="1" parent="1" source="actor-user" target="uc-register">
+        <mxCell id="edge-u2" edge="1" parent="1" source="actor-user" style="endArrow=none;html=1;strokeWidth=2;" target="uc-register" value="">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="edge-u3" value="" style="endArrow=none;html=1;strokeWidth=2;" edge="1" parent="1" source="actor-user" target="uc-browse">
+        <mxCell id="Irgv9LFl0_cgDRUMGAn3-2" connectable="0" parent="edge-u2" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="Include" vertex="1">
+          <mxGeometry relative="1" x="-0.0057" y="4" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge-u3" edge="1" parent="1" source="actor-user" style="endArrow=none;html=1;strokeWidth=2;" target="uc-browse" value="">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="edge-u4" value="" style="endArrow=none;html=1;strokeWidth=2;" edge="1" parent="1" source="actor-user" target="uc-profile">
+        <mxCell id="Irgv9LFl0_cgDRUMGAn3-3" connectable="0" parent="edge-u3" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="include" vertex="1">
+          <mxGeometry relative="1" x="0.0454" y="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge-u4" edge="1" parent="1" source="actor-user" style="endArrow=none;html=1;strokeWidth=2;" target="uc-profile" value="">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="edge-u5" value="" style="endArrow=none;html=1;strokeWidth=2;" edge="1" parent="1" source="actor-user" target="uc-claim">
+        <mxCell id="Irgv9LFl0_cgDRUMGAn3-4" connectable="0" parent="edge-u4" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="include" vertex="1">
+          <mxGeometry relative="1" x="-0.1013" y="-2" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge-u5" edge="1" parent="1" source="actor-user" style="endArrow=none;html=1;strokeWidth=2;" target="uc-claim" value="">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="edge-c1" value="" style="endArrow=none;html=1;strokeWidth=2;" edge="1" parent="1" source="actor-creator" target="uc-create">
+        <mxCell id="Irgv9LFl0_cgDRUMGAn3-5" connectable="0" parent="edge-u5" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="include" vertex="1">
+          <mxGeometry relative="1" x="-0.2648" y="3" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge-c1" edge="1" parent="1" source="actor-creator" style="endArrow=none;html=1;strokeWidth=2;" target="uc-create" value="">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="edge-c2" value="" style="endArrow=none;html=1;strokeWidth=2;" edge="1" parent="1" source="actor-creator" target="uc-report">
+        <mxCell id="Irgv9LFl0_cgDRUMGAn3-11" connectable="0" parent="edge-c1" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="include" vertex="1">
+          <mxGeometry relative="1" x="-0.2773" y="-2" as="geometry">
+            <mxPoint y="1" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge-c2" edge="1" parent="1" source="actor-creator" style="endArrow=none;html=1;strokeWidth=2;" target="uc-report" value="">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="edge-c3" value="" style="endArrow=none;html=1;strokeWidth=2;" edge="1" parent="1" source="actor-creator" target="uc-withdraw">
+        <mxCell id="Irgv9LFl0_cgDRUMGAn3-10" connectable="0" parent="edge-c2" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="include" vertex="1">
+          <mxGeometry relative="1" x="-0.2622" y="3" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge-c3" edge="1" parent="1" source="actor-creator" style="endArrow=none;html=1;strokeWidth=2;" target="uc-withdraw" value="">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="edge-c4" value="" style="endArrow=none;html=1;strokeWidth=2;" edge="1" parent="1" source="actor-creator" target="uc-refundall">
+        <mxCell id="Irgv9LFl0_cgDRUMGAn3-9" connectable="0" parent="edge-c3" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="include" vertex="1">
+          <mxGeometry relative="1" x="-0.2362" y="2" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge-c4" edge="1" parent="1" source="actor-creator" style="endArrow=none;html=1;strokeWidth=2;" target="uc-refundall" value="">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="edge-d1" value="" style="endArrow=none;html=1;strokeWidth=2;" edge="1" parent="1" source="actor-donor" target="uc-donate">
+        <mxCell id="Irgv9LFl0_cgDRUMGAn3-8" connectable="0" parent="edge-c4" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="include" vertex="1">
+          <mxGeometry relative="1" x="-0.1987" y="-1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge-d1" edge="1" parent="1" source="actor-donor" style="endArrow=none;html=1;strokeWidth=2;" target="uc-donate" value="">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="edge-d2" value="" style="endArrow=none;html=1;strokeWidth=2;" edge="1" parent="1" source="actor-donor" target="uc-refund">
+        <mxCell id="Irgv9LFl0_cgDRUMGAn3-6" connectable="0" parent="edge-d1" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="include" vertex="1">
+          <mxGeometry relative="1" x="0.1629" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge-d2" edge="1" parent="1" source="actor-donor" style="endArrow=none;html=1;strokeWidth=2;" target="uc-refund" value="">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="gen-user-creator" value="" style="endArrow=block;endFill=0;html=1;strokeWidth=2;" edge="1" parent="1" source="actor-creator" target="actor-user">
+        <mxCell id="Irgv9LFl0_cgDRUMGAn3-7" connectable="0" parent="edge-d2" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="include" vertex="1">
+          <mxGeometry relative="1" x="0.0758" y="-3" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="gen-user-creator" edge="1" parent="1" source="actor-creator" style="endArrow=block;endFill=0;html=1;strokeWidth=2;" target="actor-user" value="">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="gen-user-donor" value="" style="endArrow=block;endFill=0;html=1;strokeWidth=2;" edge="1" parent="1" source="actor-donor" target="actor-user">
+        <mxCell id="gen-user-donor" edge="1" parent="1" source="actor-donor" style="endArrow=block;endFill=0;html=1;strokeWidth=2;" target="actor-user" value="">
           <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="Irgv9LFl0_cgDRUMGAn3-1" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" value="Include" vertex="1">
+          <mxGeometry height="30" width="60" x="250" y="200" as="geometry" />
+        </mxCell>
+        <mxCell id="Irgv9LFl0_cgDRUMGAn3-12" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" value="Pet Treament System&amp;nbsp;" vertex="1">
+          <mxGeometry height="30" width="145" x="592.5" y="40" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>
