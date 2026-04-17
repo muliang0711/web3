@@ -5,7 +5,7 @@ import { clearWalletSession } from '../../lib/walletSession';
 
 export function RegisterView() {
     const [name, setName] = useState('');
-    const { address } = useAccount();
+    const { address, status: accountStatus } = useAccount();
     const { disconnect } = useDisconnect();
     const { user, register, status } = useUserRegistry();
 
@@ -28,14 +28,17 @@ export function RegisterView() {
     };
 
     const isProcessing = status.isRegistering || status.isConfirming;
-    const isCheckingWallet = !status.hasResolvedUser && status.isReading;
+    const isCheckingWallet =
+        accountStatus === 'connecting' ||
+        accountStatus === 'reconnecting' ||
+        !status.hasResolvedUser;
 
     return (
         <div className="fade-in text-center">
             <div className="auth-kicker">Registration</div>
             <h2>Create your member profile</h2>
             <p style={{ margin: '0.5rem 0 1.75rem' }}>
-                Register this wallet to join the pet treatment campaign and unlock the reward-aware campaign dashboard.
+                Register this wallet to join the pet treatment campaign and unlock the reward-aware member profile.
             </p>
 
             <div style={{ marginBottom: '1.25rem', padding: '1rem', borderRadius: '12px', background: 'var(--bg-input)', border: '1px solid var(--border)' }}>
@@ -51,7 +54,7 @@ export function RegisterView() {
 
             {!isCheckingWallet && user?.isRegistered && (
                 <p style={{ marginBottom: '1rem', fontSize: '0.85rem', color: 'var(--success)' }}>
-                    This wallet is already registered. Go back to login and continue to dashboard.
+                    This wallet is already registered. Go back to login and continue to your profile.
                 </p>
             )}
 

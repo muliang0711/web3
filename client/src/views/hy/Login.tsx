@@ -7,7 +7,7 @@ import { clearWalletSession } from '../../lib/walletSession';
 
 export function LoginView() {
     const navigate = useNavigate();
-    const { address, isConnected } = useAccount();
+    const { address, isConnected, status: accountStatus } = useAccount();
     const { connect } = useConnect();
     const { disconnect } = useDisconnect();
     const { user, status } = useUserRegistry();
@@ -23,12 +23,15 @@ export function LoginView() {
         window.location.href = '/login';
     };
 
-    const isCheckingWallet = isConnected && !status.hasResolvedUser && status.isReading;
+    const isCheckingWallet =
+        accountStatus === 'connecting' ||
+        accountStatus === 'reconnecting' ||
+        (isConnected && !status.hasResolvedUser);
     const isRegistered = Boolean(user?.isRegistered);
 
     useEffect(() => {
         if (isConnected && status.hasResolvedUser && isRegistered) {
-            navigate('/dashboard', { replace: true });
+            navigate('/profile', { replace: true });
         }
     }, [isConnected, isRegistered, navigate, status.hasResolvedUser]);
 
@@ -75,15 +78,15 @@ export function LoginView() {
                     {!isCheckingWallet && isRegistered && (
                         <>
                             <p style={{ marginTop: '0.9rem', fontSize: '0.85rem', color: 'var(--success)' }}>
-                                Wallet recognized. Redirecting to dashboard...
+                                Wallet recognized. Redirecting to profile...
                             </p>
                             <button
                                 type="button"
                                 className="btn-success"
-                                onClick={() => navigate('/dashboard')}
+                                onClick={() => navigate('/profile')}
                                 style={{ marginTop: '0.9rem' }}
                             >
-                                Go To Dashboard
+                                Open Profile
                             </button>
                         </>
                     )}

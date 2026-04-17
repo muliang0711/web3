@@ -107,8 +107,8 @@ export function CampaignsView() {
 
     return (
         <div className="fade-in">
-            <button className="btn-back" onClick={() => navigate('/dashboard')}>
-                Back
+            <button className="btn-back" onClick={() => navigate('/profile')}>
+                Back to profile
             </button>
 
             <div className="campaigns-header">

@@ -105,8 +105,8 @@ export function LandingPage() {
     const navigate = useNavigate();
     const { isConnected } = useAccount();
 
-    const primaryLabel = isConnected ? 'Open dashboard' : 'Connect wallet';
-    const primaryAction = () => navigate(isConnected ? '/dashboard' : '/login');
+    const primaryLabel = isConnected ? 'Open profile' : 'Connect wallet';
+    const primaryAction = () => navigate(isConnected ? '/profile' : '/login');
 
     return (
         <div className="landing-page">
@@ -148,7 +148,7 @@ export function LandingPage() {
                         <h1>Pet Treatment Campaign</h1>
                         <p className="landing-hero-text">
                             A clearer campaign front page for raising support around treatment, recovery, and urgent pet care. The interface reads like a real funding campaign,
-                            not a generic web3 dashboard.
+                            not a generic web3 workspace.
                         </p>
 
                         <div className="landing-hero-actions">
@@ -276,7 +276,7 @@ export function LandingPage() {
                     <div className="landing-cta-panel">
                         <div>
                             <span className="landing-section-label">Launch-ready frontend</span>
-                            <h2>Bring users into a pet-focused campaign, not a recycled dashboard</h2>
+                            <h2>Bring users into a pet-focused campaign, not a recycled workspace</h2>
                             <p>
                                 The new direction is intentionally more expressive, more memorable, and more aligned with the product name while preserving the current routes, auth flow, and reward actions.
                             </p>

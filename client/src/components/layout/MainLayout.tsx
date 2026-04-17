@@ -1,15 +1,27 @@
-import type { ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { useLocation, NavLink, useNavigate } from 'react-router-dom';
 import { useAccount, useDisconnect } from 'wagmi';
+import { useUserRegistry } from '../../hooks/useUserRegistry';
 
 export function MainLayout({ children }: { children: ReactNode }) {
     const location = useLocation();
     const navigate = useNavigate();
     const { address } = useAccount();
     const { disconnect } = useDisconnect();
+    const { user, status } = useUserRegistry();
+    const [avatarRefreshKey, setAvatarRefreshKey] = useState(Date.now());
+    const [avatarImageFailed, setAvatarImageFailed] = useState(false);
 
     const isAuthRoute = location.pathname === '/login' || location.pathname === '/register';
     const isPublicRoute = location.pathname === '/';
+    const avatarSrc = user?.profileImageUrl ? `${user.profileImageUrl}?v=${avatarRefreshKey}` : null;
+
+    useEffect(() => {
+        if (!status.isUploadingProfileImage) {
+            setAvatarRefreshKey(Date.now());
+            setAvatarImageFailed(false);
+        }
+    }, [status.isUploadingProfileImage, user?.profileImageUrl]);
 
     if (isPublicRoute) {
         return <div className="marketing-layout fade-in">{children}</div>;
@@ -32,11 +44,11 @@ export function MainLayout({ children }: { children: ReactNode }) {
     return (
         <div className="app-wrapper fade-in">
             <aside className="sidebar">
-                <button type="button" className="sidebar-logo" onClick={() => navigate('/dashboard')}>
+                <button type="button" className="sidebar-logo" onClick={() => navigate('/')}>
                     <span className="sidebar-logo-mark">PT</span>
                     <span>
                         <strong>Pet Treatment</strong>
-                        <small>Campaign workspace</small>
+                        <small>Introduction page</small>
                     </span>
                 </button>
 
@@ -92,7 +104,16 @@ export function MainLayout({ children }: { children: ReactNode }) {
                             {address ? `${address.slice(0, 6)}...${address.slice(-4)}` : ''}
                         </span>
                         <button type="button" className="user-avatar" onClick={() => navigate('/profile')} title="Open profile">
-                            {address?.slice(2, 4)?.toUpperCase() || 'PT'}
+                            {!avatarImageFailed && avatarSrc ? (
+                                <img
+                                    src={avatarSrc}
+                                    alt={`${user?.name || 'User'} avatar`}
+                                    className="user-avatar-image"
+                                    onError={() => setAvatarImageFailed(true)}
+                                />
+                            ) : (
+                                (user?.name || address?.slice(2, 4) || 'PT').slice(0, 2).toUpperCase()
+                            )}
                         </button>
                     </div>
                 </header>

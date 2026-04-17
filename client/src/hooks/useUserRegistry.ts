@@ -219,7 +219,7 @@ export function useUserRegistry() {
                     name: pendingName,
                 });
 
-                queryClient.setQueryData(userQueryKey, {
+                queryClient.setQueryData(['userRegistryUser', address, publicClient?.chain?.id] as const, {
                     name: pendingName,
                     isRegistered: true,
                     walletAddress: address,
@@ -285,8 +285,9 @@ export function useUserRegistry() {
         }
     };
 
-    const hasResolvedUser = !address || !publicClient || userQuery.isFetched || userQuery.isError;
-    const isReading = Boolean(address && publicClient) && !hasResolvedUser;
+    const canReadUser = Boolean(address && publicClient);
+    const hasResolvedUser = !address ? true : canReadUser ? (userQuery.isFetched || userQuery.isError) : false;
+    const isReading = canReadUser && !hasResolvedUser;
 
     return {
         user: userQuery.data ?? null,

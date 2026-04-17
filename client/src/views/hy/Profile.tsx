@@ -130,8 +130,8 @@ export function ProfileView() {
 
     return (
         <div className="fade-in">
-            <button className="btn-back" onClick={() => navigate('/dashboard')}>
-                Back
+            <button className="btn-back" onClick={() => navigate('/')}>
+                Back to introduction
             </button>
 
             <section className="profile-shell">

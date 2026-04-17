@@ -150,8 +150,8 @@ export function UserCreatedHistoryView() {
 
     return (
         <div className="fade-in">
-            <button className="btn-back" onClick={() => navigate('/dashboard')}>
-                Back
+            <button className="btn-back" onClick={() => navigate('/profile')}>
+                Back to profile
             </button>
 
             <div className="profile-section-heading">

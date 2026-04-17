@@ -130,7 +130,7 @@ export function UserTransactionsView() {
 
     return (
         <div className="fade-in" style={{ paddingBottom: '4rem' }}>
-            <button className="btn-back" onClick={() => navigate('/dashboard')} style={{ marginBottom: '1.5rem' }}>← Back to Dashboard</button>
+            <button className="btn-back" onClick={() => navigate('/profile')} style={{ marginBottom: '1.5rem' }}>← Back to Profile</button>
 
             <div style={{ marginBottom: '2rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
                 <div>

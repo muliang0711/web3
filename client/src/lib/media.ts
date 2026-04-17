@@ -31,7 +31,7 @@ export async function uploadMediaFile(file: File, path: string) {
   const { error } = await supabase.storage.from(SUPABASE_MEDIA_BUCKET).upload(path, file, {
     upsert: true,
     contentType: file.type || 'application/octet-stream',
-    cacheControl: '3600',
+    cacheControl: '0',
   });
 
   if (error) {
