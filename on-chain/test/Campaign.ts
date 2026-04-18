@@ -221,12 +221,12 @@ describe("Campaign Module", async function () {
     // 3. WITHDRAWAL TESTS
     // ══════════════════════════════════════════════════════════
 
-    it("Should allow creator to withdraw after successful campaign", async function () {
+    it("Should allow creator to withdraw as soon as the campaign is successfully funded", async function () {
         const factory = await deployCampaignFactory();
         const [creator] = await viem.getWalletClients();
         const publicClient = await viem.getPublicClient();
 
-        console.log(`\n    [Test: Creator Withdraw After Success]`);
+        console.log(`\n    [Test: Creator Withdraw Immediately After Success]`);
 
         const target = parseEther("5");
         await factory.write.createCampaign(["Funded!", "Description", target, 1n]);
@@ -235,9 +235,6 @@ describe("Campaign Module", async function () {
         // Contributor funds the campaign above target
         const contributorCampaign = await getCampaignContract(campaigns[0], 1);
         await contributorCampaign.write.contribute([], { value: parseEther("6") });
-
-        // Advance past deadline
-        await advanceTime(2);
 
         // Get creator balance before withdrawal
         const balanceBefore = await publicClient.getBalance({ address: creator.account.address });

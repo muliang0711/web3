@@ -243,7 +243,7 @@ export function CampaignReportView() {
     const deadlineDate = info ? new Date(Number(info.deadline) * 1000) : null;
     const isExpired = deadlineDate ? deadlineDate < new Date() : false;
     const canRefundAll = Boolean(isOwner && info && !info.goalReached && !info.fundsWithdrawn && outstandingRefundCount > 0n);
-    const canWithdraw = Boolean(isOwner && info && isExpired && info.goalReached && !info.fundsWithdrawn);
+    const canWithdraw = Boolean(isOwner && info && info.goalReached && !info.fundsWithdrawn);
     const showWithdrawAction = Boolean(isOwner && info && (info.goalReached || info.fundsWithdrawn));
     const isWithdrawDisabled = Boolean(status.isWithdrawing || status.isConfirming || !canWithdraw);
     const withdrawButtonLabel = status.isWithdrawing || status.isConfirming
@@ -252,12 +252,12 @@ export function CampaignReportView() {
             ? 'Funds withdrawn'
             : canWithdraw
                 ? 'Withdraw funds'
-                : 'Withdraw after deadline';
+                : 'Withdraw unavailable';
     const withdrawButtonTitle = info?.fundsWithdrawn
         ? 'This campaign has already been withdrawn.'
         : canWithdraw
             ? 'Withdraw the raised ETH to the creator wallet.'
-            : `Withdrawal is available after ${deadlineDate?.toLocaleString() || 'the deadline'}.`;
+            : 'Withdrawal is not available for this campaign yet.';
     const progress = info && info.fundingTarget > 0n ? Number((info.totalFunded * 100n) / info.fundingTarget) : 0;
 
     const handleRefundAll = () => {

@@ -107,9 +107,8 @@ contract Campaign {
         emit ContributionMade(msg.sender, msg.value);
     }
 
-    /// @notice Lets the creator withdraw the funds after the deadline if the goal was met.
+    /// @notice Lets the creator withdraw the funds as soon as the funding goal is met.
     function withdrawFunds() external onlyCreator {
-        require(block.timestamp >= deadline, "Campaign has not ended yet");
         require(goalReached, "Funding target was not reached");
         require(!fundsWithdrawn, "Funds already withdrawn");
 

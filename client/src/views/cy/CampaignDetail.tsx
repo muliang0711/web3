@@ -257,7 +257,7 @@ export function CampaignDetailView() {
     const isExpired = deadlineDate < new Date();
     const canDonate = !isExpired && !info.goalReached && !info.isCancelled;
     const isCreator = userAddress?.toLowerCase() === info.creator.toLowerCase();
-    const canWithdraw = isExpired && info.goalReached && isCreator && !info.fundsWithdrawn;
+    const canWithdraw = info.goalReached && isCreator && !info.fundsWithdrawn;
     const imageUrl = storedCampaign?.image_url || storedCampaign?.campaign_image_url || storedCampaign?.cover_image_url || null;
     const badgeClass = info.isCancelled
         ? 'badge-cancelled'
@@ -380,7 +380,9 @@ export function CampaignDetailView() {
                     {!canDonate && !canWithdraw && (
                         <div className="campaign-closed-message">
                             {info.goalReached
-                                ? 'This campaign has reached its goal. Waiting for the creator to withdraw.'
+                                ? info.fundsWithdrawn
+                                    ? 'This campaign has already been settled and the creator has withdrawn the funds.'
+                                    : 'This campaign has reached its goal and the creator can withdraw the funds now.'
                                 : info.isCancelled
                                     ? 'This campaign was cancelled by the owner.'
                                     : 'This campaign is closed and not accepting new donations.'}

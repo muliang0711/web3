@@ -87,7 +87,7 @@ function CreatedCampaignCard({ campaign }: { campaign: { address: `0x${string}`;
     const deadlineDate = new Date(Number(info.deadline) * 1000);
     const isExpired = deadlineDate < new Date();
     const canRefundAll = !info.goalReached && !info.fundsWithdrawn && outstandingRefundCount > 0n;
-    const canWithdraw = isExpired && info.goalReached && !info.fundsWithdrawn;
+    const canWithdraw = info.goalReached && !info.fundsWithdrawn;
     const showWithdrawAction = info.goalReached || info.fundsWithdrawn;
     const isWithdrawDisabled = status.isWithdrawing || status.isConfirming || !canWithdraw;
     const withdrawButtonLabel = status.isWithdrawing || status.isConfirming
@@ -96,12 +96,12 @@ function CreatedCampaignCard({ campaign }: { campaign: { address: `0x${string}`;
             ? 'Funds withdrawn'
             : canWithdraw
                 ? 'Withdraw funds'
-                : 'Withdraw after deadline';
+                : 'Withdraw unavailable';
     const withdrawButtonTitle = info.fundsWithdrawn
         ? 'This campaign has already been withdrawn.'
         : canWithdraw
             ? 'Withdraw the raised ETH to the creator wallet.'
-            : `Withdrawal is available after ${deadlineDate.toLocaleString()}.`;
+            : 'Withdrawal is not available for this campaign yet.';
     const badgeClass = info.isCancelled
         ? 'badge-cancelled'
         : info.goalReached
