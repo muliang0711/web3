@@ -1,19 +1,18 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.28;
-// HY
+
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
 /// @title RewardToken
-/// @notice ERC-20 reward token distributed through RewardManager
-/// @dev Rule: 1 token = 1 ETH contributed (token uses 18 decimals by default)
-// me
+/// @notice ERC-20 token minted to contributors through the reward manager.
+/// @dev The token uses the default 18 decimals, so 1 token maps to 1 ETH in wei units.
 contract RewardToken is ERC20, Ownable {
     constructor() ERC20("CrowdfundReward", "CFR") Ownable(msg.sender) {}
 
-    /// @notice Mint reward tokens to a contributor
-    /// @param _to Address of the contributor
-    /// @param _amount Amount of tokens to mint (in wei-equivalent units)
+    /// @notice Mints reward tokens directly to a contributor.
+    /// @param _to The wallet receiving the reward tokens.
+    /// @param _amount The number of tokens to mint, using the token's 18-decimal units.
     function mint(address _to, uint256 _amount) external onlyOwner {
         if (_to == address(0)) {
             revert("Invalid recipient address");
@@ -24,9 +23,9 @@ contract RewardToken is ERC20, Ownable {
         _mint(_to, _amount);
     }
 
-    /// @notice RewardManager-compatible distribution entrypoint
-    /// @param _to Address of the contributor
-    /// @param _amount Amount of reward tokens to mint
+    /// @notice Mints rewards through the entrypoint expected by `RewardManager`.
+    /// @param _to The wallet receiving the reward tokens.
+    /// @param _amount The number of reward tokens to mint.
     function distributeReward(address _to, uint256 _amount) external onlyOwner returns (bool) {
         if (_to == address(0)) {
             revert("Invalid recipient address");
@@ -39,9 +38,9 @@ contract RewardToken is ERC20, Ownable {
         return true;
     }
 
-    /// @notice Burn reward tokens from a contributor when refunded donations reverse rewards
-    /// @param _from Address of the contributor
-    /// @param _amount Amount of reward tokens to burn
+    /// @notice Burns rewards from a contributor after a refunded donation.
+    /// @param _from The wallet whose reward balance should be reduced.
+    /// @param _amount The number of reward tokens to burn.
     function revokeReward(address _from, uint256 _amount) external onlyOwner returns (bool) {
         if (_from == address(0)) {
             revert("Invalid recipient address");

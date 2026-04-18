@@ -5,44 +5,45 @@ interface IRewardManager {
     function revokeRewards(address _user, uint256 _amount) external;
 }
 
-// HY : able to explain how it work
+// Stores user profiles, donation history, and claimable reward balances.
 contract UserRegistry {
-    // 1. struct :
+    // Basic profile information saved for each registered wallet.
     struct User {
         string name;
         bool isRegistered;
     }
 
+    // Tracks each donation so the app can show campaign history per user.
     struct DonationRecord {
         address campaign;
         uint256 amount;
         uint256 timestamp;
     }
 
-    // 2.state variable :
+    // User accounts, donation history, and campaign permissions.
     mapping(address => User) public users;
     mapping(address => DonationRecord[]) public userDonations;
 
-    // mapping to track points (JJ)
+    // Reward balances that users can still claim.
     mapping(address => uint256) public claimableRewards;
     mapping(address => bool) public authorizedCampaigns;
 
-    // Security & Architecture variables (JJ)
+    // Connected contract addresses and ownership data.
     address public rewardManager;
     address public campaignFactory;
     address public owner;
 
-    // 3. events :
+    // Emitted when users register or when donations are added or reversed.
     event UserRegistered(address indexed userAddress, string username, uint256 timestamp);
     event DonationRecorded(address indexed user, address indexed campaign, uint256 amount, uint256 timestamp);
     event DonationReversed(address indexed user, address indexed campaign, uint256 amount, uint256 timestamp);
 
-    // constructor(JJ)
+    // Sets the deployer as the initial owner.
     constructor() {
         owner = msg.sender;
     }
 
-    // MODIFIERS 
+    // Access control for the contracts that are allowed to update registry state.
     modifier onlyRewardManager() {
         require(msg.sender == rewardManager, "Only RewardManager can call this");
         _;
@@ -56,13 +57,12 @@ contract UserRegistry {
         _;
     }
 
-    // 4. functions :
     function register(string memory _name) public {
-        // modifier :
+        // Prevent empty usernames and duplicate registrations.
         require(bytes(_name).length > 0, "Username cannot be empty");
         require(!users[msg.sender].isRegistered, "User already registered");
 
-        // logic :
+        // Save the user profile and emit an event for off-chain listeners.
         users[msg.sender] = User(_name, true);
         emit UserRegistered(msg.sender, _name, block.timestamp);
     }
@@ -116,19 +116,17 @@ contract UserRegistry {
         return userDonations[_userAddress];
     }
 
-    // REWARD MANAGER INTEGRATION
-    
-    // JJ: getter function
+    // Returns the reward balance a user can still claim.
     function getClaimableRewards(address _user) external view returns (uint256) {
         return claimableRewards[_user];
     }
 
-    // Secure reset (Removed the duplicate, kept the safe one)
+    // Clears a user's pending reward balance after the reward manager mints tokens.
     function resetRewards(address _user) external onlyRewardManager {
         claimableRewards[_user] = 0;
     }
 
-    // onlyOwner so hackers can't change the manager
+    // Lets the owner connect the reward manager contract once it is deployed.
     function setRewardManager(address _rewardManager) external onlyOwner {
         if (_rewardManager == address(0)) {
             revert("Invalid reward manager");

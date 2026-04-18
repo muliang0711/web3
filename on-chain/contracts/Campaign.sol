@@ -7,7 +7,7 @@ interface IUserRegistry {
 }
 
 contract Campaign {
-    // ── Structs ────────────────────────────────────────────── // cyao : need to able to explain when designn struct like this
+    // Groups the main campaign fields so the UI can fetch them in one call.
     struct CampaignInfo {
         address creator;
         string title;
@@ -20,7 +20,7 @@ contract Campaign {
         bool isCancelled;
     }
 
-    // ── State Variables ────────────────────────────────────── // cyao : need to be able explain why need these state variable
+    // Core campaign details and live funding status.
     address public creator;
     string public title;
     string public description;
@@ -36,12 +36,12 @@ contract Campaign {
 
     IUserRegistry public userRegistry;
 
-    // ── Events ─────────────────────────────────────────────── // Chooi Jian Jin : able to explain how it work
+    // Emitted when money moves in or out of the campaign.
     event ContributionMade(address indexed contributor, uint256 amount);
     event FundsWithdrawn(address indexed creator, uint256 amount);
     event RefundIssued(address indexed contributor, uint256 amount);
 
-    // ── Modifiers ──────────────────────────────────────────── // nelvyin and cyao : able to explain how it work
+    // Restricts sensitive actions to the campaign creator.
     modifier onlyCreator() {
         if (msg.sender != creator) {
             revert("Only the campaign creator can call this");
@@ -49,7 +49,7 @@ contract Campaign {
         _;
     }
 
-    // ── Constructor ────────────────────────────────────────── // cyao : able to explain how it work
+    // Sets the campaign details at deployment time.
     constructor(
         address _creator,
         string memory _title,
@@ -72,9 +72,9 @@ contract Campaign {
         userRegistry = IUserRegistry(_userRegistryAddress);
     }
 
-    // ── Core Functions ───────────────────────────────────────
+    // Main actions for contributing, withdrawing, and refunding.
 
-    /// @notice Contribute ETH to this campaign // nelvyn
+    /// @notice Lets a supporter send ETH to the campaign while it is still open.
     function contribute() external payable {
         if (block.timestamp >= deadline) {
             revert("Campaign has ended");
@@ -107,7 +107,7 @@ contract Campaign {
         emit ContributionMade(msg.sender, msg.value);
     }
 
-    /// @notice Creator withdraws funds after successful campaign // nelvyn
+    /// @notice Lets the creator withdraw the funds after the deadline if the goal was met.
     function withdrawFunds() external onlyCreator {
         require(block.timestamp >= deadline, "Campaign has not ended yet");
         require(goalReached, "Funding target was not reached");
@@ -123,7 +123,7 @@ contract Campaign {
         emit FundsWithdrawn(creator, amount);
     }
 
-    /// @notice Contributors can get a refund if the campaign failed // nelvyn
+    /// @notice Lets a contributor reclaim their ETH if the campaign failed or was cancelled.
     function refund() external {
         require(block.timestamp >= deadline || isCancelled, "Campaign has not ended yet");
         require(!goalReached, "Funding target was reached, no refunds");
@@ -140,7 +140,7 @@ contract Campaign {
         emit RefundIssued(msg.sender, amount);
     }
 
-    /// @notice Creator can process all pending refunds after a failed campaign
+    /// @notice Lets the creator return every outstanding contribution after a failed campaign.
     function refundAll() external onlyCreator {
         require(!goalReached, "Funding target was reached, no refunds");
         require(!fundsWithdrawn, "Funds already withdrawn");
@@ -173,9 +173,9 @@ contract Campaign {
         totalFunded -= refundedAmount;
     }
 
-    // ── View Functions ───────────────────────────────────────
+    // Read-only helpers for the frontend and external callers.
 
-    /// @notice Get full campaign info // nelvyn
+    /// @notice Returns the full campaign snapshot in a single struct.
     function getCampaignInfo() external view returns (CampaignInfo memory) {
         return
             CampaignInfo({
@@ -191,19 +191,19 @@ contract Campaign {
             });
     }
 
-    /// @notice Get contribution amount for a specific address // nelvyn
+    /// @notice Returns how much a given address has contributed so far.
     function getContribution(
         address _contributor
     ) external view returns (uint256) {
         return contributions[_contributor];
     }
 
-    /// @notice Get all contributor addresses // nelvyn
+    /// @notice Returns the list of wallet addresses that have contributed at least once.
     function getContributors() external view returns (address[] memory) {
         return contributors;
     }
 
-    /// @notice Count contributors that still have claimable refunds
+    /// @notice Counts contributors whose contribution balance has not been refunded yet.
     function getOutstandingRefundCount() external view returns (uint256) {
         uint256 count = 0;
 

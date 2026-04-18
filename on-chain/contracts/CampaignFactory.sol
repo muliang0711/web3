@@ -8,9 +8,9 @@ interface IUserRegistryAdmin {
 }
 
 contract CampaignFactory {
-    // ── State Variables ────────────────────────────────────── // cyao : need to be able explain why need these state variable
-    address[] public campaigns; // cyao : need to be able explain why need this state variable
-    mapping(address => address[]) public userCampaigns; // cyao : need to be able explain why need this state variable
+    // Stores every deployed campaign and groups them by creator.
+    address[] public campaigns;
+    mapping(address => address[]) public userCampaigns;
     address public userRegistryAddress;
 
     constructor(address _userRegistryAddress) {
@@ -20,7 +20,7 @@ contract CampaignFactory {
         userRegistryAddress = _userRegistryAddress;
     }
 
-    // ── Events ─────────────────────────────────────────────── // cyao : need to be able explain why need these event
+    // Emitted whenever the factory deploys a new campaign.
     event CampaignCreated(
         address indexed campaignAddress,
         address indexed creator,
@@ -29,14 +29,13 @@ contract CampaignFactory {
         uint256 durationInDays
     );
 
-    // ── Functions ──────────────────────────────────────────── cyao : all the fucntion below need to be able explain why need and how it work
+    // Deployment and lookup helpers for campaigns created through the factory.
 
-    /// @notice Deploy a new Campaign contract
-    /// @param _title Campaign title
-    /// @param _description Campaign description
-    /// @param _fundingTarget Funding target in wei
-    /// @param _durationInDays Duration in days until deadline
-
+    /// @notice Deploys a new campaign and registers it with the user registry.
+    /// @param _title The public name of the campaign.
+    /// @param _description The campaign summary shown to users.
+    /// @param _fundingTarget The minimum amount of ETH the campaign wants to raise.
+    /// @param _durationInDays The number of days the campaign stays open.
     function createCampaign(
         string memory _title,
         string memory _description,
@@ -84,19 +83,19 @@ contract CampaignFactory {
         return campaignAddress;
     }
 
-    /// @notice Get all deployed campaign addresses
+    /// @notice Returns every campaign address deployed by this factory.
     function getCampaigns() external view returns (address[] memory) {
         return campaigns;
     }
 
-    /// @notice Get campaigns created by a specific user
+    /// @notice Returns the campaigns created by a specific wallet.
     function getUserCampaigns(
         address _user
     ) external view returns (address[] memory) {
         return userCampaigns[_user];
     }
 
-    /// @notice Get total number of campaigns
+    /// @notice Returns the total number of deployed campaigns.
     function getCampaignCount() external view returns (uint256) {
         return campaigns.length;
     }
