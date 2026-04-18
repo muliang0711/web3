@@ -1,0 +1,39 @@
+{
+  "_format": "hh3-sol-build-info-1",
+  "id": "solc-0_8_28-01a60c1be88bde7bd7e74077b2f9ec4f76b8b3f5",
+  "solcVersion": "0.8.28",
+  "solcLongVersion": "0.8.28+commit.7893614a",
+  "userSourceNameMap": {
+    "contracts/RewardManager.sol": "project/contracts/RewardManager.sol"
+  },
+  "input": {
+    "language": "Solidity",
+    "settings": {
+      "evmVersion": "cancun",
+      "optimizer": {
+        "enabled": true,
+        "runs": 200
+      },
+      "outputSelection": {
+        "*": {
+          "": [
+            "ast"
+          ],
+          "*": [
+            "abi",
+            "evm.bytecode",
+            "evm.deployedBytecode",
+            "evm.methodIdentifiers",
+            "metadata"
+          ]
+        }
+      },
+      "remappings": []
+    },
+    "sources": {
+      "project/contracts/RewardManager.sol": {
+        "content": "// SPDX-License-Identifier: UNLICENSED\npragma solidity ^0.8.28;\n\n// Minimal token interface used to mint and revoke rewards.\ninterface IRewardToken {\n    function distributeReward(address _to, uint256 _amount) external returns (bool);\n    function revokeReward(address _from, uint256 _amount) external returns (bool);\n}\n\n// Minimal registry interface used when users claim or lose rewards.\ninterface IUserRegistry {\n    function getClaimableRewards(address _user) external view returns (uint256);\n    function resetRewards(address _user) external;\n}\n\ncontract RewardManager {\n\n    // External contracts and access control for reward operations.\n    IRewardToken public rewardToken;\n    IUserRegistry public userRegistry;\n    address public owner;\n\n    // Emitted when rewards are claimed or revoked.\n    event RewardClaimed(address indexed user, uint256 amount);\n    event RewardRevoked(address indexed user, uint256 amount);\n\n    // Wires the token and registry addresses during deployment.\n    constructor(address _tokenAddress, address _registryAddress) {\n        if (_tokenAddress == address(0)) {\n            revert(\"Invalid token address\");\n        }\n        if (_registryAddress == address(0)) {\n            revert(\"Invalid registry address\");\n        }\n        rewardToken = IRewardToken(_tokenAddress);\n        userRegistry = IUserRegistry(_registryAddress);\n        owner = msg.sender;\n    }\n\n    // Keeps administrative functions restricted to the contract owner.\n    modifier onlyOwner() {\n        require(msg.sender == owner, \"Not contract owner\");\n        _;\n    }\n\n    modifier onlyUserRegistry() {\n        require(msg.sender == address(userRegistry), \"Only UserRegistry can call this\");\n        _;\n    }\n\n    // Claims the caller's current reward balance from the registry.\n    function claimRewards() external {\n        uint256 amount = userRegistry.getClaimableRewards(msg.sender);\n        require(amount > 0, \"No rewards to claim\");\n\n        // Clear the pending balance before minting to reduce reentrancy risk.\n        userRegistry.resetRewards(msg.sender);\n\n        // Mint the matching amount of reward tokens to the caller.\n        bool success = rewardToken.distributeReward(msg.sender, amount);\n        require(success, \"Reward transfer failed\");\n\n        emit RewardClaimed(msg.sender, amount);\n    }\n\n    /// @notice Burns rewards when a refunded donation means the user no longer qualifies for them.\n    function revokeRewards(address _user, uint256 _amount) external onlyUserRegistry {\n        require(_user != address(0), \"Invalid user address\");\n        require(_amount > 0, \"No rewards to revoke\");\n\n        bool success = rewardToken.revokeReward(_user, _amount);\n        require(success, \"Reward revoke failed\");\n\n        emit RewardRevoked(_user, _amount);\n    }\n}\r\n"
+      }
+    }
+  }
+}

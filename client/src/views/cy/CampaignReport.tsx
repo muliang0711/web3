@@ -244,6 +244,20 @@ export function CampaignReportView() {
     const isExpired = deadlineDate ? deadlineDate < new Date() : false;
     const canRefundAll = Boolean(isOwner && info && !info.goalReached && !info.fundsWithdrawn && outstandingRefundCount > 0n);
     const canWithdraw = Boolean(isOwner && info && isExpired && info.goalReached && !info.fundsWithdrawn);
+    const showWithdrawAction = Boolean(isOwner && info && (info.goalReached || info.fundsWithdrawn));
+    const isWithdrawDisabled = Boolean(status.isWithdrawing || status.isConfirming || !canWithdraw);
+    const withdrawButtonLabel = status.isWithdrawing || status.isConfirming
+        ? 'Processing...'
+        : info?.fundsWithdrawn
+            ? 'Funds withdrawn'
+            : canWithdraw
+                ? 'Withdraw funds'
+                : 'Withdraw after deadline';
+    const withdrawButtonTitle = info?.fundsWithdrawn
+        ? 'This campaign has already been withdrawn.'
+        : canWithdraw
+            ? 'Withdraw the raised ETH to the creator wallet.'
+            : `Withdrawal is available after ${deadlineDate?.toLocaleString() || 'the deadline'}.`;
     const progress = info && info.fundingTarget > 0n ? Number((info.totalFunded * 100n) / info.fundingTarget) : 0;
 
     const handleRefundAll = () => {
@@ -392,14 +406,15 @@ export function CampaignReportView() {
                     <button type="button" className="btn-ghost" onClick={() => navigate(`/campaigns/${campaignAddress}`)}>
                         Open public page
                     </button>
-                    {canWithdraw && (
+                    {showWithdrawAction && (
                         <button
                             type="button"
                             className="btn-success"
                             onClick={withdrawFunds}
-                            disabled={status.isWithdrawing || status.isConfirming}
+                            disabled={isWithdrawDisabled}
+                            title={withdrawButtonTitle}
                         >
-                            {status.isWithdrawing || status.isConfirming ? 'Processing...' : 'Withdraw funds'}
+                            {withdrawButtonLabel}
                         </button>
                     )}
                     {canRefundAll && (

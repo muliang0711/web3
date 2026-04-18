@@ -88,6 +88,20 @@ function CreatedCampaignCard({ campaign }: { campaign: { address: `0x${string}`;
     const isExpired = deadlineDate < new Date();
     const canRefundAll = !info.goalReached && !info.fundsWithdrawn && outstandingRefundCount > 0n;
     const canWithdraw = isExpired && info.goalReached && !info.fundsWithdrawn;
+    const showWithdrawAction = info.goalReached || info.fundsWithdrawn;
+    const isWithdrawDisabled = status.isWithdrawing || status.isConfirming || !canWithdraw;
+    const withdrawButtonLabel = status.isWithdrawing || status.isConfirming
+        ? 'Processing...'
+        : info.fundsWithdrawn
+            ? 'Funds withdrawn'
+            : canWithdraw
+                ? 'Withdraw funds'
+                : 'Withdraw after deadline';
+    const withdrawButtonTitle = info.fundsWithdrawn
+        ? 'This campaign has already been withdrawn.'
+        : canWithdraw
+            ? 'Withdraw the raised ETH to the creator wallet.'
+            : `Withdrawal is available after ${deadlineDate.toLocaleString()}.`;
     const badgeClass = info.isCancelled
         ? 'badge-cancelled'
         : info.goalReached
@@ -173,14 +187,15 @@ function CreatedCampaignCard({ campaign }: { campaign: { address: `0x${string}`;
                     Public page
                 </button>
 
-                {canWithdraw && (
+                {showWithdrawAction && (
                     <button
                         type="button"
                         className="btn-success"
                         onClick={withdrawFunds}
-                        disabled={status.isWithdrawing || status.isConfirming}
+                        disabled={isWithdrawDisabled}
+                        title={withdrawButtonTitle}
                     >
-                        {status.isWithdrawing || status.isConfirming ? 'Processing...' : 'Withdraw funds'}
+                        {withdrawButtonLabel}
                     </button>
                 )}
 

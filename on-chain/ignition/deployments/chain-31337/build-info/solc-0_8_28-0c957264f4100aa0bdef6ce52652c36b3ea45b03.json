@@ -1,0 +1,39 @@
+{
+  "_format": "hh3-sol-build-info-1",
+  "id": "solc-0_8_28-0c957264f4100aa0bdef6ce52652c36b3ea45b03",
+  "solcVersion": "0.8.28",
+  "solcLongVersion": "0.8.28+commit.7893614a",
+  "userSourceNameMap": {
+    "contracts/UserRegistry.sol": "project/contracts/UserRegistry.sol"
+  },
+  "input": {
+    "language": "Solidity",
+    "settings": {
+      "evmVersion": "cancun",
+      "optimizer": {
+        "enabled": true,
+        "runs": 200
+      },
+      "outputSelection": {
+        "*": {
+          "": [
+            "ast"
+          ],
+          "*": [
+            "abi",
+            "evm.bytecode",
+            "evm.deployedBytecode",
+            "evm.methodIdentifiers",
+            "metadata"
+          ]
+        }
+      },
+      "remappings": []
+    },
+    "sources": {
+      "project/contracts/UserRegistry.sol": {
+        "content": "// SPDX-License-Identifier: UNLICENSED\npragma solidity ^0.8.28;\n\ninterface IRewardManager {\n    function revokeRewards(address _user, uint256 _amount) external;\n}\n\n// Stores user profiles, donation history, and claimable reward balances.\ncontract UserRegistry {\n    // Basic profile information saved for each registered wallet.\n    struct User {\n        string name;\n        bool isRegistered;\n    }\n\n    // Tracks each donation so the app can show campaign history per user.\n    struct DonationRecord {\n        address campaign;\n        uint256 amount;\n        uint256 timestamp;\n    }\n\n    // User accounts, donation history, and campaign permissions.\n    mapping(address => User) public users;\n    mapping(address => DonationRecord[]) public userDonations;\n\n    // Reward balances that users can still claim.\n    mapping(address => uint256) public claimableRewards;\n    mapping(address => bool) public authorizedCampaigns;\n\n    // Connected contract addresses and ownership data.\n    address public rewardManager;\n    address public campaignFactory;\n    address public owner;\n\n    // Emitted when users register or when donations are added or reversed.\n    event UserRegistered(address indexed userAddress, string username, uint256 timestamp);\n    event DonationRecorded(address indexed user, address indexed campaign, uint256 amount, uint256 timestamp);\n    event DonationReversed(address indexed user, address indexed campaign, uint256 amount, uint256 timestamp);\n\n    // Sets the deployer as the initial owner.\n    constructor() {\n        owner = msg.sender;\n    }\n\n    // Access control for the contracts that are allowed to update registry state.\n    modifier onlyRewardManager() {\n        require(msg.sender == rewardManager, \"Only RewardManager can call this\");\n        _;\n    }\n    modifier onlyOwner() {\n        require(msg.sender == owner, \"Not authorized\");\n        _;\n    }\n    modifier onlyCampaignFactory() {\n        require(msg.sender == campaignFactory, \"Only CampaignFactory can call this\");\n        _;\n    }\n\n    function register(string memory _name) public {\n        // Prevent empty usernames and duplicate registrations.\n        require(bytes(_name).length > 0, \"Username cannot be empty\");\n        require(!users[msg.sender].isRegistered, \"User already registered\");\n\n        // Save the user profile and emit an event for off-chain listeners.\n        users[msg.sender] = User(_name, true);\n        emit UserRegistered(msg.sender, _name, block.timestamp);\n    }\n\n    function getUser(address _userAddress) public view returns (User memory) {\n        return users[_userAddress];\n    }\n\n    function recordDonation(address _user, uint256 _amount) external {\n        require(authorizedCampaigns[msg.sender], \"Only authorized campaigns can record donations\");\n        if (_user == address(0)) {\n            revert(\"Invalid user address\");\n        }\n        if (_amount == 0) {\n            revert(\"Donation amount must be greater than 0\");\n        }\n\n        userDonations[_user].push(DonationRecord(msg.sender, _amount, block.timestamp));\n        claimableRewards[_user] += _amount;\n        emit DonationRecorded(_user, msg.sender, _amount, block.timestamp);\n    }\n\n    function reverseDonation(address _user, uint256 _amount) external {\n        require(authorizedCampaigns[msg.sender], \"Only authorized campaigns can reverse donations\");\n        if (_user == address(0)) {\n            revert(\"Invalid user address\");\n        }\n        if (_amount == 0) {\n            revert(\"Refund amount must be greater than 0\");\n        }\n\n        uint256 availableClaimable = claimableRewards[_user];\n\n        if (availableClaimable >= _amount) {\n            claimableRewards[_user] = availableClaimable - _amount;\n        } else {\n            claimableRewards[_user] = 0;\n\n            uint256 amountToRevoke = _amount - availableClaimable;\n            if (rewardManager == address(0)) {\n                revert(\"Reward manager not configured\");\n            }\n\n            IRewardManager(rewardManager).revokeRewards(_user, amountToRevoke);\n        }\n\n        emit DonationReversed(_user, msg.sender, _amount, block.timestamp);\n    }\n\n    function getUserDonations(address _userAddress) public view returns (DonationRecord[] memory) {\n        return userDonations[_userAddress];\n    }\n\n    // Returns the reward balance a user can still claim.\n    function getClaimableRewards(address _user) external view returns (uint256) {\n        return claimableRewards[_user];\n    }\n\n    // Clears a user's pending reward balance after the reward manager mints tokens.\n    function resetRewards(address _user) external onlyRewardManager {\n        claimableRewards[_user] = 0;\n    }\n\n    // Lets the owner connect the reward manager contract once it is deployed.\n    function setRewardManager(address _rewardManager) external onlyOwner {\n        if (_rewardManager == address(0)) {\n            revert(\"Invalid reward manager\");\n        }\n        rewardManager = _rewardManager;\n    }\n\n    function setCampaignFactory(address _campaignFactory) external onlyOwner {\n        if (_campaignFactory == address(0)) {\n            revert(\"Invalid campaign factory\");\n        }\n        campaignFactory = _campaignFactory;\n    }\n\n    function authorizeCampaign(address _campaign) external onlyCampaignFactory {\n        if (_campaign == address(0)) {\n            revert(\"Invalid campaign address\");\n        }\n        authorizedCampaigns[_campaign] = true;\n    }\n}\r\n"
+      }
+    }
+  }
+}
