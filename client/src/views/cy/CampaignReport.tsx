@@ -40,6 +40,7 @@ export function CampaignReportView() {
     const [isLoadingReport, setIsLoadingReport] = useState(false);
     const [reportError, setReportError] = useState<string | null>(null);
     const [pendingRefundSuccessCount, setPendingRefundSuccessCount] = useState<string | null>(null);
+    const [pendingWithdrawNavigation, setPendingWithdrawNavigation] = useState(false);
     const [storedImageUrl, setStoredImageUrl] = useState<string | null>(null);
     const syncedReportTxHashRef = useRef<string | null>(null);
 
@@ -219,6 +220,14 @@ export function CampaignReportView() {
 
         syncedReportTxHashRef.current = status.txHash;
 
+        if (pendingWithdrawNavigation && campaignAddress) {
+            navigate(
+                `/campaigns/${campaignAddress}/withdraw-success?tx=${status.txHash}`,
+                { replace: true }
+            );
+            return;
+        }
+
         if (pendingRefundSuccessCount && campaignAddress) {
             navigate(
                 `/campaigns/${campaignAddress}/refund-success?count=${encodeURIComponent(pendingRefundSuccessCount)}&tx=${status.txHash}`,
@@ -229,7 +238,7 @@ export function CampaignReportView() {
 
         void refetchInfo();
         void fetchReport();
-    }, [campaignAddress, fetchReport, navigate, pendingRefundSuccessCount, refetchInfo, status.isConfirmed, status.txHash]);
+    }, [campaignAddress, fetchReport, navigate, pendingRefundSuccessCount, pendingWithdrawNavigation, refetchInfo, status.isConfirmed, status.txHash]);
 
     const donationVolume = useMemo(
         () => donations.reduce((sum, row) => sum + Number(row.amount_eth || 0), 0),
@@ -263,6 +272,21 @@ export function CampaignReportView() {
     const handleRefundAll = () => {
         setPendingRefundSuccessCount(outstandingRefundCount.toString());
         refundAll();
+    };
+
+    const handleWithdrawFunds = async () => {
+        setPendingWithdrawNavigation(true);
+
+        try {
+            await withdrawFunds();
+        } catch (error: any) {
+            setPendingWithdrawNavigation(false);
+            const reason = error?.message || 'Withdrawal failed.';
+            navigate(
+                `/campaigns/${campaignAddress}/withdraw-failed?reason=${encodeURIComponent(reason)}`,
+                { replace: true }
+            );
+        }
     };
 
     if (status.isLoadingInfo) {
@@ -410,7 +434,7 @@ export function CampaignReportView() {
                         <button
                             type="button"
                             className="btn-success"
-                            onClick={withdrawFunds}
+                            onClick={() => { void handleWithdrawFunds(); }}
                             disabled={isWithdrawDisabled}
                             title={withdrawButtonTitle}
                         >

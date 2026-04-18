@@ -101,7 +101,7 @@ export type CampaignInfo = {
 export function useCampaign(campaignAddress?: `0x${string}`) {
     const { address } = useAccount();
     const publicClient = usePublicClient();
-    const { writeContract, data: hash, isPending: isWriting, error: writeError } = useWriteContract();
+    const { writeContract, writeContractAsync, data: hash, isPending: isWriting, error: writeError } = useWriteContract();
 
     const [pendingAction, setPendingAction] = useState<{
         type: 'contribute' | 'refund' | 'refundAll' | 'withdraw';
@@ -304,11 +304,11 @@ export function useCampaign(campaignAddress?: `0x${string}`) {
         });
     };
 
-    const withdrawFunds = () => {
+    const withdrawFunds = async () => {
         if (!campaignAddress) return;
 
         setPendingAction({ type: 'withdraw' });
-        writeContract({
+        return writeContractAsync({
             address: campaignAddress,
             abi: CAMPAIGN_ABI,
             functionName: 'withdrawFunds',

@@ -8,6 +8,7 @@ function CreatedCampaignCard({ campaign }: { campaign: { address: `0x${string}`;
     const navigate = useNavigate();
     const [imageFailed, setImageFailed] = useState(false);
     const [pendingRefundSuccessCount, setPendingRefundSuccessCount] = useState<string | null>(null);
+    const [pendingWithdrawNavigation, setPendingWithdrawNavigation] = useState(false);
 
     useEffect(() => {
         if (!status.isConfirmed || !status.txHash || !pendingRefundSuccessCount) {
@@ -19,6 +20,17 @@ function CreatedCampaignCard({ campaign }: { campaign: { address: `0x${string}`;
             { replace: true }
         );
     }, [campaign.address, navigate, pendingRefundSuccessCount, status.isConfirmed, status.txHash]);
+
+    useEffect(() => {
+        if (!status.isConfirmed || !status.txHash || !pendingWithdrawNavigation) {
+            return;
+        }
+
+        navigate(
+            `/campaigns/${campaign.address}/withdraw-success?tx=${status.txHash}`,
+            { replace: true }
+        );
+    }, [campaign.address, navigate, pendingWithdrawNavigation, status.isConfirmed, status.txHash]);
 
     if (!info) {
         if (campaign.title) {
@@ -122,6 +134,21 @@ function CreatedCampaignCard({ campaign }: { campaign: { address: `0x${string}`;
         refundAll();
     };
 
+    const handleWithdrawFunds = async () => {
+        setPendingWithdrawNavigation(true);
+
+        try {
+            await withdrawFunds();
+        } catch (error: any) {
+            setPendingWithdrawNavigation(false);
+            const reason = error?.message || 'Withdrawal failed.';
+            navigate(
+                `/campaigns/${campaign.address}/withdraw-failed?reason=${encodeURIComponent(reason)}`,
+                { replace: true }
+            );
+        }
+    };
+
     return (
         <article className={`created-campaign-card ${info.isCancelled ? 'created-campaign-card-cancelled' : ''}`}>
             <button type="button" className="created-campaign-card-body" onClick={() => navigate(`/campaigns/${campaign.address}/report`)}>
@@ -191,7 +218,7 @@ function CreatedCampaignCard({ campaign }: { campaign: { address: `0x${string}`;
                     <button
                         type="button"
                         className="btn-success"
-                        onClick={withdrawFunds}
+                        onClick={() => { void handleWithdrawFunds(); }}
                         disabled={isWithdrawDisabled}
                         title={withdrawButtonTitle}
                     >

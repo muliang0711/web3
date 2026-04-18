@@ -19,6 +19,8 @@ import { CreateCampaignView } from './views/cy/CreateCampaign';
 import { DonationSuccessView } from './views/cy/DonationSuccess';
 import { CampaignReportView } from './views/cy/CampaignReport';
 import { RefundSuccessView } from './views/cy/RefundSuccess';
+import { WithdrawSuccessView } from './views/cy/WithdrawSuccess';
+import { WithdrawFailedView } from './views/cy/WithdrawFailed';
 
 
 // ccy - Transaction module
@@ -54,6 +56,8 @@ function App() {
               <Route path="/campaigns/:address/report" element={<CampaignReportView />} />
               <Route path="/campaigns/:address/success" element={<DonationSuccessView />} />
               <Route path="/campaigns/:address/refund-success" element={<RefundSuccessView />} />
+              <Route path="/campaigns/:address/withdraw-success" element={<WithdrawSuccessView />} />
+              <Route path="/campaigns/:address/withdraw-failed" element={<WithdrawFailedView />} />
 
 
 

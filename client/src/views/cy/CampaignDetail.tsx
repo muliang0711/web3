@@ -25,6 +25,7 @@ export function CampaignDetailView() {
     const [donateAmount, setDonateAmount] = useState('');
     const [imageFailed, setImageFailed] = useState(false);
     const [pendingSuccessAmount, setPendingSuccessAmount] = useState<string | null>(null);
+    const [pendingWithdrawNavigation, setPendingWithdrawNavigation] = useState(false);
     const [storedCampaign, setStoredCampaign] = useState<StoredCampaignRecord | null>(null);
     const [storedRaised, setStoredRaised] = useState(0);
     const [storedBackers, setStoredBackers] = useState(0);
@@ -114,6 +115,36 @@ export function CampaignDetailView() {
             { replace: true }
         );
     }, [campaignAddress, navigate, pendingSuccessAmount, status.isConfirmed, status.txHash]);
+
+    useEffect(() => {
+        if (!campaignAddress || !pendingWithdrawNavigation || !status.isConfirmed || !status.txHash) {
+            return;
+        }
+
+        navigate(
+            `/campaigns/${campaignAddress}/withdraw-success?tx=${status.txHash}`,
+            { replace: true }
+        );
+    }, [campaignAddress, navigate, pendingWithdrawNavigation, status.isConfirmed, status.txHash]);
+
+    const handleWithdrawFunds = async () => {
+        if (!campaignAddress) {
+            return;
+        }
+
+        setPendingWithdrawNavigation(true);
+
+        try {
+            await withdrawFunds();
+        } catch (error: any) {
+            setPendingWithdrawNavigation(false);
+            const reason = error?.message || 'Withdrawal failed.';
+            navigate(
+                `/campaigns/${campaignAddress}/withdraw-failed?reason=${encodeURIComponent(reason)}`,
+                { replace: true }
+            );
+        }
+    };
 
     if (status.isLoadingInfo || isLoadingStoredCampaign) {
         return (
@@ -372,7 +403,7 @@ export function CampaignDetailView() {
                     )}
 
                     {canWithdraw && (
-                        <button className="btn-success large-btn" type="button" onClick={withdrawFunds} disabled={status.isWithdrawing || status.isConfirming}>
+                        <button className="btn-success large-btn" type="button" onClick={() => { void handleWithdrawFunds(); }} disabled={status.isWithdrawing || status.isConfirming}>
                             {status.isWithdrawing || status.isConfirming ? 'Processing...' : 'Withdraw funds'}
                         </button>
                     )}
